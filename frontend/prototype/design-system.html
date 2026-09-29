@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Design System · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .ds { max-width: 1110px; margin: 0 auto; padding: 32px 0 64px; display: flex; flex-direction: column; gap: 32px; }
+  .ds-num { color: var(--color-slate); font-weight: 400; margin-right: 8px; }
+  .ds-h { font-size: var(--fs-helper); font-weight: 700; color: var(--color-slate); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 16px; }
+  .swatch { display: flex; gap: 16px; align-items: flex-start; }
+  .swatch-color { width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(24,50,59,.15); }
+  .swatch-meta code { display: block; color: var(--color-slate); font-family: var(--font-sans); }
+  .swatch-meta small { display: block; color: var(--color-ink); font-size: 12px; line-height: 16.8px; margin-top: 4px; }
+  .spec-row { display: grid; grid-template-columns: 260px 1fr 120px 120px; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
+  .spec-row:last-child { border-bottom: 0; }
+  .spec-row > * { justify-self: start; }
+  .stack > .segmented { align-self: flex-start; }
+  .spec-head { color: var(--color-slate); padding-top: 0; }
+  .icon-tile { border: 1px solid var(--color-tide-line); border-radius: 8px; height: 88px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--color-ink); font-size: 12px; }
+  .icon-tile svg { width: 30px; height: 30px; }
+  .state-grid { display: grid; grid-template-columns: 90px repeat(4, 1fr); gap: 16px 24px; align-items: center; }
+  .state-grid .btn { width: 100%; }
+  .space-box { background: var(--color-tide-line); }
+  .demo-overlay { position: relative; height: 260px; background: rgba(24,50,59,.4); border-radius: 8px; overflow: hidden; }
+</style>
+</head>
+<body>
+<header class="gh"><div class="gh-brand"><span class="gh-logo"><i data-lucide="waves"></i></span>Smart Shrimp Pond</div><div class="gh-scope"><b>Design System</b><span class="sep">/</span><span>v2</span></div><div class="gh-spacer"></div><a class="btn btn--outline btn--sm" href="index.html"><i data-lucide="layout-grid"></i>Screen Catalog</a></header>
+<div class="ds">
+
+  <section>
+    <h1 class="page-title">Design System</h1>
+    <div class="page-meta"><span>v2 · Rules: frontend/docs/UI・UX設計書.md · Spec: knowledge/04_design_system.md · Code: assets/tokens.css · app.css</span></div>
+  </section>
+
+  <!-- 01 Colors -->
+  <section class="card"><div class="card-header"><h2 class="card-title"><span class="ds-num">01.</span>Colors</h2><span class="caption">Each color has one role. Status colors only mean status.</span></div>
+    <div class="card-body stack" style="gap:24px">
+      <div><div class="ds-h">Brand</div><div class="grid cols-4" style="gap:24px">
+        <div class="swatch"><span class="swatch-color" style="background:#087EA4"></span><div class="swatch-meta"><b>Water Blue</b><code>#087EA4</code><small>Primary button · link · selected · focus · In Progress</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#075985"></span><div class="swatch-meta"><b>Deep Water</b><code>#075985</code><small>Global header · primary hover · toast</small></div></div>
+      </div></div>
+      <div><div class="ds-h">Neutral</div><div class="grid cols-5" style="gap:24px">
+        <div class="swatch"><span class="swatch-color" style="background:#FFFFFF;border:1px solid #D6E3E5"></span><div class="swatch-meta"><b>White</b><code>#FFFFFF</code><small>Cards · tables · forms · overlays</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#F4F8F7;border:1px solid #D6E3E5"></span><div class="swatch-meta"><b>Mist</b><code>#F4F8F7</code><small>Page background · table header · read-only · tags</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#18323B"></span><div class="swatch-meta"><b>Ink</b><code>#18323B</code><small>Text · headings · key numbers</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#5B7078"></span><div class="swatch-meta"><b>Slate</b><code>#5B7078</code><small>Secondary text · units · timestamps</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#D6E3E5"></span><div class="swatch-meta"><b>Tide Line</b><code>#D6E3E5</code><small>Dividers · card and table borders</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#7C8D93"></span><div class="swatch-meta"><b>Control Border</b><code>#7C8D93</code><small>Inputs · checkboxes · outline buttons (3.45:1)</small></div></div>
+      </div></div>
+      <div><div class="ds-h">Status</div><div class="grid cols-5" style="gap:24px">
+        <div class="swatch"><span class="swatch-color" style="background:#237A57"></span><div class="swatch-meta"><b>Status Green</b><code>#237A57</code><small>Normal · stable · completed</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#A15C00"></span><div class="swatch-meta"><b>Attention</b><code>#A15C00</code><small>Attention · check recommended</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#B54708"></span><div class="swatch-meta"><b>Status Orange</b><code>#B54708</code><small>Warning · action needed · threshold line</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#B42318"></span><div class="swatch-meta"><b>Status Red</b><code>#B42318</code><small>Critical · immediate action · Danger button</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#1769AA"></span><div class="swatch-meta"><b>Status Blue</b><code>#1769AA</code><small>Info notices only</small></div></div>
+      </div></div>
+      <div><div class="ds-h">Data (charts)</div><div class="grid cols-5" style="gap:24px">
+        <div class="swatch"><span class="swatch-color" style="background:#087EA4"></span><div class="swatch-meta"><b>Sensor series</b><code>#087EA4</code><small>Water Blue · IoT time series</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#2F855A"></span><div class="swatch-meta"><b>Mangrove Green</b><code>#2F855A</code><small>Actual · growth · feeding series</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:repeating-linear-gradient(90deg,#5B7078 0 6px,#fff 6px 10px)"></span><div class="swatch-meta"><b>Target</b><code>#5B7078</code><small>Slate dashed</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#F9F0EB;border:1px solid #D6E3E5"></span><div class="swatch-meta"><b>Threshold band</b><code>#B54708</code><small>Orange dashed line + warning tint</small></div></div>
+      </div></div>
+      <div><div class="ds-h">Tints</div><div class="grid cols-6" style="gap:16px">
+        <div class="swatch"><span class="swatch-color" style="background:#E1F0F4"></span><div class="swatch-meta"><b>Selected</b><code>#E1F0F4</code><small>Active nav · selected row</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#C1DEE8"></span><div class="swatch-meta"><b>Focus ring</b><code>#C1DEE8</code><small>3 px around focused controls</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#F9FBFB;border:1px solid #D6E3E5"></span><div class="swatch-meta"><b>Row hover</b><code>#F9FBFB</code><small>Table row hover</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#397A9D"></span><div class="swatch-meta"><b>Primary pressed</b><code>#397A9D</code><small>Primary active state</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#912018"></span><div class="swatch-meta"><b>Danger hover</b><code>#912018</code><small>Danger hover state</small></div></div>
+        <div class="swatch"><span class="swatch-color" style="background:#C4CFD2"></span><div class="swatch-meta"><b>Disabled</b><code>#C4CFD2</code><small>Disabled button background</small></div></div>
+      </div>
+      <div class="caption" style="margin-top:8px">Status tints: background = 8%, badge border = 35% of the status color (Normal #EDF4F2 / #B2D0C4 · Attention #F7F2EB / #DEC6A6 · Warning #F9F0EB / #E5BFA9 · Critical #F9EDED / #E5B2AE · Info #ECF3F8 / #AECAE1)</div></div>
+      <div><div class="ds-h">Color balance</div>
+        <div style="display:flex;height:24px;border-radius:4px;overflow:hidden;border:1px solid #D6E3E5">
+          <span style="flex:85;background:#F4F8F7"></span><span style="flex:10;background:#18323B"></span><span style="flex:4;background:#087EA4"></span><span style="flex:1;background:#B54708"></span>
+        </div>
+        <div class="row caption" style="gap:24px;margin-top:8px"><span>Neutral surfaces ≈ 85%</span><span>Text ≈ 10%</span><span>Brand ≤ 5%</span><span>Status: only for exceptions</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 Typography -->
+  <section class="card"><div class="card-header"><h2 class="card-title"><span class="ds-num">02.</span>Typography · Inter</h2><span class="caption">Line height = 1.4 × font size</span></div>
+    <div class="card-body">
+      <div class="spec-row spec-head"><span>Name</span><span>Usage</span><span>Font size</span><span>Line height</span></div>
+      <div class="spec-row"><span style="font-size:24px;line-height:33.6px;font-weight:700">18.4 <span class="kpi-unit">t</span></span><span class="text-muted">Display — KPI value · sensor value · status count (numbers only)</span><span>24 px</span><span>33.6 px</span></div>
+      <div class="spec-row"><span style="font-size:20px;line-height:28px;font-weight:700">Large Text Bold</span><span class="text-muted">Page title</span><span>20 px</span><span>28 px</span></div>
+      <div class="spec-row"><span style="font-size:18px;line-height:25.2px;font-weight:700">Medium Text Bold</span><span class="text-muted">Section label outside cards · dialog title</span><span>18 px</span><span>25.2 px</span></div>
+      <div class="spec-row"><span style="font-size:16px;line-height:22.4px;font-weight:700">Normal Text Bold</span><span class="text-muted">Card title · header brand</span><span>16 px</span><span>22.4 px</span></div>
+      <div class="spec-row"><span style="font-size:16px;line-height:22.4px">Normal Text Regular</span><span class="text-muted">Input value · navigation · tabs</span><span>16 px</span><span>22.4 px</span></div>
+      <div class="spec-row"><span style="font-size:14px;line-height:19.6px;font-weight:700">Small Text Bold</span><span class="text-muted">Buttons · badges · form labels · emphasized cell</span><span>14 px</span><span>19.6 px</span></div>
+      <div class="spec-row"><span style="font-size:14px;line-height:19.6px">Small Text Regular</span><span class="text-muted">Body · table cells · meta</span><span>14 px</span><span>19.6 px</span></div>
+      <div class="spec-row"><span class="caption">Caption</span><span class="text-muted">Helper text (07 Inputs) · table header (Bold) · timestamps</span><span>12 px</span><span>16.8 px</span></div>
+    </div>
+  </section>
+
+  <!-- 03 Iconography -->
+  <section class="card"><div class="card-header"><h2 class="card-title"><span class="ds-num">03.</span>Iconography</h2><span class="caption">Lucide outline · stroke 1.75 · 16 inline / 20 nav / 24 tile / 40 standalone (30 live + 5 safe)</span></div>
+    <div class="card-body stack" style="gap:24px">
+      <div><div class="ds-h">Navigation</div><div class="grid cols-6 gap-4"><div class="icon-tile"><i data-lucide="layout-dashboard"></i>Dashboard</div><div class="icon-tile"><i data-lucide="warehouse"></i>Farms</div><div class="icon-tile"><i data-lucide="waves"></i>Ponds</div><div class="icon-tile"><i data-lucide="file-text"></i>Reports</div><div class="icon-tile"><i data-lucide="activity"></i>Sensor</div><div class="icon-tile"><i data-lucide="building-2"></i>Company</div></div></div>
+      <div><div class="ds-h">Pond metrics</div><div class="grid cols-6 gap-4"><div class="icon-tile"><i data-lucide="thermometer"></i>Temperature</div><div class="icon-tile"><i data-lucide="beaker"></i>pH</div><div class="icon-tile"><i data-lucide="wind"></i>DO</div><div class="icon-tile"><i data-lucide="gauge"></i>TDS</div><div class="icon-tile"><i data-lucide="eye"></i>Turbidity</div><div class="icon-tile"><i data-lucide="ruler"></i>Water Level</div></div></div>
+      <div><div class="ds-h">Operations &amp; equipment</div><div class="grid cols-6 gap-4"><div class="icon-tile"><i data-lucide="utensils"></i>Feeding</div><div class="icon-tile"><i data-lucide="clipboard-list"></i>Mortality</div><div class="icon-tile"><i data-lucide="scale"></i>Sampling</div><div class="icon-tile"><i data-lucide="fan"></i>Aerator</div><div class="icon-tile"><i data-lucide="droplets"></i>Pump</div><div class="icon-tile"><i data-lucide="zap"></i>Generator</div></div></div>
+      <div><div class="ds-h">Status &amp; trend</div><div class="grid cols-6 gap-4"><div class="icon-tile"><i data-lucide="circle-check"></i>Normal</div><div class="icon-tile"><i data-lucide="triangle-alert"></i>Alert</div><div class="icon-tile"><i data-lucide="circle-alert"></i>Critical</div><div class="icon-tile"><i data-lucide="trending-up"></i>Increasing</div><div class="icon-tile"><i data-lucide="trending-down"></i>Decreasing</div><div class="icon-tile"><i data-lucide="arrow-right"></i>Stable</div></div></div>
+      <div><div class="ds-h">Interface actions</div><div class="grid cols-6 gap-4"><div class="icon-tile"><i data-lucide="search"></i>Search</div><div class="icon-tile"><i data-lucide="sliders-vertical"></i>Filter</div><div class="icon-tile"><i data-lucide="plus"></i>Add</div><div class="icon-tile"><i data-lucide="pencil"></i>Edit</div><div class="icon-tile"><i data-lucide="save"></i>Save</div><div class="icon-tile"><i data-lucide="send"></i>Submit</div><div class="icon-tile"><i data-lucide="arrow-left"></i>Back</div><div class="icon-tile"><i data-lucide="x"></i>Close</div><div class="icon-tile"><i data-lucide="globe"></i>Language</div><div class="icon-tile"><i data-lucide="calendar"></i>Date</div><div class="icon-tile"><i data-lucide="clock"></i>Time</div><div class="icon-tile"><i data-lucide="info"></i>Info</div></div></div>
+    </div>
+  </section>
+
+  <div class="grid cols-2">
+    <!-- 04 Grid -->
+    <section class="card"><div class="card-header"><h2 class="card-title"><span class="ds-num">04.</span>Grid Systems</h2></div>
+      <table class="table"><thead><tr><th>Frame</th><th class="num">Columns</th><th class="num">Column</th><th class="num">Gutter</th></tr></thead><tbody>
+        <tr><td class="cell-main">Desktop HD 1440</td><td class="num">12</td><td class="num">fluid</td><td class="num">24 px</td></tr>
+        <tr><td class="cell-main">Desktop 1024</td><td class="num">12</td><td class="num">fluid</td><td class="num">24 px</td></tr>
+        <tr><td class="cell-main">Tablet 768</td><td class="num">6</td><td class="num">fluid</td><td class="num">24 px</td></tr>
+      </tbody></table>
+      <div class="card-footer" style="justify-content:flex-start"><span class="caption">1440: content 1144 (1440 − sidebar 232 − 32 × 2) · 12 columns · gutter 24</span></div>
+    </section>
+    <!-- 05 Spacing -->
+    <section class="card"><div class="card-header"><h2 class="card-title"><span class="ds-num">05.</span>Spacing & Radius</h2></div>
+      <div class="card-body stack" style="gap:24px">
+        <div class="row" style="gap:32px;align-items:flex-end">
+          <div class="stack" style="gap:8px;align-items:center"><span class="space-box" style="width:4px;height:4px"></span><span class="caption">4</span></div>
+          <div class="stack" style="gap:8px;align-items:center"><span class="space-box" style="width:8px;height:8px"></span><span class="caption">8</span></div>
+          <div class="stack" style="gap:8px;align-items:center"><span class="space-box" style="width:16px;height:16px"></span><span class="caption">16</span></div>
+          <div class="stack" style="gap:8px;align-items:center"><span class="space-box" style="width:24px;height:24px"></span><span class="caption">24</span></div>
+          <div class="stack" style="gap:8px;align-items:center"><span class="space-box" style="width:32px;height:32px"></span><span class="caption">32</span></div>
+          <div class="stack" style="gap:8px;align-items:center"><span class="space-box" style="width:40px;height:40px"></span><span class="caption">40</span></div>
+          <span style="flex:1"></span>
+          <div class="stack" style="gap:8px;align-items:center"><span class="space-box" style="width:48px;height:48px;border-radius:4px"></span><span class="caption">Radius 4</span></div>
+          <div class="stack" style="gap:8px;align-items:center"><span class="space-box" style="width:48px;height:48px;border-radius:8px"></span><span class="caption">Radius 8</span></div>
+        </div>
+        <span class="caption">4 px only inside components · Radius 8: cards, buttons, inputs, badges, dialogs · Radius 4: checkbox, pagination, tags</span>
+      </div>
+    </section>
+  </div>
+
+  <!-- 06 Buttons -->
+  <section class="card"><div class="card-header"><h2 class="card-title"><span class="ds-num">06.</span>Buttons</h2><span class="caption">Small 32 · Medium 40 · Large 48</span></div>
+    <div class="card-body stack" style="gap:24px">
+      <div class="state-grid" style="grid-template-columns:90px repeat(4, 1fr)">
+        <span></span><span class="caption">Primary</span><span class="caption">Outline</span><span class="caption">Danger</span><span class="caption">Link</span>
+        <b>Default</b><button class="btn btn--primary">Button Sample</button><button class="btn btn--outline">Button Sample</button><button class="btn btn--danger">Button Sample</button><a class="btn btn--link" href="#">View Detail</a>
+        <b>Hover</b><button class="btn btn--primary" style="background:var(--color-primary-hover)">Hover</button><button class="btn btn--outline" style="background:var(--color-outline-hover);border-color:var(--color-slate)">Hover</button><button class="btn btn--danger" style="background:var(--color-danger-hover)">Hover</button><a class="btn btn--link" href="#" style="color:var(--color-primary-hover);text-decoration:underline">View Detail</a>
+        <b>Active</b><button class="btn btn--primary" style="background:var(--color-primary-pressed)">Pressed</button><button class="btn btn--outline" style="background:var(--color-outline-pressed)">Pressed</button><button class="btn btn--danger" style="background:var(--color-danger-pressed)">Pressed</button><span></span>
+        <b>Focus</b><button class="btn btn--primary" style="box-shadow:0 0 0 3px var(--color-primary-ring)">Focus</button><button class="btn btn--outline" style="box-shadow:0 0 0 3px var(--color-primary-ring)">Focus</button><button class="btn btn--danger" style="box-shadow:0 0 0 3px #E5B2AE">Focus</button><span></span>
+        <b>Disabled</b><button class="btn btn--primary" disabled>Disabled</button><button class="btn btn--outline" disabled>Disabled</button><button class="btn btn--danger" disabled>Disabled</button><span></span>
+      </div>
+      <hr class="divider">
+      <div class="row" style="gap:16px"><button class="btn btn--primary btn--sm">Small</button><button class="btn btn--primary">Medium</button><button class="btn btn--primary btn--lg">Large</button><span style="width:24px"></span><button class="btn btn--outline"><i data-lucide="save"></i>Button + Icon</button><a class="btn btn--link" href="#">View All<i data-lucide="arrow-right"></i></a></div>
+      <span class="caption">Primary = one main action per area (Submit, Save Record, Acknowledge, Turn On) · Outline = Cancel, Save Draft, Turn Off, Return to Auto · Danger = destructive confirmation in dialogs · Link = View / View All / Detail. Order: main action on the right.</span>
+    </div>
+  </section>
+
+  <!-- 07 Inputs -->
+  <section class="card"><div class="card-header"><h2 class="card-title"><span class="ds-num">07.</span>Inputs</h2></div>
+    <div class="card-body grid cols-3" style="gap:24px 30px">
+      <label class="field"><span class="field-label"><span>Default <span class="req">*</span></span></span><input class="input" placeholder="Placeholder text"><span class="helper">Helper text</span></label>
+      <label class="field"><span class="field-label"><span>Focus <span class="req">*</span></span></span><input class="input" placeholder="Placeholder text" style="border:2px solid var(--color-primary);box-shadow:0 0 0 3px var(--color-primary-ring)"><span class="helper">Helper text</span></label>
+      <label class="field"><span class="field-label"><span>Filled <span class="req">*</span></span></span><input class="input" value="Value"><span class="helper">Helper text</span></label>
+      <label class="field"><span class="field-label"><span>Error <span class="req">*</span></span></span><span class="input-group"><input class="input is-error" value="0"><span class="input-unit">mg/L</span></span><span class="helper is-error">Value out of range</span></label>
+      <label class="field"><span class="field-label"><span>Disabled <span class="req">*</span></span></span><span class="input-group"><input class="input" value="0" disabled><span class="input-unit">mg/L</span></span><span class="helper">Helper text</span></label>
+      <label class="field"><span class="field-label"><span>Read-only <span class="source-tag"><i data-lucide="radio"></i>From sensor data</span></span></span><span class="input-group"><input class="input" value="5.3" readonly><span class="input-unit">mg/L</span></span><span class="helper">Referenced from database</span></label>
+    </div>
+  </section>
+
+  <!-- 08 Status -->
+  <section class="card"><div class="card-header"><h2 class="card-title"><span class="ds-num">08.</span>Status</h2></div>
+    <div class="card-body">
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="badge badge--normal">Normal</span><span class="text-muted">Normal condition · report completed · sensor values within range</span></div>
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="badge badge--attention">Attention</span><span class="text-muted">Approaching the threshold · check recommended, no immediate action</span></div>
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="badge badge--warning">Warning</span><span class="text-muted">Threshold exceeded · prompt action · on-site judgment</span></div>
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="badge badge--critical">Critical</span><span class="text-muted">Critical alert · high production risk · immediate action</span></div>
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="row"><span class="badge badge--submitted">Submitted</span><span class="badge badge--draft">Draft</span></span><span class="text-muted">Report status (Submitted = 完了 / Status Green, Draft = Slate)</span></div>
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="stack" style="gap:6px;align-items:flex-start"><span class="badge badge--state badge--unack">Unacknowledged</span><span class="badge badge--state badge--ack">Acknowledged</span><span class="badge badge--state badge--progress">In Progress</span><span class="badge badge--state badge--resolved">Resolved</span></span><span class="text-muted">Alert handling state — Status Indicator (dot + text), so it never reads as a severity</span></div>
+    </div>
+  </section>
+
+  <!-- 09 Selectors -->
+  <section class="card"><div class="card-header"><h2 class="card-title"><span class="ds-num">09.</span>Selectors</h2></div>
+    <div class="card-body grid cols-3" style="gap:32px 30px">
+      <div class="stack"><div class="ds-h" style="margin:0">Checkbox</div><span class="row"><span class="check is-on"></span>Checkbox Label</span><span class="row"><span class="check"></span>Checkbox Label</span><span class="row"><span class="check is-mixed"></span>Checkbox Label</span></div>
+      <div class="stack"><div class="ds-h" style="margin:0">Radio Button</div><span class="row"><span class="radio is-on"></span>Radio Label</span><span class="row"><span class="radio"></span>Radio Label</span><span class="row"><span class="radio is-focus"></span>Radio Label</span></div>
+      <div class="stack"><div class="ds-h" style="margin:0">Toggle</div><span class="row"><span class="toggle is-on"></span>Switch Label</span><span class="row"><span class="toggle"></span>Switch Label</span></div>
+      <div class="stack"><div class="ds-h" style="margin:0">DropDown</div><select class="select"><option>Selected Value</option></select><div class="dropdown-list"><div>Option 1</div><div class="is-selected">Option 2</div><div>Option 3</div></div></div>
+      <div class="stack"><div class="ds-h" style="margin:0">Pagination</div><nav class="pagination"><span class="is-disabled"><i data-lucide="chevron-left"></i></span><span class="is-active">1</span><a href="#">2</a><a href="#">3</a><a href="#"><i data-lucide="chevron-right"></i></a></nav></div>
+      <div class="stack"><div class="ds-h" style="margin:0">Tabs · Segmented</div><nav class="tabs"><a class="tab is-active">Daily</a><a class="tab">Weekly</a></nav><div class="segmented"><button class="is-active">24h</button><button>7d</button><button>30d</button></div></div>
+    </div>
+  </section>
+
+  <!-- Components -->
+  <section class="stack" style="gap:16px">
+    <h2 class="section-label">Size Scale</h2>
+    <div class="card"><div class="card-body">
+      <div class="spec-row spec-head" style="grid-template-columns:120px 100px 1fr"><span>Size</span><span>Height</span><span>Elements</span></div>
+      <div class="spec-row" style="grid-template-columns:120px 100px 1fr"><b>XS</b><span>24</span><span class="row"><span class="kpi-type">Actual</span><span class="source-tag"><i data-lucide="radio"></i>From sensor data</span><span class="badge badge--xs badge--warning">Warning</span><a class="btn btn--link" href="#">View</a></span></div>
+      <div class="spec-row" style="grid-template-columns:120px 100px 1fr"><b>S</b><span>32</span><span class="row"><button class="btn btn--primary btn--sm">Acknowledge</button><button class="btn btn--outline btn--sm">Turn Off</button><div class="segmented"><button class="is-active">24h</button><button>7d</button></div><nav class="pagination"><span class="is-active">1</span><a href="#">2</a></nav><span class="badge badge--lg badge--warning">Warning</span></span></div>
+      <div class="spec-row" style="grid-template-columns:120px 100px 1fr"><b>M</b><span>40</span><span class="row"><button class="btn btn--primary">Save Record</button><input class="input" style="width:200px" value="4.1"><select class="select" style="width:180px"><option>Status: All</option></select><span class="caption">+ sidebar item · table header row</span></span></div>
+      <div class="spec-row" style="grid-template-columns:120px 100px 1fr"><b>L</b><span>48</span><span class="row"><button class="btn btn--primary btn--lg">Submit</button><span class="caption">table row · tab · touch primary (tablet)</span></span></div>
+      <div class="spec-row" style="grid-template-columns:120px 100px 1fr"><b>Badge</b><span>28</span><span class="row"><span class="badge badge--attention">Attention</span><span class="caption">standard status badge</span></span></div>
+    </div></div>
+
+    <h2 class="section-label">Status: Badge vs Indicator</h2>
+    <div class="card"><div class="card-body">
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="row"><span class="badge badge--warning">Warning</span><span class="badge badge--draft">Draft</span></span><span class="text-muted"><b style="color:var(--color-ink)">Status Badge</b> — primary status that needs attention (Attention or worse), Draft, page-title status, legends</span></div>
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="row" style="gap:16px"><span class="status-text st--normal">Normal</span><span class="status-text st--submitted">Submitted</span></span><span class="text-muted"><b style="color:var(--color-ink)">Status Indicator</b> — Normal / completed states stay quiet (dot + text)</span></div>
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="row" style="gap:16px"><span class="status-text st--warning">Warning</span><span class="status-text st--attention">Attention</span></span><span class="text-muted">Secondary statuses (Environmental / Production / Operational breakdown)</span></div>
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="stack" style="gap:4px"><span class="badge badge--state badge--unack">Unacknowledged</span><span class="badge badge--state badge--ack">Acknowledged</span><span class="badge badge--state badge--progress">In Progress</span><span class="badge badge--state badge--resolved">Resolved</span></span><span class="text-muted">Alert handling state (用語定義: 未確認 / 確認済み / 対応中 / 解決済み)</span></div>
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="row" style="gap:16px"><span class="status-text st--normal">Live</span><span class="value-delayed">Delayed · 09:10</span><span class="status-text st--offline">Offline</span></span><span class="text-muted">Data quality — freshness of sensor values</span></div>
+      <div class="spec-row" style="grid-template-columns:260px 1fr"><span class="row" style="gap:16px"><span class="val-warning">4.1</span><span class="val-attention">7.4</span><span>5.9</span></span><span class="text-muted">Out-of-range value — status color + bold + alert icon (never color alone)</span></div>
+    </div></div>
+
+    <h2 class="section-label">Common Components</h2>
+    <div class="ds-h" style="margin:0">KPI Card</div>
+    <div class="grid cols-4 gap-4">
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">18.4<span class="kpi-unit">t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.5 t vs last week</div><div class="kpi-updated">Updated Sep 28</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">FCR</span><span class="kpi-type">Actual</span></div><div class="kpi-value">1.32</div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.02 vs last week</div><div class="kpi-updated">Updated Sep 28</div></div>
+    </div>
+    <div class="ds-h" style="margin:0">Alert Row</div>
+    <div class="card"><div class="alert-list">
+      <div class="alert-row"><span class="alert-bar alert-bar--warning"></span><div><div class="alert-title">DO below threshold (4.1 mg/L &lt; 4.5)</div><div class="alert-meta"><span><i data-lucide="waves"></i>Pond 02</span><span><i data-lucide="clock"></i>07:50</span><span>ALT-1042</span></div></div><div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--unack">Unacknowledged</span></div><button class="btn btn--primary btn--sm">Acknowledge</button></div>
+    </div></div>
+    <div class="ds-h" style="margin:0">Table</div>
+    <div class="card"><table class="table"><thead><tr><th>Pond</th><th>Parameter</th><th>Trend</th><th>Severity</th><th class="num">Value</th><th></th></tr></thead><tbody>
+      <tr><td class="cell-main">Pond 02</td><td>DO</td><td><span class="trend"><i data-lucide="trending-down"></i>Decreasing</span></td><td><span class="badge badge--warning">Warning</span></td><td class="num val-warning">4.1</td><td class="actions"><a class="btn btn--link" href="#">View</a></td></tr>
+      <tr><td class="cell-main">Pond 04</td><td>pH</td><td><span class="trend"><i data-lucide="trending-down"></i>Decreasing</span></td><td><span class="badge badge--attention">Attention</span></td><td class="num val-attention">7.4</td><td class="actions"><a class="btn btn--link" href="#">View</a></td></tr>
+    </tbody></table></div>
+    <div class="ds-h" style="margin:0">Time-series Chart</div>
+    <div class="card"><div class="card-body"><div class="chart-legend" style="margin-bottom:16px"><span><i class="legend-line"></i>Sensor (Water Blue)</span><span><i class="legend-line actual"></i>Actual (Mangrove Green)</span><span><i class="legend-line dashed"></i>Target</span><span><i class="legend-band"></i>Below threshold</span></div><div class="chart" id="ds-chart"></div></div></div>
+    <div class="grid cols-3 gap-4">
+      <div><div class="ds-h">Confirmation Dialog</div><div class="demo-overlay"><div class="dialog" style="width:92%"><div class="dialog-body"><h3 class="dialog-title">Turn on Water Pump 1?</h3><p class="text-muted">Automatic control is paused until returned to Auto.</p></div><div class="dialog-footer"><button class="btn btn--outline btn--sm">Cancel</button><button class="btn btn--primary btn--sm">Turn On</button></div></div></div></div>
+      <div><div class="ds-h">Drawer</div><div class="demo-overlay"><aside class="drawer" style="width:70%"><div class="drawer-header"><b>Alert Detail</b><i data-lucide="x" class="text-muted"></i></div><div class="drawer-body text-muted">Detail content…</div></aside></div></div>
+      <div><div class="ds-h">Empty · Loading</div><div class="card"><div class="empty"><i data-lucide="file-text"></i><span class="empty-title">No reports for this period</span><span>Change the date filter to see earlier reports.</span></div><div class="card-body stack" style="border-top:1px solid var(--color-border)"><span class="skeleton" style="width:60%"></span><span class="skeleton" style="width:90%"></span><span class="skeleton" style="width:75%"></span></div></div></div>
+      <div><div class="ds-h">Action Bar (sticky form footer)</div><div class="card"><div class="action-bar" style="position:static;margin:0;box-shadow:none;border-radius:8px;padding:16px"><div class="action-bar-status"><span class="badge badge--draft">Draft</span><span>Saved 09:20</span></div><span class="action-bar-spacer"></span><button class="btn btn--outline btn--sm">Save Draft</button><button class="btn btn--primary btn--sm">Submit</button></div></div></div>
+      <div><div class="ds-h">Toast · Notice</div><div class="stack"><div class="toast" style="width:100%"><i data-lucide="circle-check"></i><div><b>Feeding record saved</b><div style="opacity:.85">Pond 02 · 34 kg</div></div></div><div class="notice"><i data-lucide="info"></i><span>System notice (Status Blue)</span></div></div></div>
+    </div>
+  </section>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="assets/charts.js"></script>
+<script>
+  Charts.line("#ds-chart", { labels: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], series: [{ values: [6, 6, 6, 6, 6, 6, 6], style: "target" }, { values: [6.2, 6.0, 5.6, 5.1, 4.6, 4.3, 4.1], points: true }], yMin: 3, yMax: 7, ticks: 4, unit: "mg/L", band: { from: 3, to: 4.5 }, threshold: [{ value: 4.5, label: "4.5" }], height: 200 });
+</script>
+<script src="assets/layout.js"></script>
+</body>
+</html>

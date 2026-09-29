@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>FM-06 Weekly Report Detail · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body data-role="fm" data-nav="reports" data-sub="weekly">
+<main class="main"><div class="page">
+
+  <!-- Report Header -->
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb"><a href="fm-reports.html">Reports</a><i data-lucide="chevron-right"></i><a href="fm-reports.html?type=weekly">Weekly Reports</a><i data-lucide="chevron-right"></i><span>Farm A · 15–21 Sep 2026</span></div>
+      <h1 class="page-title">Weekly Report · Farm A <span class="badge badge--submitted badge--lg">Submitted</span></h1>
+      <div class="page-meta">
+        <span><i data-lucide="calendar-range"></i>15–21 Sep 2026 · DOC 48–55</span>
+        <span><i data-lucide="user"></i>Technical Manager: Sari Wijaya</span>
+        <span><i data-lucide="send"></i>Submitted 22 Sep, 10:10</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Summary -->
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">Report Summary</h2></div>
+    <div class="card-body">
+      <dl class="dl">
+        <div><dt>Farm Condition (end of week)</dt><dd><span class="status-text st--normal">Normal</span></dd></div>
+        <div><dt>Major Issues</dt><dd>1 · resolved</dd></div>
+        <div><dt>Total Feed</dt><dd class="num">8,420 kg (+6%)</dd></div>
+        <div><dt>Mortality</dt><dd class="num">1,120 pcs · 14.3 kg</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Production Status -->
+  <section class="stack">
+    <div class="row-between"><h2 class="section-label">Production Status</h2><span class="caption">Sampling 21 Sep · compared with previous week</span></div>
+    <div class="grid cols-6 gap-4">
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">16.9<span class="kpi-unit">t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.7 t</div><div class="kpi-updated">21 Sep</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">ABW</span><span class="kpi-type">Actual</span></div><div class="kpi-value">12.6<span class="kpi-unit">g</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.6 g</div><div class="kpi-updated">21 Sep</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">ADG</span><span class="kpi-type">Actual</span></div><div class="kpi-value">0.23<span class="kpi-unit">g/d</span></div><div class="kpi-compare"><i data-lucide="arrow-right"></i>±0.00</div><div class="kpi-updated">21 Sep</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Survival Rate</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">87<span class="kpi-unit">%</span></div><div class="kpi-compare"><i data-lucide="trending-down"></i>−1 pt</div><div class="kpi-updated">21 Sep</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">FCR</span><span class="kpi-type">Actual</span></div><div class="kpi-value">1.30</div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.02</div><div class="kpi-updated">21 Sep</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Size Uniformity</span><span class="kpi-type">Actual</span></div><div class="kpi-value">78<span class="kpi-unit">%</span></div><div class="kpi-compare"><i data-lucide="trending-down"></i>−2 pt</div><div class="kpi-updated">21 Sep</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div><h3 class="card-title">Growth Trend</h3><div class="card-sub">ABW by weekly sampling (g)</div></div>
+        <div class="chart-legend"><span><i class="legend-line actual"></i>Actual</span><span><i class="legend-line dashed"></i>Target</span></div>
+      </div>
+      <div class="card-body"><div class="chart" id="growth"></div></div>
+    </div>
+  </section>
+
+  <!-- Water Quality Trends -->
+  <section class="card">
+    <div class="card-header">
+      <div><h2 class="card-title">Water Quality Trends</h2><div class="card-sub">Weekly summary · Farm average across 8 Ponds</div></div>
+    </div>
+    <div class="grid cols-2" style="gap:0">
+      <table class="table" style="border-right:1px solid var(--color-border)">
+        <thead><tr><th>Parameter</th><th class="num">Min</th><th class="num">Avg</th><th class="num">Max</th><th>Range</th><th>Trend</th></tr></thead>
+        <tbody>
+          <tr><td>DO (mg/L)</td><td class="num">4.6</td><td class="num">5.9</td><td class="num">6.8</td><td class="text-muted">≥ 4.5</td><td><span class="trend"><i data-lucide="trending-down"></i>Decreasing</span></td></tr>
+          <tr><td>pH</td><td class="num">7.6</td><td class="num">7.9</td><td class="num">8.2</td><td class="text-muted">7.5–8.5</td><td><span class="trend"><i data-lucide="arrow-right"></i>Stable</span></td></tr>
+          <tr><td>Temperature (°C)</td><td class="num">27.6</td><td class="num">28.6</td><td class="num">31.2</td><td class="text-muted">26–31</td><td><span class="trend"><i data-lucide="trending-up"></i>Increasing</span></td></tr>
+          <tr><td>Salinity (ppt)</td><td class="num">14</td><td class="num">15</td><td class="num">16</td><td class="text-muted">10–25</td><td><span class="trend"><i data-lucide="arrow-right"></i>Stable</span></td></tr>
+          <tr><td>Water Level (cm)</td><td class="num">131</td><td class="num">135</td><td class="num">138</td><td class="text-muted">120–150</td><td><span class="trend"><i data-lucide="arrow-right"></i>Stable</span></td></tr>
+        </tbody>
+      </table>
+      <div class="card-body">
+        <div class="row-between" style="margin-bottom:8px"><span class="subsection-title" style="margin:0">DO · daily average</span>
+          <div class="chart-legend"><span><i class="legend-line"></i>Daily avg.</span><span><i class="legend-band"></i>Below threshold</span></div></div>
+        <div class="chart" id="do-week"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid cols-2">
+    <!-- Laboratory Results -->
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Laboratory Results</h2><div class="card-sub">Sampled 19 Sep · Pond composite</div></div></div>
+      <table class="table">
+        <thead><tr><th>Item</th><th class="num">Result</th><th>Reference</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>TAN</td><td class="num">0.4 mg/L</td><td class="text-muted">≤ 1.0 mg/L</td><td><span class="status-text st--normal">Normal</span></td></tr>
+          <tr><td>NO2</td><td class="num">0.12 mg/L</td><td class="text-muted">≤ 0.5 mg/L</td><td><span class="status-text st--normal">Normal</span></td></tr>
+          <tr><td>Vibrio (total)</td><td class="num">8.5 × 10³ CFU/mL</td><td class="text-muted">&lt; 1 × 10⁴ CFU/mL</td><td><span class="badge badge--attention">Attention</span></td></tr>
+          <tr><td>Alkalinity</td><td class="num">135 mg/L</td><td class="text-muted">100–150 mg/L</td><td><span class="status-text st--normal">Normal</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+    <!-- Feeding Summary -->
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">Feeding Summary</h2></div>
+      <div class="card-body stack">
+        <dl class="dl dl-3">
+          <div><dt>Total Feed</dt><dd>8,420 kg</dd></div>
+          <div><dt>Daily Average</dt><dd>1,203 kg</dd></div>
+          <div><dt>Feed Type</dt><dd>Grower 2</dd></div>
+        </dl>
+        <div class="chart" id="feed-week"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="grid cols-2">
+    <!-- Mortality Summary -->
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">Mortality Summary</h2></div>
+      <div class="card-body stack">
+        <dl class="dl dl-3">
+          <div><dt>Total Count</dt><dd>1,120 pcs</dd></div>
+          <div><dt>Total Weight</dt><dd>14.3 kg</dd></div>
+          <div><dt>Highest Pond</dt><dd>Pond 05 · 262 pcs</dd></div>
+        </dl>
+        <div class="chart" id="mort-week"></div>
+      </div>
+    </section>
+    <!-- Major Alerts / Issues + Major Actions -->
+    <div class="stack" style="gap:24px">
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">Major Alerts / Issues</h2></div>
+        <div class="alert-list">
+          <div class="alert-row"><span class="alert-bar alert-bar--warning"></span>
+            <div><div class="alert-title">Water Quality · Temperature above 31.0 °C</div><div class="alert-meta"><span><i data-lucide="waves"></i>Pond 05</span><span><i data-lucide="clock"></i>18–19 Sep · 1 day</span></div></div>
+            <div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--resolved">Resolved</span></div><span></span></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">Major Actions</h2></div>
+        <div class="card-body">
+          <ul class="bullets">
+            <li>18 Sep — Pond 05 water exchange 15% to reduce temperature</li>
+            <li>19 Sep — Probiotic application in all Ponds after Vibrio result</li>
+            <li>21 Sep — Feed size changed to Grower 2 based on sampling</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Weekly Technical Summary -->
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">Weekly Technical Summary</h2></div>
+    <div class="card-body">
+      <div class="prose">
+        <p>Growth remained on track with ADG of 0.23 g/day, although ABW is about 5% below target. Mortality was concentrated in Pond 05 during the high-temperature period on 18–19 Sep and returned to normal after water exchange.</p>
+        <p>DO shows a gradual decreasing trend as biomass increases. Aeration capacity for Ponds 02 and 05 will be reviewed next week. Vibrio count is within the reference range but close to the limit; probiotic application will continue.</p>
+      </div>
+      <p class="caption" style="margin-top:16px">— Sari Wijaya, Technical Manager</p>
+    </div>
+  </section>
+
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="../assets/charts.js"></script>
+<script>
+  var days = ["15 Sep", "16", "17", "18", "19", "20", "21"];
+  Charts.line("#growth", {
+    labels: ["DOC 13", "DOC 20", "DOC 27", "DOC 34", "DOC 41", "DOC 48", "DOC 55"],
+    series: [
+      { values: [1.8, 3.4, 5.3, 7.4, 9.5, 11.5, 13.3], style: "target" },
+      { values: [1.6, 3.1, 5.0, 7.2, 9.3, 11.0, 12.6], points: true, style: "actual" }
+    ],
+    yMin: 0, yMax: 16, ticks: 4, unit: "g", height: 200
+  });
+  Charts.line("#do-week", {
+    labels: days, series: [{ values: [6.2, 6.1, 6.0, 5.9, 5.8, 5.8, 5.7], points: true }],
+    yMin: 3, yMax: 7, ticks: 4, unit: "mg/L", band: { from: 3, to: 4.5 }, threshold: [{ value: 4.5, label: "4.5" }], height: 200
+  });
+  Charts.bars("#feed-week", { labels: days, values: [1150, 1170, 1190, 1180, 1210, 1240, 1280], yMax: 1500, ticks: 3, unit: "kg", style: "actual", height: 160 });
+  Charts.bars("#mort-week", { labels: days, values: [120, 135, 190, 245, 170, 130, 130], yMax: 300, ticks: 3, unit: "pcs", height: 160 });
+</script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>

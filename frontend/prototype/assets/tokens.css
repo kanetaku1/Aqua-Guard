@@ -1,0 +1,83 @@
+/* Design tokens — Design System v2 (frontend/docs/knowledge/04_design_system.md) */
+:root {
+  /* 01. Colors — brand */
+  --color-water-blue: #087EA4;   /* 主要ボタン・選択状態・リンク・進行中 */
+  --color-deep-water: #075985;   /* ヘッダー・濃色ボタン・白文字の背景 */
+  --color-mangrove: #2F855A;     /* データ色: 実績・成長・給餌のグラフ系列（ボタンには使わない） */
+  --color-mist: #F4F8F7;         /* アプリケーション全体の背景 */
+  /* neutral */
+  --color-white: #FFFFFF;        /* パネル・テーブル・フォームの背景 */
+  --color-ink: #18323B;          /* 本文・主要数値・見出し */
+  --color-slate: #5B7078;        /* 補足・単位・更新時刻 */
+  --color-tide-line: #D6E3E5;    /* 境界線・区切り線 */
+  /* status */
+  --color-status-green: #237A57;  /* 正常・安定・完了 */
+  --color-attention: #A15C00;     /* 注意・確認推奨 */
+  --color-status-orange: #B54708; /* 警告・対応が必要 */
+  --color-status-red: #B42318;    /* 重大・即時対応が必要 */
+  --color-status-blue: #1769AA;   /* 情報・参考・システム通知 */
+
+  /* Semantic aliases used by components */
+  --color-primary: var(--color-water-blue);
+  --color-primary-hover: var(--color-deep-water);
+  --color-primary-pressed: #397A9D;
+  --color-primary-ring: #C1DEE8;
+  --color-primary-subtle: #E1F0F4;     /* derived tint: Water Blue 12% */
+  --color-danger-hover: #912018;
+  --color-danger-pressed: #A74D46;
+  --color-control-border: #7C8D93;  /* 操作部品の枠線（白背景で3.45:1） UI/UX設計書 A1 */
+  --color-outline-hover: var(--color-mist);  /* A2: Mist背景＋Ink文字 */
+  --color-outline-pressed: #BDC6C9;
+  --color-row-hover: #F9FBFB;
+  --color-disabled-bg: #C4CFD2;
+  --color-disabled-text: #E9EEF0;
+  --color-text: var(--color-ink);
+  --color-text-secondary: var(--color-slate);
+  --color-text-muted: var(--color-slate);
+  --color-border: var(--color-tide-line);
+  --color-border-strong: var(--color-control-border);
+  --color-bg: var(--color-mist);
+  --color-bg-subtle: var(--color-mist);
+  --color-surface: var(--color-white);
+
+  /* Status tints (derived: 8% background / 35% border) */
+  --status-normal-fg: var(--color-status-green);  --status-normal-bg: #EDF4F2;  --status-normal-border: #B2D0C4;
+  --status-attention-fg: var(--color-attention);  --status-attention-bg: #F7F2EB; --status-attention-border: #DEC6A6;
+  --status-warning-fg: var(--color-status-orange); --status-warning-bg: #F9F0EB; --status-warning-border: #E5BFA9;
+  --status-critical-fg: var(--color-status-red);  --status-critical-bg: #F9EDED; --status-critical-border: #E5B2AE;
+  --status-info-fg: var(--color-status-blue);     --status-info-bg: #ECF3F8;     --status-info-border: #AECAE1;
+  --status-neutral-fg: var(--color-slate);        --status-neutral-bg: #F2F4F4;  --status-neutral-border: #C6CDD0;
+
+  /* 02. Typography — Inter, line height 1.4 × font size */
+  --font-sans: "Inter", "Noto Sans JP", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs-display: 24px; --lh-display: 33.6px; /* Display: 数値専用 (UI/UX設計書 D2) */
+  --fs-large: 20px;  --lh-large: 28px;     /* Large Text */
+  --fs-medium: 18px; --lh-medium: 25.2px;  /* Medium Text */
+  --fs-normal: 16px; --lh-normal: 22.4px;  /* Normal Text */
+  --fs-small: 14px;  --lh-small: 19.6px;   /* Small Text */
+  --fs-helper: 12px; --lh-helper: 16.8px;  /* Caption / Helper text (D1) */
+  --fw-regular: 400;
+  --fw-bold: 700;
+
+  /* 03. Iconography */
+  --icon-inline: 16px;
+  --icon-nav: 20px;
+  --icon-tile: 24px;
+  --icon-live: 30px; --icon-full: 40px;   /* standalone icon: 30 live area in 40 frame (5 safe area) */
+
+  /* 04. Grid — 12 col, gutter 24 (UI/UX設計書 D4: 30→24) */
+  --header-h: 60px;
+  --sidebar-w: 232px;
+  --content-max: 1144px;  /* 1440 − sidebar 232 − 32×2 */
+  --gutter: 24px;
+
+  /* 05. Spacing & Radius */
+  --space-0: 4px; /* 部品内部専用 */
+  --space-1: 8px; --space-2: 16px; --space-3: 24px; --space-4: 32px; --space-5: 40px;
+  --radius-sm: 4px; --radius-md: 8px;
+  --shadow-overlay: 0 8px 24px rgba(24, 50, 59, 0.16), 0 2px 8px rgba(24, 50, 59, 0.08);
+
+  /* Control height scale (UI/UX設計書 6.2) */
+  --control-xs: 24px; --control-sm: 32px; --control-md: 40px; --control-lg: 48px;
+  --z-header: 20; --z-dropdown: 30; --z-overlay: 50; --z-toast: 60;
+}

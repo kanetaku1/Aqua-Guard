@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>FM-03 Farm Detail · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body data-role="fm" data-nav="farms">
+<main class="main"><div class="page">
+
+  <!-- Farm Header -->
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb"><a href="fm-dashboard.html">Dashboard</a><i data-lucide="chevron-right"></i><a href="fm-farms.html">Farms</a><i data-lucide="chevron-right"></i><span>Farm A</span></div>
+      <h1 class="page-title">Farm A <span class="badge badge--warning badge--lg">Warning</span></h1>
+      <div class="page-meta">
+        <span><i data-lucide="map-pin"></i>East Java, Indonesia</span>
+        <span><i data-lucide="user"></i>Technical Manager: Sari Wijaya</span>
+        <span><i data-lucide="waves"></i>8 Ponds · DOC 62</span>
+        <span><i data-lucide="clock"></i>Last updated 09:35</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. Farm Status (FM-FD-001, 002) -->
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">Farm Status</h2></div>
+    <div class="card-body stack">
+      <div class="grid cols-4 gap-4">
+        <div class="status-tile"><span class="status-tile-label">Overall Status</span><span><span class="badge badge--warning">Warning</span></span><span class="status-tile-note">3 open issues</span></div>
+        <div class="status-tile"><span class="status-tile-label">Environmental Status</span><span><span class="badge badge--warning">Warning</span></span><span class="status-tile-note">2 Ponds Warning · 1 Pond Attention</span></div>
+        <div class="status-tile"><span class="status-tile-label">Production Status</span><span><span class="status-text st--normal">Normal</span></span><span class="status-tile-note">ABW 14.2 g · within 5% of target</span></div>
+        <div class="status-tile"><span class="status-tile-label">Operational Status</span><span><span class="badge badge--attention">Attention</span></span><span class="status-tile-note">1 sensor offline (Pond 08)</span></div>
+      </div>
+      <div>
+        <div class="row-between" style="margin-bottom:8px"><span class="subsection-title" style="margin:0">Status Trend</span><span class="caption">Overall status · last 14 days</span></div>
+        <div class="status-strip">
+          <span class="s-normal" title="16 Sep"></span><span class="s-normal"></span><span class="s-normal"></span><span class="s-normal"></span><span class="s-normal"></span><span class="s-attention"></span><span class="s-normal"></span><span class="s-normal"></span><span class="s-normal"></span><span class="s-attention"></span><span class="s-attention"></span><span class="s-warning"></span><span class="s-warning"></span><span class="s-warning" title="29 Sep"></span>
+        </div>
+        <div class="row-between caption" style="margin-top:6px"><span>16 Sep</span><span>29 Sep</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Environmental / Pond Trends (FM-FD-003, 004, 005) -->
+  <section class="card">
+    <div class="card-header">
+      <div><h2 class="card-title">Environmental / Pond Trends</h2><div class="card-sub">Important abnormalities and trends in this Farm · aggregated from IoT sensor data</div></div>
+      <span class="caption">5 of 8 Ponds stable</span>
+    </div>
+    <table class="table">
+      <thead><tr><th>Pond</th><th>Parameter</th><th>Trend</th><th>Severity</th><th>Duration</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="cell-main">Pond 02</td><td>DO</td><td><span class="trend"><i data-lucide="trending-down"></i>Decreasing</span></td><td><span class="badge badge--warning">Warning</span></td><td>2 days</td><td><span class="badge badge--state badge--progress">In Progress</span></td></tr>
+        <tr><td class="cell-main">Pond 05</td><td>Temperature</td><td><span class="trend"><i data-lucide="trending-up"></i>Increasing</span></td><td><span class="badge badge--warning">Warning</span></td><td>4 hrs</td><td><span class="badge badge--state badge--ack">Acknowledged</span></td></tr>
+        <tr><td class="cell-main">Pond 04</td><td>pH</td><td><span class="trend"><i data-lucide="trending-down"></i>Decreasing</span></td><td><span class="badge badge--attention">Attention</span></td><td>6 hrs</td><td><span class="badge badge--state badge--unack">Unacknowledged</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3. Production Status (FM-FD-006, 007) -->
+  <section class="stack">
+    <div class="row-between"><h2 class="section-label">Production Status</h2><span class="caption">Current cycle · DOC 62 · compared with last week</span></div>
+    <div class="grid cols-5 gap-4">
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">18.4<span class="kpi-unit">t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.5 t</div><div class="kpi-updated">Updated 28 Sep</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">ABW</span><span class="kpi-type">Actual</span></div><div class="kpi-value">14.2<span class="kpi-unit">g</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.6 g</div><div class="kpi-updated">Updated 28 Sep</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">ADG</span><span class="kpi-type">Actual</span></div><div class="kpi-value">0.24<span class="kpi-unit">g/day</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.01 g/day</div><div class="kpi-updated">Updated 28 Sep</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Survival Rate</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">86<span class="kpi-unit">%</span></div><div class="kpi-compare"><i data-lucide="trending-down"></i>−1 pt</div><div class="kpi-updated">Updated 28 Sep</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">FCR</span><span class="kpi-type">Actual</span></div><div class="kpi-value">1.32</div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.02</div><div class="kpi-updated">Updated 28 Sep</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div><h3 class="card-title">Growth Trend</h3><div class="card-sub">ABW by weekly sampling (g)</div></div>
+        <div class="chart-legend"><span><i class="legend-line actual"></i>Actual</span><span><i class="legend-line dashed"></i>Target</span></div>
+      </div>
+      <div class="card-body"><div class="chart" id="growth"></div></div>
+    </div>
+  </section>
+
+    <!-- 4. Risk / Issue (FM-FD-008, 009, 010) -->
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Risk / Issue</h2><div class="card-sub">3 open issues in Farm A</div></div></div>
+      <table class="table">
+        <thead><tr><th>Issue Type</th><th>Severity</th><th>Affected Pond</th><th>Status</th><th>Related Report</th><th>Occurrence / Duration</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><div class="cell-main">Water Quality</div><div class="cell-sub">DO decreasing</div></td><td><span class="badge badge--warning">Warning</span></td><td>Pond 02</td><td><span class="badge badge--state badge--progress">In Progress</span></td><td><a href="fm-daily-report.html">Daily · 28 Sep</a></td><td><div>27 Sep 07:10</div><div class="cell-sub">2 days</div></td><td class="actions"><a class="btn btn--link btn--sm" href="#" data-open="issue">Detail</a></td></tr>
+          <tr><td><div class="cell-main">Water Quality</div><div class="cell-sub">Temperature increasing</div></td><td><span class="badge badge--warning">Warning</span></td><td>Pond 05</td><td><span class="badge badge--state badge--ack">Acknowledged</span></td><td class="text-muted">—</td><td><div>29 Sep 05:40</div><div class="cell-sub">4 hrs</div></td><td class="actions"><a class="btn btn--link btn--sm" href="#" data-open="issue">Detail</a></td></tr>
+          <tr><td><div class="cell-main">Water Quality</div><div class="cell-sub">pH decreasing</div></td><td><span class="badge badge--attention">Attention</span></td><td>Pond 04</td><td><span class="badge badge--state badge--unack">Unacknowledged</span></td><td class="text-muted">—</td><td><div>29 Sep 03:30</div><div class="cell-sub">6 hrs</div></td><td class="actions"><a class="btn btn--link btn--sm" href="#" data-open="issue">Detail</a></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 5. Recent Reports (FM-FD-011, 012, 013) -->
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">Recent Reports</h2></div>
+      <table class="table table-compact">
+        <thead><tr><th>Date</th><th>Report</th><th>Period</th><th>Technical Manager</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>28 Sep</td><td class="cell-main">Daily Report</td><td class="text-muted">28 Sep</td><td>Sari Wijaya</td><td><span class="status-text st--submitted">Submitted</span></td><td class="actions"><a class="btn btn--link btn--sm" href="fm-daily-report.html">View</a></td></tr>
+          <tr><td>27 Sep</td><td class="cell-main">Daily Report</td><td class="text-muted">27 Sep</td><td>Sari Wijaya</td><td><span class="status-text st--submitted">Submitted</span></td><td class="actions"><a class="btn btn--link btn--sm" href="fm-daily-report.html">View</a></td></tr>
+          <tr><td>22 Sep</td><td class="cell-main">Weekly Report</td><td class="text-muted">15–21 Sep</td><td>Sari Wijaya</td><td><span class="status-text st--submitted">Submitted</span></td><td class="actions"><a class="btn btn--link btn--sm" href="fm-weekly-report.html">View</a></td></tr>
+        </tbody>
+      </table>
+      <div class="card-footer"><a class="btn btn--link btn--sm" href="fm-reports.html">View All<i data-lucide="arrow-right"></i></a></div>
+    </section>
+
+</div></main>
+
+<!-- Issue Detail Drawer (read-only for Farms Manager) -->
+<div class="overlay" id="issue">
+  <aside class="drawer">
+    <div class="drawer-header"><div><div class="caption">ISS-218 · Farm A</div><h2 class="dialog-title">Water Quality · DO decreasing</h2></div><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="drawer-body">
+      <div class="row"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--progress">In Progress</span></div>
+      <dl class="dl dl-2">
+        <div><dt>Issue Type</dt><dd>Water Quality</dd></div>
+        <div><dt>Affected Pond</dt><dd>Pond 02</dd></div>
+        <div><dt>Occurrence</dt><dd>27 Sep 2026 07:10</dd></div>
+        <div><dt>Duration</dt><dd>2 days (ongoing)</dd></div>
+        <div><dt>Trend</dt><dd><span class="trend"><i data-lucide="trending-down"></i>DO decreasing</span></dd></div>
+        <div><dt>Handled by</dt><dd>Sari Wijaya (Technical Manager)</dd></div>
+      </dl>
+      <hr class="divider">
+      <div><div class="subsection-title">Summary</div><p class="prose">Morning DO in Pond 02 has stayed below the 4.5 mg/L threshold for two consecutive days. Additional aeration has been applied by the Technical Manager.</p></div>
+      <div><div class="subsection-title">Related Information</div>
+        <table class="table table-compact"><tbody>
+          <tr><td><a href="fm-daily-report.html">Daily Report · 28 Sep</a></td><td class="actions"><span class="status-text st--submitted">Submitted</span></td></tr>
+        </tbody></table>
+      </div>
+      <div class="notice"><i data-lucide="info"></i><span>Pond Alert handling is performed by the Technical Manager. This view is read-only.</span></div>
+    </div>
+    <div class="drawer-footer"><button class="btn btn--outline" data-close>Close</button></div>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="../assets/charts.js"></script>
+<script>
+  Charts.line("#growth", {
+    labels: ["DOC 13", "DOC 20", "DOC 27", "DOC 34", "DOC 41", "DOC 48", "DOC 55", "DOC 62"],
+    series: [
+      { values: [1.8, 3.4, 5.3, 7.4, 9.5, 11.5, 13.3, 15.0], style: "target" },
+      { values: [1.6, 3.1, 5.0, 7.2, 9.3, 11.0, 12.6, 14.2], points: true, style: "actual" }
+    ],
+    yMin: 0, yMax: 16, ticks: 4, unit: "g", height: 220
+  });
+</script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>

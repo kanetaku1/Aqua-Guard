@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>TM-04 Daily Report · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body data-role="tm" data-nav="reports" data-sub="daily">
+<main class="main"><div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb"><span>Reports</span><i data-lucide="chevron-right"></i><span>Daily Report</span></div>
+      <h1 class="page-title">Daily Report</h1>
+      <div class="page-meta"><span><i data-lucide="warehouse"></i>Farm A</span><span>Structured report for the Farms Manager · sections match the submitted view</span></div>
+    </div>
+  </div>
+
+  <nav class="tabs" data-tabs="tab">
+    <a class="tab" data-tab="create" href="?tab=create">Create / Edit</a>
+    <a class="tab" data-tab="history" href="?tab=history">History</a>
+  </nav>
+
+  <!-- ============ Create / Edit (TM-R-001, 002, 003) ============ -->
+  <div class="stack" style="gap:24px" data-panel-group="tab" data-panel="create">
+
+    <!-- Report Header -->
+    <section class="card">
+      <div class="card-body">
+        <dl class="dl">
+          <div><dt>Report Date</dt><dd>29 Sep 2026</dd></div>
+          <div><dt>Farm</dt><dd>Farm A</dd></div>
+          <div><dt>Status</dt><dd><span class="badge badge--draft">Draft</span></dd></div>
+          <div><dt>Last saved</dt><dd>09:20 · due 18:00</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- Report Summary -->
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">Report Summary</h2><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
+      <div class="card-body form-grid-4">
+        <label class="field"><span class="field-label"><span>Farm Condition <span class="req">*</span></span></span><select class="select"><option>Warning</option></select></label>
+        <div class="field"><span class="field-label">Alerts / Issues</span><div class="input" style="display:flex;align-items:center;background:var(--color-bg-subtle)">4 active</div></div>
+        <div class="field"><span class="field-label">Total Feed (so far)</span><div class="input" style="display:flex;align-items:center;background:var(--color-bg-subtle)">596 kg</div></div>
+        <div class="field"><span class="field-label">Mortality (so far)</span><div class="input" style="display:flex;align-items:center;background:var(--color-bg-subtle)">74 pcs · 0.98 kg</div></div>
+      </div>
+    </section>
+
+    <div class="grid cols-2">
+      <!-- Water Quality -->
+      <section class="card">
+        <div class="card-header"><div><h2 class="card-title">Water Quality</h2><div class="card-sub">Farm average across 8 Ponds · editable</div></div><span class="source-tag"><i data-lucide="radio"></i>From sensor data</span></div>
+        <table class="table table-compact">
+          <thead><tr><th>Parameter</th><th>Morning (06:00)</th><th>Evening (17:00)</th></tr></thead>
+          <tbody>
+            <tr><td>DO (mg/L)</td><td><input class="input" value="5.3" style="height:32px"></td><td><input class="input" placeholder="After 17:00" style="height:32px"></td></tr>
+            <tr><td>pH</td><td><input class="input" value="7.8" style="height:32px"></td><td><input class="input" placeholder="After 17:00" style="height:32px"></td></tr>
+            <tr><td>Temperature (°C)</td><td><input class="input" value="28.3" style="height:32px"></td><td><input class="input" placeholder="After 17:00" style="height:32px"></td></tr>
+            <tr><td>Salinity (ppt)</td><td><input class="input" value="15" style="height:32px"></td><td><input class="input" placeholder="After 17:00" style="height:32px"></td></tr>
+          </tbody>
+        </table>
+        <div class="card-body form-grid" style="border-top:1px solid var(--color-border)">
+          <label class="field"><span class="field-label">Secchi Depth</span><span class="input-group"><input class="input" value="36"><span class="input-unit">cm</span></span></label>
+          <label class="field"><span class="field-label">Water Level</span><span class="input-group"><input class="input" value="134"><span class="input-unit">cm</span></span></label>
+        </div>
+      </section>
+
+      <!-- Feeding -->
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">Feeding</h2><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
+        <div class="card-body form-grid">
+          <label class="field"><span class="field-label">Total Feed</span><span class="input-group"><input class="input" value="596"><span class="input-unit">kg</span></span><span class="helper">2 of 4 rounds recorded</span></label>
+          <label class="field"><span class="field-label">Frequency</span><span class="input-group"><input class="input" value="4"><span class="input-unit">/ day</span></span></label>
+          <label class="field span-2"><span class="field-label"><span>Feed Type <span class="req">*</span></span></span><select class="select"><option>Grower 2 (2.0 mm)</option></select></label>
+          <label class="field span-2"><span class="field-label">Appetite / Tray Status</span><textarea class="textarea" style="min-height:64px">Good in most Ponds. Pond 02 leftover &lt; 5% at 09:00 round.</textarea></label>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid cols-2">
+      <!-- Mortality -->
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">Mortality</h2><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
+        <table class="table table-compact">
+          <thead><tr><th>Pond</th><th class="num">Count</th><th class="num">Weight</th></tr></thead>
+          <tbody>
+            <tr><td>Pond 02</td><td class="num">22</td><td class="num">0.30 kg</td></tr>
+            <tr><td>Pond 05</td><td class="num">19</td><td class="num">0.24 kg</td></tr>
+            <tr><td>Other Ponds (6)</td><td class="num">33</td><td class="num">0.44 kg</td></tr>
+            <tr><td class="strong">Total</td><td class="num strong">74</td><td class="num strong">0.98 kg</td></tr>
+          </tbody>
+        </table>
+        <div class="card-footer" style="justify-content:flex-start"><span class="caption">Pond-level records are managed in Pond Detail › Mortality</span></div>
+      </section>
+
+      <div class="stack" style="gap:24px">
+        <!-- Health Condition -->
+        <section class="card">
+          <div class="card-header"><h2 class="card-title">Health Condition</h2></div>
+          <div class="card-body"><textarea class="textarea" placeholder="Observations: activity, appearance, symptoms"></textarea></div>
+        </section>
+        <!-- Environment / Equipment -->
+        <section class="card">
+          <div class="card-header"><h2 class="card-title">Environment / Equipment</h2></div>
+          <div class="card-body form-grid-4" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+            <label class="field"><span class="field-label">Weather</span><select class="select"><option>Sunny</option></select></label>
+            <label class="field"><span class="field-label">Rainfall</span><span class="input-group"><input class="input" value="0"><span class="input-unit">mm</span></span></label>
+            <label class="field"><span class="field-label">Aerator</span><select class="select"><option>19/20 On</option></select></label>
+            <label class="field"><span class="field-label">Pump</span><select class="select"><option>Normal</option></select></label>
+            <label class="field"><span class="field-label">Generator</span><select class="select"><option>Standby</option></select></label>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Alerts / Issues -->
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Alerts / Issues</h2><div class="card-sub">Select the items to include in this report</div></div><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
+      <div class="alert-list">
+        <div class="alert-row" style="grid-template-columns:4px auto 1fr auto"><span class="alert-bar alert-bar--warning"></span><span class="check is-on"></span>
+          <div><div class="alert-title">Pond 02 · DO below threshold (4.1 mg/L &lt; 4.5)</div><div class="alert-meta"><span>ALT-1042 · 07:50</span></div></div>
+          <div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--unack">Unacknowledged</span></div></div>
+        <div class="alert-row" style="grid-template-columns:4px auto 1fr auto"><span class="alert-bar alert-bar--warning"></span><span class="check is-on"></span>
+          <div><div class="alert-title">Pond 05 · Temperature above threshold (31.6 °C &gt; 31.0)</div><div class="alert-meta"><span>ALT-1041 · 05:40</span></div></div>
+          <div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--ack">Acknowledged</span></div></div>
+        <div class="alert-row" style="grid-template-columns:4px auto 1fr auto"><span class="alert-bar alert-bar--attention"></span><span class="check is-on"></span>
+          <div><div class="alert-title">Pond 04 · pH below threshold (7.4 &lt; 7.5)</div><div class="alert-meta"><span>ALT-1039 · 03:30</span></div></div>
+          <div class="alert-side"><span class="badge badge--attention">Attention</span><span class="badge badge--state badge--progress">In Progress</span></div></div>
+        <div class="alert-row" style="grid-template-columns:4px auto 1fr auto"><span class="alert-bar alert-bar--attention"></span><span class="check"></span>
+          <div><div class="alert-title">Pond 08 · Turbidity sensor offline</div><div class="alert-meta"><span>ALT-1035 · 28 Sep 22:10</span></div></div>
+          <div class="alert-side"><span class="badge badge--attention">Attention</span><span class="badge badge--state badge--ack">Acknowledged</span></div></div>
+      </div>
+    </section>
+
+    <div class="grid cols-2">
+      <!-- Actions Taken -->
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">Actions Taken</h2><span class="source-tag"><i data-lucide="database"></i>Actuator log</span></div>
+        <div class="card-body stack gap-3" style="gap:16px">
+          <div class="row"><input class="input" value="05:40" style="width:88px"><input class="input" value="Pond 02 — Aerators 3, 4 switched on (manual override)"></div>
+          <div class="row"><input class="input" value="06:10" style="width:88px"><input class="input" value="Pond 05 — water exchange 10% started"></div>
+          <div class="row"><input class="input" placeholder="Time" style="width:88px"><input class="input" placeholder="Describe the action"></div>
+          <div><button class="btn btn--link btn--sm"><i data-lucide="plus"></i>Add action</button></div>
+        </div>
+      </section>
+      <!-- Technical Manager Summary -->
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">Technical Manager Summary</h2></div>
+        <div class="card-body"><textarea class="textarea" style="min-height:160px" placeholder="Summarize the day's condition, issues and follow-up for the Farms Manager"></textarea></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ============ History (TM-R-004) ============ -->
+  <section class="card" data-panel-group="tab" data-panel="history">
+    <div class="card-header"><h2 class="card-title">Daily Report History</h2><select class="select" style="width:180px;height:32px;font-size:14px"><option>Last 30 days</option></select></div>
+    <table class="table">
+      <thead><tr><th>Date</th><th>Status</th><th class="num">Issues</th><th class="num">Total Feed</th><th class="num">Mortality</th><th>Submitted</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="cell-main">29 Sep 2026</td><td><span class="badge badge--draft">Draft</span></td><td class="num">3</td><td class="num">596 kg</td><td class="num">74 pcs</td><td class="text-muted">—</td><td class="actions"><a class="btn btn--outline btn--sm" href="?tab=create">Continue</a></td></tr>
+        <tr><td class="cell-main">28 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="num">1,240 kg</td><td class="num">186 pcs</td><td class="text-muted">28 Sep 18:20</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
+        <tr><td class="cell-main">27 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="num">1,225 kg</td><td class="num">142 pcs</td><td class="text-muted">27 Sep 18:05</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
+        <tr><td class="cell-main">26 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">0</td><td class="num">1,210 kg</td><td class="num">118 pcs</td><td class="text-muted">26 Sep 17:52</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
+        <tr><td class="cell-main">25 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">0</td><td class="num">1,195 kg</td><td class="num">121 pcs</td><td class="text-muted">25 Sep 18:11</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Action Bar (UI/UX設計書 7) -->
+  <div class="action-bar" data-show-on-tab="create">
+    <div class="action-bar-status"><span class="badge badge--draft">Draft</span><span>Saved 09:20 · due today 18:00</span></div>
+    <span class="action-bar-spacer"></span>
+    <button class="btn btn--outline"><i data-lucide="save"></i>Save Draft</button>
+    <button class="btn btn--primary" data-open="submit"><i data-lucide="send"></i>Submit</button>
+  </div>
+
+</div></main>
+
+<!-- Submit Confirmation Dialog (?submit=1) -->
+<div class="overlay" id="submit">
+  <div class="dialog" role="dialog">
+    <div class="dialog-body">
+      <h2 class="dialog-title">Submit Daily Report for 29 Sep?</h2>
+      <p class="text-secondary">The report will be shared with the Farms Manager and can no longer be edited.</p>
+      <div class="notice notice--warning"><i data-lucide="triangle-alert"></i><span>Evening water quality and Health Condition are empty.</span></div>
+    </div>
+    <div class="dialog-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--primary" data-close>Submit</button></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="../assets/charts.js"></script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>

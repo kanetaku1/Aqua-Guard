@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>TM-01 Dashboard · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body data-role="tm" data-nav="dashboard">
+<main class="main"><div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <div class="page-meta"><span><i data-lucide="warehouse"></i>Farm A · 8 Ponds · DOC 62</span></div>
+    </div>
+  </div>
+
+  <!-- 1. Pond Status (TM-D-001, 006) -->
+  <section class="card">
+    <div class="card-header">
+      <div><h2 class="card-title">Pond Status</h2><div class="card-sub">Current values · sensor data every 5 min</div></div>
+      <a class="btn btn--link" href="tm-ponds.html">All Ponds<i data-lucide="arrow-right"></i></a>
+    </div>
+    <div class="status-summary" style="border-bottom:1px solid var(--color-border)">
+      <div class="status-count"><span class="badge badge--critical">Critical</span><div class="status-count-value">0<small>Ponds</small></div></div>
+      <div class="status-count"><span class="badge badge--warning">Warning</span><div class="status-count-value">2<small>Ponds</small></div></div>
+      <div class="status-count"><span class="badge badge--attention">Attention</span><div class="status-count-value">1<small>Pond</small></div></div>
+      <div class="status-count"><span class="badge badge--normal">Normal</span><div class="status-count-value">5<small>Ponds</small></div></div>
+    </div>
+    <div class="card-body">
+      <div class="grid cols-4 gap-4">
+        <a class="pond-card" href="tm-pond-detail.html"><div class="row-between"><span class="strong">Pond 02</span><span class="badge badge--warning">Warning</span></div>
+          <dl class="pond-card-values"><div><dt>DO mg/L</dt><dd class="val-warning">4.1</dd></div><div><dt>pH</dt><dd>7.8</dd></div><div><dt>Temp °C</dt><dd>29.8</dd></div></dl>
+          <div class="pond-card-foot"><span>1 active alert</span><span>Aerators 4/4</span></div></a>
+        <a class="pond-card" href="tm-pond-detail.html"><div class="row-between"><span class="strong">Pond 05</span><span class="badge badge--warning">Warning</span></div>
+          <dl class="pond-card-values"><div><dt>DO mg/L</dt><dd>5.0</dd></div><div><dt>pH</dt><dd>7.9</dd></div><div><dt>Temp °C</dt><dd class="val-warning">31.6</dd></div></dl>
+          <div class="pond-card-foot"><span>1 active alert</span><span>Aerators 3/4</span></div></a>
+        <a class="pond-card" href="tm-pond-detail.html"><div class="row-between"><span class="strong">Pond 04</span><span class="badge badge--attention">Attention</span></div>
+          <dl class="pond-card-values"><div><dt>DO mg/L</dt><dd>5.4</dd></div><div><dt>pH</dt><dd class="val-attention">7.4</dd></div><div><dt>Temp °C</dt><dd>29.5</dd></div></dl>
+          <div class="pond-card-foot"><span>1 active alert</span><span>Aerators 2/2</span></div></a>
+        <a class="pond-card" href="tm-pond-detail.html"><div class="row-between"><span class="strong">Pond 08</span><span class="status-text st--normal">Normal</span></div>
+          <dl class="pond-card-values"><div><dt>DO mg/L</dt><dd>5.7</dd></div><div><dt>pH</dt><dd>7.9</dd></div><div><dt>Temp °C</dt><dd>29.4</dd></div></dl>
+          <div class="pond-card-foot"><span>1 sensor offline</span><span>Aerators 2/2</span></div></a>
+        <a class="pond-card" href="tm-pond-detail.html"><div class="row-between"><span class="strong">Pond 01</span><span class="status-text st--normal">Normal</span></div>
+          <dl class="pond-card-values"><div><dt>DO mg/L</dt><dd>5.9</dd></div><div><dt>pH</dt><dd>7.9</dd></div><div><dt>Temp °C</dt><dd>29.4</dd></div></dl>
+          <div class="pond-card-foot"><span>No alerts</span><span>Aerators 2/2</span></div></a>
+        <a class="pond-card" href="tm-pond-detail.html"><div class="row-between"><span class="strong">Pond 03</span><span class="status-text st--normal">Normal</span></div>
+          <dl class="pond-card-values"><div><dt>DO mg/L</dt><dd>6.1</dd></div><div><dt>pH</dt><dd>8.0</dd></div><div><dt>Temp °C</dt><dd>29.2</dd></div></dl>
+          <div class="pond-card-foot"><span>No alerts</span><span>Aerators 2/2</span></div></a>
+        <a class="pond-card" href="tm-pond-detail.html"><div class="row-between"><span class="strong">Pond 06</span><span class="status-text st--normal">Normal</span></div>
+          <dl class="pond-card-values"><div><dt>DO mg/L</dt><dd>6.0</dd></div><div><dt>pH</dt><dd>8.1</dd></div><div><dt>Temp °C</dt><dd>29.1</dd></div></dl>
+          <div class="pond-card-foot"><span>No alerts</span><span>Aerators 2/2</span></div></a>
+        <a class="pond-card" href="tm-pond-detail.html"><div class="row-between"><span class="strong">Pond 07</span><span class="status-text st--normal">Normal</span></div>
+          <dl class="pond-card-values"><div><dt>DO mg/L</dt><dd>5.8</dd></div><div><dt>pH</dt><dd>8.0</dd></div><div><dt>Temp °C</dt><dd>29.3</dd></div></dl>
+          <div class="pond-card-foot"><span>No alerts</span><span>Aerators 2/2</span></div></a>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid cols-8-4">
+    <!-- 2. Active Alerts (TM-D-002) -->
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Active Alerts</h2><div class="card-sub">4 unresolved · 1 unacknowledged</div></div></div>
+      <div class="alert-list">
+        <div class="alert-row"><span class="alert-bar alert-bar--warning"></span>
+          <div><div class="alert-title">DO below threshold (4.1 mg/L &lt; 4.5)</div><div class="alert-meta"><span><i data-lucide="waves"></i>Pond 02</span><span><i data-lucide="clock"></i>07:50</span><span>ALT-1042</span></div></div>
+          <div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--unack">Unacknowledged</span></div>
+          <a class="btn btn--primary btn--sm" href="tm-pond-detail.html?tab=alerts&drawer=1">Acknowledge</a></div>
+        <div class="alert-row"><span class="alert-bar alert-bar--warning"></span>
+          <div><div class="alert-title">Temperature above threshold (31.6 °C &gt; 31.0)</div><div class="alert-meta"><span><i data-lucide="waves"></i>Pond 05</span><span><i data-lucide="clock"></i>05:40</span><span>ALT-1041</span></div></div>
+          <div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--ack">Acknowledged</span></div>
+          <a class="btn btn--link btn--sm" href="tm-pond-detail.html?tab=alerts">View</a></div>
+        <div class="alert-row"><span class="alert-bar alert-bar--attention"></span>
+          <div><div class="alert-title">pH below threshold (7.4 &lt; 7.5)</div><div class="alert-meta"><span><i data-lucide="waves"></i>Pond 04</span><span><i data-lucide="clock"></i>03:30</span><span>ALT-1039</span></div></div>
+          <div class="alert-side"><span class="badge badge--attention">Attention</span><span class="badge badge--state badge--progress">In Progress</span></div>
+          <a class="btn btn--link btn--sm" href="tm-pond-detail.html?tab=alerts">View</a></div>
+        <div class="alert-row"><span class="alert-bar alert-bar--attention"></span>
+          <div><div class="alert-title">Turbidity sensor offline</div><div class="alert-meta"><span><i data-lucide="waves"></i>Pond 08</span><span><i data-lucide="clock"></i>28 Sep 22:10</span><span>ALT-1035</span></div></div>
+          <div class="alert-side"><span class="badge badge--attention">Attention</span><span class="badge badge--state badge--ack">Acknowledged</span></div>
+          <a class="btn btn--link btn--sm" href="tm-pond-detail.html?tab=alerts">View</a></div>
+      </div>
+    </section>
+
+    <!-- 4. Operational Status (TM-D-004) -->
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">Operational Status</h2></div>
+      <table class="table table-compact">
+        <tbody>
+          <tr><td><span class="row"><i data-lucide="fan" class="text-muted"></i>Aerators running</span></td><td class="num strong">19 / 20</td></tr>
+          <tr><td><span class="row"><i data-lucide="droplets" class="text-muted"></i>Pumps running</span></td><td class="num strong">2 / 3</td></tr>
+          <tr><td><span class="row"><i data-lucide="radio" class="text-muted"></i>Sensors online</span></td><td class="num strong">47 / 48</td></tr>
+          <tr><td><span class="row"><i data-lucide="utensils" class="text-muted"></i>Feeding today</span></td><td class="num strong">2 / 4 rounds</td></tr>
+          <tr><td><span class="row"><i data-lucide="scale" class="text-muted"></i>Next sampling</span></td><td class="num strong">5 Oct</td></tr>
+          <tr><td><span class="row"><i data-lucide="zap" class="text-muted"></i>Generator</span></td><td class="num strong">Standby</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <div class="grid cols-8-4">
+    <!-- 3. Water Quality Status (TM-D-003) -->
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Water Quality Status</h2><div class="card-sub">Current values · out-of-range values highlighted</div></div></div>
+      <table class="table table-compact">
+        <thead><tr><th>Pond</th><th class="num">DO mg/L</th><th class="num">pH</th><th class="num">Temp °C</th><th class="num">TDS mg/L</th><th class="num">Turbidity NTU</th><th class="num">Level cm</th></tr></thead>
+        <tbody>
+          <tr><td>Pond 01</td><td class="num">5.9</td><td class="num">7.9</td><td class="num">29.4</td><td class="num">18,200</td><td class="num">38</td><td class="num">135</td></tr>
+          <tr><td>Pond 02</td><td class="num val-warning">4.1</td><td class="num">7.8</td><td class="num">29.8</td><td class="num">18,900</td><td class="num">45</td><td class="num">132</td></tr>
+          <tr><td>Pond 03</td><td class="num">6.1</td><td class="num">8.0</td><td class="num">29.2</td><td class="num">17,800</td><td class="num">35</td><td class="num">138</td></tr>
+          <tr><td>Pond 04</td><td class="num">5.4</td><td class="num val-attention">7.4</td><td class="num">29.5</td><td class="num">18,400</td><td class="num">40</td><td class="num">136</td></tr>
+          <tr><td>Pond 05</td><td class="num">5.0</td><td class="num">7.9</td><td class="num val-warning">31.6</td><td class="num">18,600</td><td class="num">42</td><td class="num">130</td></tr>
+          <tr><td>Pond 06</td><td class="num">6.0</td><td class="num">8.1</td><td class="num">29.1</td><td class="num">17,900</td><td class="num">33</td><td class="num">137</td></tr>
+          <tr><td>Pond 07</td><td class="num">5.8</td><td class="num">8.0</td><td class="num">29.3</td><td class="num">18,100</td><td class="num">36</td><td class="num">134</td></tr>
+          <tr><td>Pond 08</td><td class="num">5.7</td><td class="num">7.9</td><td class="num">29.4</td><td class="num">18,000</td><td class="num"><span class="status-text st--offline">Offline</span></td><td class="num">135</td></tr>
+        </tbody>
+      </table>
+      <div class="card-footer" style="justify-content:flex-start"><span class="caption">Ranges: DO ≥ 4.5 · pH 7.5–8.5 · Temp 26–31 · TDS 15,000–25,000 · Turbidity 25–60 · Level 120–150</span></div>
+    </section>
+
+    <!-- 5. Report Status (TM-D-005) -->
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">Report Status</h2></div>
+      <div class="card-body stack">
+        <div class="stack gap-3" style="gap:8px">
+          <div class="row-between"><span class="strong">Daily Report · 29 Sep</span><span class="badge badge--draft">Draft</span></div>
+          <span class="caption">Due today 18:00 · last saved 09:20</span>
+          <div><a class="btn btn--primary btn--sm" href="tm-daily-report.html">Continue</a></div>
+        </div>
+        <hr class="divider">
+        <div class="stack" style="gap:8px">
+          <div class="row-between"><span class="strong">Weekly Report · 22–28 Sep</span><span class="badge badge--draft">Draft</span></div>
+          <span class="caption">Due today · last saved 28 Sep 20:15</span>
+          <div><a class="btn btn--outline btn--sm" href="tm-weekly-report.html">Continue</a></div>
+        </div>
+        <hr class="divider">
+        <div class="row-between"><span class="text-secondary small">Last submitted</span><span class="small">Daily · 28 Sep 18:20</span></div>
+      </div>
+    </section>
+  </div>
+
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="../assets/charts.js"></script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>

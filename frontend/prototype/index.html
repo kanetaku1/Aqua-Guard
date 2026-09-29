@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Screen Catalog · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .cat { max-width: 1320px; margin: 0 auto; padding: 32px 32px 64px; display: flex; flex-direction: column; gap: 40px; }
+  .shots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+  .shot { display: block; color: inherit; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; }
+  .shot:hover { border-color: var(--color-primary); text-decoration: none; }
+  .thumb { position: relative; height: 190px; overflow: hidden; border-bottom: 1px solid var(--color-border); background: var(--color-bg); }
+  .thumb iframe { position: absolute; top: 0; left: 0; width: 1440px; height: 900px; border: 0; transform: scale(0.2); transform-origin: 0 0; pointer-events: none; }
+  .shot-body { padding: 12px 16px; }
+  .shot-id { font-size: 12px; font-weight: 600; color: var(--color-primary); }
+  .shot-desc { font-size: 12px; line-height: 16px; color: var(--color-text-muted); margin-top: 2px; }
+</style>
+</head>
+<body>
+<header class="gh"><div class="gh-brand"><span class="gh-logo"><i data-lucide="waves"></i></span>Smart Shrimp Pond</div><div class="gh-scope"><span class="strong">Screen Catalog</span><span class="sep">/</span><span>Web UI Prototype v0.1</span></div><div class="gh-spacer"></div><a class="btn btn--outline" href="design-system.html"><i data-lucide="palette"></i>Design System</a></header>
+<div class="cat">
+
+  <section class="stack" style="gap:8px">
+    <h1 class="page-title">Screen Catalog</h1>
+    <p class="text-secondary">All screens share one design system. Spec: <code>frontend/docs/knowledge/</code>. Frame width 1440 px — import each screen into Figma with html.to.design.</p>
+    <div class="row" style="gap:16px;margin-top:8px">
+      <span class="small"><b>Farms Manager</b> — VIEW / UNDERSTAND</span>
+      <span class="small"><b>Technical Manager</b> — MONITOR / INVESTIGATE / MANAGE</span>
+    </div>
+  </section>
+
+  <section class="stack">
+    <div class="row-between"><h2 class="section-label">Farms Manager</h2><span class="caption">Farm-level monitoring and report review · read-only</span></div>
+    <div class="shots" data-shots='[
+      ["FM-01","Dashboard","Which Farm should I look at?","screens/fm-dashboard.html"],
+      ["FM-02","Farm List","Select a Farm · high-level condition","screens/fm-farms.html"],
+      ["FM-03","Farm Detail","Integrated Farm overview (primary screen)","screens/fm-farm-detail.html"],
+      ["FM-03","Farm Detail · Issue Drawer","Risk / Issue detail (read-only)","screens/fm-farm-detail.html?issue=1"],
+      ["FM-04","Reports · Daily","Submitted Daily Reports","screens/fm-reports.html"],
+      ["FM-04","Reports · Weekly","Submitted Weekly Reports","screens/fm-reports.html?type=weekly"],
+      ["FM-05","Daily Report Detail","What happened on a particular day","screens/fm-daily-report.html"],
+      ["FM-06","Weekly Report Detail","How the Farm progressed during the week","screens/fm-weekly-report.html"]
+    ]'></div>
+  </section>
+
+  <section class="stack">
+    <div class="row-between"><h2 class="section-label">Technical Manager</h2><span class="caption">Pond-level technical operations · Farm A</span></div>
+    <div class="shots" data-shots='[
+      ["TM-01","Dashboard","Which Pond needs attention?","screens/tm-dashboard.html"],
+      ["TM-02","Pond List","Assigned Ponds with current values","screens/tm-ponds.html"],
+      ["TM-03","Pond Detail · IoT / Water Quality","Current values, time-series, history","screens/tm-pond-detail.html?tab=iot"],
+      ["TM-03","Pond Detail · Alerts","Alert list and handling","screens/tm-pond-detail.html?tab=alerts"],
+      ["TM-03","Pond Detail · Alert Drawer","Alert detail · Acknowledge","screens/tm-pond-detail.html?tab=alerts&drawer=1"],
+      ["TM-03","Pond Detail · Feeding","Record / history / edit","screens/tm-pond-detail.html?tab=feeding"],
+      ["TM-03","Pond Detail · Mortality","Record / history / edit","screens/tm-pond-detail.html?tab=mortality"],
+      ["TM-03","Pond Detail · Sampling","Record / history / ABW","screens/tm-pond-detail.html?tab=sampling"],
+      ["TM-03","Pond Detail · Actuator","Status, control, history","screens/tm-pond-detail.html?tab=actuator"],
+      ["TM-03","Pond Detail · Actuator Dialog","Confirmation Dialog","screens/tm-pond-detail.html?tab=actuator&dialog=1"],
+      ["TM-03","Pond Detail · Toast","Save feedback","screens/tm-pond-detail.html?tab=feeding&toast=1"],
+      ["TM-04","Daily Report · Create / Edit","Draft with referenced data","screens/tm-daily-report.html"],
+      ["TM-04","Daily Report · Submit Dialog","Submit confirmation","screens/tm-daily-report.html?submit=1"],
+      ["TM-04","Daily Report · History","Past Daily Reports","screens/tm-daily-report.html?tab=history"],
+      ["TM-05","Weekly Report · Create / Edit","Draft with referenced data","screens/tm-weekly-report.html"],
+      ["TM-05","Weekly Report · History","Past Weekly Reports","screens/tm-weekly-report.html?tab=history"]
+    ]'></div>
+  </section>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script>
+  document.querySelectorAll("[data-shots]").forEach(function (grid) {
+    JSON.parse(grid.dataset.shots).forEach(function (s) {
+      var a = document.createElement("a");
+      a.className = "shot"; a.href = s[3]; a.target = "_blank";
+      a.innerHTML = '<div class="thumb"><iframe loading="lazy" tabindex="-1" src="' + s[3] + '"></iframe></div>' +
+        '<div class="shot-body"><div class="shot-id">' + s[0] + '</div><div class="strong">' + s[1] + '</div><div class="shot-desc">' + s[2] + "</div></div>";
+      grid.appendChild(a);
+    });
+  });
+  lucide.createIcons();
+</script>
+</body>
+</html>

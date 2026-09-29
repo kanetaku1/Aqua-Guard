@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>TM-02 Pond List · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body data-role="tm" data-nav="ponds">
+<main class="main"><div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb"><a href="tm-dashboard.html">Dashboard</a><i data-lucide="chevron-right"></i><span>Ponds</span></div>
+      <h1 class="page-title">Ponds</h1>
+      <div class="page-meta"><span><i data-lucide="warehouse"></i>Farm A · 8 Ponds</span></div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="input-search"><i data-lucide="search"></i><input class="input" placeholder="Search Pond"></div>
+    <select class="select"><option>Status: All</option></select>
+    <select class="select"><option>Alert: All</option></select>
+  </div>
+
+  <!-- Pond List (TM-P-001 … 004) -->
+  <section class="card">
+    <div class="card-header"><div><h2 class="card-title">Pond List</h2><div class="card-sub">Sorted by status · current sensor values</div></div></div>
+    <table class="table">
+      <thead><tr><th>Pond</th><th>Status</th><th>Alert Status</th><th class="num">DO mg/L</th><th class="num">pH</th><th class="num">Temp °C</th><th>Operational Status</th><th>Updated</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><div class="cell-main">Pond 02</div><div class="cell-sub">0.5 ha · DOC 62</div></td><td><span class="badge badge--warning">Warning</span></td><td><span class="badge badge--state badge--unack">1 Unacknowledged</span></td><td class="num val-warning">4.1</td><td class="num">7.8</td><td class="num">29.8</td><td><div>Aerators 4/4 On</div><div class="cell-sub">2 in Manual override</div></td><td class="text-muted">09:35</td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html">View</a></td></tr>
+        <tr><td><div class="cell-main">Pond 05</div><div class="cell-sub">0.5 ha · DOC 62</div></td><td><span class="badge badge--warning">Warning</span></td><td><span class="badge badge--state badge--ack">1 Acknowledged</span></td><td class="num">5.0</td><td class="num">7.9</td><td class="num val-warning">31.6</td><td><div>Aerators 3/4 On</div><div class="cell-sub">Aerator 4 under maintenance</div></td><td class="text-muted">09:35</td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html">View</a></td></tr>
+        <tr><td><div class="cell-main">Pond 04</div><div class="cell-sub">0.4 ha · DOC 62</div></td><td><span class="badge badge--attention">Attention</span></td><td><span class="badge badge--state badge--progress">1 In Progress</span></td><td class="num">5.4</td><td class="num val-attention">7.4</td><td class="num">29.5</td><td>Aerators 2/2 On</td><td class="text-muted">09:35</td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html">View</a></td></tr>
+        <tr><td><div class="cell-main">Pond 08</div><div class="cell-sub">0.4 ha · DOC 62</div></td><td><span class="status-text st--normal">Normal</span></td><td><span class="badge badge--state badge--ack">1 Acknowledged</span></td><td class="num">5.7</td><td class="num">7.9</td><td class="num">29.4</td><td><div>Aerators 2/2 On</div><div class="cell-sub">Turbidity sensor offline</div></td><td class="text-muted">09:35</td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html">View</a></td></tr>
+        <tr><td><div class="cell-main">Pond 01</div><div class="cell-sub">0.4 ha · DOC 62</div></td><td><span class="status-text st--normal">Normal</span></td><td class="text-muted">None</td><td class="num">5.9</td><td class="num">7.9</td><td class="num">29.4</td><td>Aerators 2/2 On</td><td class="text-muted">09:35</td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html">View</a></td></tr>
+        <tr><td><div class="cell-main">Pond 03</div><div class="cell-sub">0.4 ha · DOC 62</div></td><td><span class="status-text st--normal">Normal</span></td><td class="text-muted">None</td><td class="num">6.1</td><td class="num">8.0</td><td class="num">29.2</td><td>Aerators 2/2 On</td><td class="text-muted">09:35</td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html">View</a></td></tr>
+        <tr><td><div class="cell-main">Pond 06</div><div class="cell-sub">0.4 ha · DOC 62</div></td><td><span class="status-text st--normal">Normal</span></td><td class="text-muted">None</td><td class="num">6.0</td><td class="num">8.1</td><td class="num">29.1</td><td>Aerators 2/2 On</td><td class="text-muted">09:35</td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html">View</a></td></tr>
+        <tr><td><div class="cell-main">Pond 07</div><div class="cell-sub">0.4 ha · DOC 62</div></td><td><span class="status-text st--normal">Normal</span></td><td class="text-muted">None</td><td class="num">5.8</td><td class="num">8.0</td><td class="num">29.3</td><td>Aerators 2/2 On</td><td class="text-muted">09:35</td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html">View</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="../assets/charts.js"></script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>FM-01 Dashboard · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body data-role="fm" data-nav="dashboard">
+<main class="main"><div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <div class="page-meta"><span>4 Farms · 32 Ponds</span></div>
+    </div>
+  </div>
+
+  <!-- 1. Farm Status Summary (FM-D-001, FM-D-006) -->
+  <section class="card">
+    <div class="card-header">
+      <div><h2 class="card-title">Farm Status</h2><div class="card-sub">Overall condition of each Farm, sorted by severity</div></div>
+      <a class="btn btn--link" href="fm-farms.html">All Farms<i data-lucide="arrow-right"></i></a>
+    </div>
+    <div class="status-summary" style="border-bottom:1px solid var(--color-border)">
+      <div class="status-count"><span class="badge badge--critical">Critical</span><div class="status-count-value">1<small>Farm</small></div></div>
+      <div class="status-count"><span class="badge badge--warning">Warning</span><div class="status-count-value">1<small>Farm</small></div></div>
+      <div class="status-count"><span class="badge badge--attention">Attention</span><div class="status-count-value">1<small>Farm</small></div></div>
+      <div class="status-count"><span class="badge badge--normal">Normal</span><div class="status-count-value">1<small>Farm</small></div></div>
+    </div>
+    <table class="table">
+      <thead><tr><th>Farm</th><th>Overall</th><th>Environmental</th><th>Production</th><th>Operational</th><th class="num">Open Issues</th><th>Updated</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><div class="cell-main">Farm D</div><div class="cell-sub">Lombok, West Nusa Tenggara · 8 Ponds</div></td><td><span class="badge badge--critical">Critical</span></td><td><span class="status-text st--critical">Critical</span></td><td><span class="status-text st--warning">Warning</span></td><td><span class="status-text st--attention">Attention</span></td><td class="num">2</td><td class="text-muted">09:30</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-farm-detail.html">View</a></td></tr>
+        <tr><td><div class="cell-main">Farm A</div><div class="cell-sub">East Java, Indonesia · 8 Ponds</div></td><td><span class="badge badge--warning">Warning</span></td><td><span class="status-text st--warning">Warning</span></td><td><span class="status-text st--normal">Normal</span></td><td><span class="status-text st--attention">Attention</span></td><td class="num">3</td><td class="text-muted">09:35</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-farm-detail.html">View</a></td></tr>
+        <tr><td><div class="cell-main">Farm C</div><div class="cell-sub">Banyuwangi, East Java · 6 Ponds</div></td><td><span class="badge badge--attention">Attention</span></td><td><span class="status-text st--attention">Attention</span></td><td><span class="status-text st--normal">Normal</span></td><td><span class="status-text st--normal">Normal</span></td><td class="num">1</td><td class="text-muted">09:28</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-farm-detail.html">View</a></td></tr>
+        <tr><td><div class="cell-main">Farm B</div><div class="cell-sub">Lampung, Indonesia · 10 Ponds</div></td><td><span class="status-text st--normal">Normal</span></td><td><span class="status-text st--normal">Normal</span></td><td><span class="status-text st--normal">Normal</span></td><td><span class="status-text st--normal">Normal</span></td><td class="num">0</td><td class="text-muted">09:33</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-farm-detail.html">View</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 2. Risk / Issue Summary (FM-D-002) -->
+  <section class="card">
+    <div class="card-header">
+      <div><h2 class="card-title">Risk / Issue</h2><div class="card-sub">6 open Farm-level issues</div></div>
+    </div>
+    <div class="alert-list">
+      <div class="alert-row"><span class="alert-bar alert-bar--critical"></span>
+        <div><div class="alert-title">Water Quality · DO decreasing</div><div class="alert-meta"><span><i data-lucide="warehouse"></i>Farm D</span><span><i data-lucide="waves"></i>Pond 06</span><span><i data-lucide="clock"></i>8 hrs</span><span>ISS-214</span></div></div>
+        <div class="alert-side"><span class="badge badge--critical">Critical</span><span class="badge badge--state badge--progress">In Progress</span></div>
+        <a class="btn btn--link btn--sm" href="fm-farm-detail.html">View Farm</a></div>
+      <div class="alert-row"><span class="alert-bar alert-bar--warning"></span>
+        <div><div class="alert-title">Mortality · Mortality increasing</div><div class="alert-meta"><span><i data-lucide="warehouse"></i>Farm D</span><span><i data-lucide="waves"></i>Pond 06</span><span><i data-lucide="clock"></i>3 days</span><span>ISS-212</span></div></div>
+        <div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--progress">In Progress</span></div>
+        <a class="btn btn--link btn--sm" href="fm-farm-detail.html">View Farm</a></div>
+      <div class="alert-row"><span class="alert-bar alert-bar--warning"></span>
+        <div><div class="alert-title">Water Quality · DO decreasing</div><div class="alert-meta"><span><i data-lucide="warehouse"></i>Farm A</span><span><i data-lucide="waves"></i>Pond 02</span><span><i data-lucide="clock"></i>2 days</span><span>ISS-218</span></div></div>
+        <div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--progress">In Progress</span></div>
+        <a class="btn btn--link btn--sm" href="fm-farm-detail.html">View Farm</a></div>
+      <div class="alert-row"><span class="alert-bar alert-bar--warning"></span>
+        <div><div class="alert-title">Water Quality · Temperature increasing</div><div class="alert-meta"><span><i data-lucide="warehouse"></i>Farm A</span><span><i data-lucide="waves"></i>Pond 05</span><span><i data-lucide="clock"></i>4 hrs</span><span>ISS-221</span></div></div>
+        <div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--ack">Acknowledged</span></div>
+        <a class="btn btn--link btn--sm" href="fm-farm-detail.html">View Farm</a></div>
+      <div class="alert-row"><span class="alert-bar alert-bar--attention"></span>
+        <div><div class="alert-title">Water Quality · pH decreasing</div><div class="alert-meta"><span><i data-lucide="warehouse"></i>Farm A</span><span><i data-lucide="waves"></i>Pond 04</span><span><i data-lucide="clock"></i>6 hrs</span><span>ISS-220</span></div></div>
+        <div class="alert-side"><span class="badge badge--attention">Attention</span><span class="badge badge--state badge--unack">Unacknowledged</span></div>
+        <a class="btn btn--link btn--sm" href="fm-farm-detail.html">View Farm</a></div>
+      <div class="alert-row"><span class="alert-bar alert-bar--attention"></span>
+        <div><div class="alert-title">Water Quality · Turbidity increasing</div><div class="alert-meta"><span><i data-lucide="warehouse"></i>Farm C</span><span><i data-lucide="waves"></i>Pond 03</span><span><i data-lucide="clock"></i>1 day</span><span>ISS-219</span></div></div>
+        <div class="alert-side"><span class="badge badge--attention">Attention</span><span class="badge badge--state badge--ack">Acknowledged</span></div>
+        <a class="btn btn--link btn--sm" href="fm-farm-detail.html">View Farm</a></div>
+    </div>
+  </section>
+
+  <!-- 3. Production Status Summary (FM-D-003) -->
+  <section class="stack">
+    <div class="row-between"><h2 class="section-label">Production Status</h2><span class="caption">Company total / average · current cycle</span></div>
+    <div class="grid cols-4">
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Total Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">62.4<span class="kpi-unit">t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+4.1 t vs last week</div><div class="kpi-updated">Updated 28 Sep · Sampling</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Avg. ABW</span><span class="kpi-type">Actual</span></div><div class="kpi-value">14.1<span class="kpi-unit">g</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.5 g vs last week</div><div class="kpi-updated">Updated 28 Sep · Sampling</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Avg. Survival Rate</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">84<span class="kpi-unit">%</span></div><div class="kpi-compare"><i data-lucide="trending-down"></i>−1 pt vs last week</div><div class="kpi-updated">Updated 28 Sep · Sampling</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Avg. FCR</span><span class="kpi-type">Actual</span></div><div class="kpi-value">1.37</div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.02 vs last week</div><div class="kpi-updated">Updated 28 Sep · Feeding records</div></div>
+    </div>
+  </section>
+
+  <div class="grid cols-8-4">
+    <!-- 4. Environmental / Pond Trend Summary (FM-D-004) -->
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Environmental / Pond Trends</h2><div class="card-sub">Important aggregated trends across Farms</div></div></div>
+      <table class="table">
+        <thead><tr><th>Farm</th><th>Pond</th><th>Parameter</th><th>Trend</th><th>Severity</th><th>Duration</th></tr></thead>
+        <tbody>
+          <tr><td class="cell-main">Farm D</td><td>Pond 06</td><td>DO</td><td><span class="trend"><i data-lucide="trending-down"></i>Decreasing</span></td><td><span class="badge badge--critical">Critical</span></td><td>8 hrs</td></tr>
+          <tr><td class="cell-main">Farm A</td><td>Pond 02</td><td>DO</td><td><span class="trend"><i data-lucide="trending-down"></i>Decreasing</span></td><td><span class="badge badge--warning">Warning</span></td><td>2 days</td></tr>
+          <tr><td class="cell-main">Farm A</td><td>Pond 05</td><td>Temperature</td><td><span class="trend"><i data-lucide="trending-up"></i>Increasing</span></td><td><span class="badge badge--warning">Warning</span></td><td>4 hrs</td></tr>
+          <tr><td class="cell-main">Farm A</td><td>Pond 04</td><td>pH</td><td><span class="trend"><i data-lucide="trending-down"></i>Decreasing</span></td><td><span class="badge badge--attention">Attention</span></td><td>6 hrs</td></tr>
+          <tr><td class="cell-main">Farm C</td><td>Pond 03</td><td>Turbidity</td><td><span class="trend"><i data-lucide="trending-up"></i>Increasing</span></td><td><span class="badge badge--attention">Attention</span></td><td>1 day</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 5. Recent Reports (FM-D-005) -->
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">Recent Reports</h2><a class="btn btn--link btn--sm" href="fm-reports.html">View All<i data-lucide="arrow-right"></i></a></div>
+      <table class="table table-compact">
+        <tbody>
+          <tr><td><a class="cell-main" href="fm-daily-report.html">Daily Report</a><div class="cell-sub">Farm A · 28 Sep</div></td><td class="actions"><span class="status-text st--submitted">Submitted</span></td></tr>
+          <tr><td><a class="cell-main" href="fm-daily-report.html">Daily Report</a><div class="cell-sub">Farm B · 28 Sep</div></td><td class="actions"><span class="status-text st--submitted">Submitted</span></td></tr>
+          <tr><td><a class="cell-main" href="fm-daily-report.html">Daily Report</a><div class="cell-sub">Farm C · 28 Sep</div></td><td class="actions"><span class="status-text st--submitted">Submitted</span></td></tr>
+          <tr><td><a class="cell-main" href="fm-daily-report.html">Daily Report</a><div class="cell-sub">Farm D · 28 Sep</div></td><td class="actions"><span class="status-text st--submitted">Submitted</span></td></tr>
+          <tr><td><a class="cell-main" href="fm-weekly-report.html">Weekly Report</a><div class="cell-sub">Farm A · 15–21 Sep</div></td><td class="actions"><span class="status-text st--submitted">Submitted</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="../assets/charts.js"></script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>

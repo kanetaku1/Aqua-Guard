@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>FM-04 Reports · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body data-role="fm" data-nav="reports" data-sub="daily">
+<main class="main"><div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb"><a href="fm-dashboard.html">Dashboard</a><i data-lucide="chevron-right"></i><span>Reports</span></div>
+      <h1 class="page-title">Reports</h1>
+      <div class="page-meta"><span>Daily / Weekly Reports submitted by Technical Managers · read-only</span></div>
+    </div>
+  </div>
+
+  <section class="card">
+    <!-- Report Type -->
+    <nav class="tabs" data-tabs="type">
+      <a class="tab" data-tab="daily" href="?type=daily">Daily Reports</a>
+      <a class="tab" data-tab="weekly" href="?type=weekly">Weekly Reports</a>
+    </nav>
+
+    <!-- Search / Filter -->
+    <div class="card-body" style="padding-bottom:16px">
+      <div class="filter-bar">
+        <div class="input-search"><i data-lucide="search"></i><input class="input" placeholder="Search reports"></div>
+        <select class="select"><option>Farm: All</option></select>
+        <select class="select" data-panel-group="type" data-panel="daily"><option>Date: Last 7 days</option></select>
+        <select class="select" data-panel-group="type" data-panel="weekly"><option>Period: Last 4 weeks</option></select>
+        <select class="select"><option>Status: Submitted</option></select>
+      </div>
+    </div>
+
+    <!-- Daily Report List (FM-R-001, 003) -->
+    <div data-panel-group="type" data-panel="daily">
+      <table class="table">
+        <thead><tr><th>Date</th><th>Farm</th><th>Technical Manager</th><th>Status</th><th class="num">Issues</th><th>Submitted</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="cell-main">28 Sep 2026</td><td>Farm A</td><td>Sari Wijaya</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="text-muted">28 Sep 18:20</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-daily-report.html">View</a></td></tr>
+          <tr><td class="cell-main">28 Sep 2026</td><td>Farm B</td><td>Budi Santoso</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">0</td><td class="text-muted">28 Sep 17:55</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-daily-report.html">View</a></td></tr>
+          <tr><td class="cell-main">28 Sep 2026</td><td>Farm C</td><td>Dewi Lestari</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="text-muted">28 Sep 18:40</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-daily-report.html">View</a></td></tr>
+          <tr><td class="cell-main">28 Sep 2026</td><td>Farm D</td><td>Agus Pratama</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">2</td><td class="text-muted">28 Sep 19:05</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-daily-report.html">View</a></td></tr>
+          <tr><td class="cell-main">27 Sep 2026</td><td>Farm A</td><td>Sari Wijaya</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="text-muted">27 Sep 18:05</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-daily-report.html">View</a></td></tr>
+          <tr><td class="cell-main">27 Sep 2026</td><td>Farm B</td><td>Budi Santoso</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">0</td><td class="text-muted">27 Sep 17:48</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-daily-report.html">View</a></td></tr>
+          <tr><td class="cell-main">27 Sep 2026</td><td>Farm C</td><td>Dewi Lestari</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">0</td><td class="text-muted">27 Sep 18:30</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-daily-report.html">View</a></td></tr>
+          <tr><td class="cell-main">27 Sep 2026</td><td>Farm D</td><td>Agus Pratama</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="text-muted">27 Sep 19:12</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-daily-report.html">View</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Weekly Report List (FM-R-004, 006) -->
+    <div data-panel-group="type" data-panel="weekly">
+      <table class="table">
+        <thead><tr><th>Reporting Period</th><th>Farm</th><th>Technical Manager</th><th>Status</th><th class="num">Major Issues</th><th>Submitted</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="cell-main">15–21 Sep 2026</td><td>Farm A</td><td>Sari Wijaya</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="text-muted">22 Sep 10:10</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-weekly-report.html">View</a></td></tr>
+          <tr><td class="cell-main">15–21 Sep 2026</td><td>Farm B</td><td>Budi Santoso</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">0</td><td class="text-muted">22 Sep 09:40</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-weekly-report.html">View</a></td></tr>
+          <tr><td class="cell-main">15–21 Sep 2026</td><td>Farm C</td><td>Dewi Lestari</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">0</td><td class="text-muted">22 Sep 11:25</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-weekly-report.html">View</a></td></tr>
+          <tr><td class="cell-main">15–21 Sep 2026</td><td>Farm D</td><td>Agus Pratama</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">2</td><td class="text-muted">22 Sep 13:02</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-weekly-report.html">View</a></td></tr>
+          <tr><td class="cell-main">8–14 Sep 2026</td><td>Farm A</td><td>Sari Wijaya</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">0</td><td class="text-muted">15 Sep 09:55</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-weekly-report.html">View</a></td></tr>
+          <tr><td class="cell-main">8–14 Sep 2026</td><td>Farm B</td><td>Budi Santoso</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">0</td><td class="text-muted">15 Sep 10:20</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-weekly-report.html">View</a></td></tr>
+          <tr><td class="cell-main">8–14 Sep 2026</td><td>Farm C</td><td>Dewi Lestari</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="text-muted">15 Sep 11:02</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-weekly-report.html">View</a></td></tr>
+          <tr><td class="cell-main">8–14 Sep 2026</td><td>Farm D</td><td>Agus Pratama</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="text-muted">15 Sep 12:40</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-weekly-report.html">View</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer" style="justify-content:space-between">
+      <span class="caption" style="align-self:center">Showing 1–8</span>
+      <nav class="pagination"><span class="is-disabled"><i data-lucide="chevron-left"></i></span><span class="is-active">1</span><a href="#">2</a><a href="#">3</a><a href="#"><i data-lucide="chevron-right"></i></a></nav>
+    </div>
+  </section>
+
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="../assets/charts.js"></script>
+<script>
+  // Keep sidebar sub-item in sync with the Report Type tab
+  if (new URLSearchParams(location.search).get("type") === "weekly") document.body.dataset.sub = "weekly";
+</script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>
