@@ -18,7 +18,7 @@
       <div class="page-meta">
         <span><i data-lucide="map-pin"></i>East Java, Indonesia</span>
         <span><i data-lucide="user"></i>Technical Manager: Sari Wijaya</span>
-        <span><i data-lucide="waves"></i>8 Ponds · DOC 62</span>
+        <span><i data-lucide="waves"></i>8 Ponds · DOC 34–76</span>
         <span><i data-lucide="clock"></i>Last updated 09:35</span>
       </div>
     </div>
@@ -31,7 +31,7 @@
       <div class="grid cols-4 gap-4">
         <div class="status-tile"><span class="status-tile-label">Overall Status</span><span><span class="badge badge--warning">Warning</span></span><span class="status-tile-note">3 open issues</span></div>
         <div class="status-tile"><span class="status-tile-label">Environmental Status</span><span><span class="badge badge--warning">Warning</span></span><span class="status-tile-note">2 Ponds Warning · 1 Pond Attention</span></div>
-        <div class="status-tile"><span class="status-tile-label">Production Status</span><span><span class="status-text st--normal">Normal</span></span><span class="status-tile-note">ABW 14.2 g · within 5% of target</span></div>
+        <div class="status-tile"><span class="status-tile-label">Production Status</span><span><span class="badge badge--attention">Attention</span></span><span class="status-tile-note">2 of 8 Ponds behind growth target</span></div>
         <div class="status-tile"><span class="status-tile-label">Operational Status</span><span><span class="badge badge--attention">Attention</span></span><span class="status-tile-note">1 sensor offline (Pond 08)</span></div>
       </div>
       <div>
@@ -60,20 +60,36 @@
     </table>
   </section>
 
-  <!-- 3. Production Status (FM-FD-006, 007) -->
+  <!-- 3. Production Status (FM-FD-006, 007) — per-Pond KPIs; only additive / weighted values at Farm level (04_KPI §4) -->
   <section class="stack">
-    <div class="row-between"><h2 class="section-label">Production Status</h2><span class="caption">Current cycle · DOC 62 · compared with last week</span></div>
-    <div class="grid cols-5 gap-4">
-      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">18.4<span class="kpi-unit">t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.5 t</div><div class="kpi-updated">Updated 28 Sep</div></div>
-      <div class="kpi"><div class="kpi-head"><span class="kpi-name">ABW</span><span class="kpi-type">Actual</span></div><div class="kpi-value">14.2<span class="kpi-unit">g</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.6 g</div><div class="kpi-updated">Updated 28 Sep</div></div>
-      <div class="kpi"><div class="kpi-head"><span class="kpi-name">ADG</span><span class="kpi-type">Actual</span></div><div class="kpi-value">0.24<span class="kpi-unit">g/day</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.01 g/day</div><div class="kpi-updated">Updated 28 Sep</div></div>
-      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Survival Rate</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">86<span class="kpi-unit">%</span></div><div class="kpi-compare"><i data-lucide="trending-down"></i>−1 pt</div><div class="kpi-updated">Updated 28 Sep</div></div>
-      <div class="kpi"><div class="kpi-head"><span class="kpi-name">FCR</span><span class="kpi-type">Actual</span></div><div class="kpi-value">1.32</div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.02</div><div class="kpi-updated">Updated 28 Sep</div></div>
+    <div class="row-between"><h2 class="section-label">Production Status</h2><span class="caption">Latest sampling 28 Sep · compared with last week</span></div>
+    <div class="grid cols-4 gap-4">
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">11.6<span class="kpi-unit">t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.4 t vs last week</div><div class="kpi-updated">Sum of 8 Ponds</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Survival Rate</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">88<span class="kpi-unit">%</span></div><div class="kpi-compare"><i data-lucide="trending-down"></i>−1 pt vs last week</div><div class="kpi-updated">Weighted by stocked PL</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">FCR</span><span class="kpi-type">Actual</span></div><div class="kpi-value">1.31</div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.02 vs last week</div><div class="kpi-updated">Total feed ÷ biomass gain</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Growth vs Target</span><span class="kpi-type">Actual</span></div><div class="kpi-value">6 / 8<span class="kpi-unit">on track</span></div><div class="kpi-compare"><i data-lucide="triangle-alert"></i>2 Ponds behind (02, 05)</div><div class="kpi-updated">Behind = −5% or more</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div><h3 class="card-title">Pond Production Summary</h3><div class="card-sub">Ponds are stocked on different dates — compare ABW with the target for the same DOC</div></div><span class="caption">SR and Biomass estimated</span></div>
+      <table class="table">
+<thead><tr><th>Pond</th><th>Stocked</th><th class="num">DOC</th><th class="num">ABW</th><th class="num">Target</th><th>vs Target</th><th class="num">ADG</th><th class="num">SR</th><th class="num">FCR</th><th class="num">Biomass</th></tr></thead>
+<tbody>
+<tr><td class="cell-main">Pond 01</td><td class="text-muted">15 Jul</td><td class="num">76</td><td class="num">18.0 g</td><td class="num text-muted">18.2 g</td><td><span class="status-text st--normal">−1% On track</span></td><td class="num">0.21</td><td class="num">88%</td><td class="num">1.38</td><td class="num">1.90 t</td></tr>
+<tr><td class="cell-main">Pond 02</td><td class="text-muted">29 Jul</td><td class="num">62</td><td class="num">13.8 g</td><td class="num text-muted">15.0 g</td><td><span class="status-text st--attention">−8% Behind</span></td><td class="num">0.21</td><td class="num">84%</td><td class="num">1.41</td><td class="num">1.74 t</td></tr>
+<tr><td class="cell-main">Pond 03</td><td class="text-muted">22 Jul</td><td class="num">69</td><td class="num">16.9 g</td><td class="num text-muted">16.6 g</td><td><span class="status-text st--normal">+2% On track</span></td><td class="num">0.23</td><td class="num">89%</td><td class="num">1.29</td><td class="num">1.80 t</td></tr>
+<tr><td class="cell-main">Pond 04</td><td class="text-muted">5 Aug</td><td class="num">55</td><td class="num">12.9 g</td><td class="num text-muted">13.3 g</td><td><span class="status-text st--normal">−3% On track</span></td><td class="num">0.23</td><td class="num">87%</td><td class="num">1.30</td><td class="num">1.35 t</td></tr>
+<tr><td class="cell-main">Pond 05</td><td class="text-muted">29 Jul</td><td class="num">62</td><td class="num">13.9 g</td><td class="num text-muted">15.0 g</td><td><span class="status-text st--attention">−7% Behind</span></td><td class="num">0.21</td><td class="num">82%</td><td class="num">1.44</td><td class="num">1.71 t</td></tr>
+<tr><td class="cell-main">Pond 06</td><td class="text-muted">12 Aug</td><td class="num">48</td><td class="num">11.8 g</td><td class="num text-muted">11.5 g</td><td><span class="status-text st--normal">+3% On track</span></td><td class="num">0.27</td><td class="num">90%</td><td class="num">1.21</td><td class="num">1.27 t</td></tr>
+<tr><td class="cell-main">Pond 07</td><td class="text-muted">19 Aug</td><td class="num">41</td><td class="num">9.4 g</td><td class="num text-muted">9.5 g</td><td><span class="status-text st--normal">−1% On track</span></td><td class="num">0.26</td><td class="num">91%</td><td class="num">1.15</td><td class="num">1.03 t</td></tr>
+<tr><td class="cell-main">Pond 08</td><td class="text-muted">26 Aug</td><td class="num">34</td><td class="num">7.6 g</td><td class="num text-muted">7.4 g</td><td><span class="status-text st--normal">+3% On track</span></td><td class="num">0.30</td><td class="num">92%</td><td class="num">1.10</td><td class="num">0.84 t</td></tr>
+</tbody>
+<tfoot><tr><td>Farm A</td><td class="text-muted">8 Ponds</td><td class="num">34–76</td><td class="num text-muted">—</td><td class="num text-muted">—</td><td>6 on track · 2 behind</td><td class="num text-muted">—</td><td class="num">88%</td><td class="num">1.31</td><td class="num">11.6 t</td></tr></tfoot>
+</table>
     </div>
     <div class="card">
       <div class="card-header">
-        <div><h3 class="card-title">Growth Trend</h3><div class="card-sub">ABW by weekly sampling (g)</div></div>
-        <div class="chart-legend"><span><i class="legend-line actual"></i>Actual</span><span><i class="legend-line dashed"></i>Target</span></div>
+        <div><h3 class="card-title">Growth vs Target</h3><div class="card-sub">Target ABW by DOC with each Pond's latest ABW</div></div>
+        <div class="chart-legend"><span><i class="legend-line dashed"></i>Target ABW</span><span><i class="legend-band" style="background:#EDF4F2;border-color:#B2D0C4"></i>±5% on track</span><span class="status-text st--normal">On track</span><span class="status-text st--attention" style="--x:0">Behind</span></div>
       </div>
       <div class="card-body"><div class="chart" id="growth"></div></div>
     </div>
@@ -138,14 +154,7 @@
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
 <script src="../assets/charts.js"></script>
 <script>
-  Charts.line("#growth", {
-    labels: ["DOC 13", "DOC 20", "DOC 27", "DOC 34", "DOC 41", "DOC 48", "DOC 55", "DOC 62"],
-    series: [
-      { values: [1.8, 3.4, 5.3, 7.4, 9.5, 11.5, 13.3, 15.0], style: "target" },
-      { values: [1.6, 3.1, 5.0, 7.2, 9.3, 11.0, 12.6, 14.2], points: true, style: "actual" }
-    ],
-    yMin: 0, yMax: 16, ticks: 4, unit: "g", height: 220
-  });
+  Charts.growth("#growth", { target: [[27,5.3],[34,7.4],[41,9.5],[48,11.5],[55,13.3],[62,15.0],[69,16.6],[76,18.2]], points: [{x:76,y:18.0,label:"P01",status:"on"},{x:62,y:13.8,label:"P02",status:"behind"},{x:69,y:16.9,label:"P03",status:"on"},{x:55,y:12.9,label:"P04",status:"on"},{x:62,y:13.9,label:"P05",status:"behind"},{x:48,y:11.8,label:"P06",status:"on"},{x:41,y:9.4,label:"P07",status:"on"},{x:34,y:7.6,label:"P08",status:"on"}], xMin: 27, xMax: 83, xStep: 7, yMin: 0, yMax: 20, ticks: 4, unit: "g", height: 240 });
 </script>
 <script src="../assets/layout.js"></script>
 </body>

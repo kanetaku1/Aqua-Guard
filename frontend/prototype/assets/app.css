@@ -1,4 +1,4 @@
-/* Components — Design System v2 (frontend/docs/knowledge/04_design_system.md) */
+/* Components — Design System v2 (frontend/docs/08_デザインシステム定義書.md) */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap");
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -179,6 +179,7 @@ b, strong, .strong { font-weight: var(--fw-bold); }
 .table tbody tr:hover td { background: var(--color-row-hover); }
 .table tr.is-link { cursor: pointer; }
 .table .num, .table th.num { text-align: right; }
+.table tfoot td { height: var(--control-md); padding: 0 var(--space-2); background: var(--color-mist); border-top: 1px solid var(--color-border); font-weight: var(--fw-bold); }
 .table .actions { text-align: right; white-space: nowrap; }
 .table .cell-main { font-weight: var(--fw-bold); }
 .table .cell-sub { font-size: var(--fs-helper); color: var(--color-slate); }

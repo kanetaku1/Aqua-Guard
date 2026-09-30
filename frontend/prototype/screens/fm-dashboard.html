@@ -33,7 +33,7 @@
       <thead><tr><th>Farm</th><th>Overall</th><th>Environmental</th><th>Production</th><th>Operational</th><th class="num">Open Issues</th><th>Updated</th><th></th></tr></thead>
       <tbody>
         <tr><td><div class="cell-main">Farm D</div><div class="cell-sub">Lombok, West Nusa Tenggara · 8 Ponds</div></td><td><span class="badge badge--critical">Critical</span></td><td><span class="status-text st--critical">Critical</span></td><td><span class="status-text st--warning">Warning</span></td><td><span class="status-text st--attention">Attention</span></td><td class="num">2</td><td class="text-muted">09:30</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-farm-detail.html">View</a></td></tr>
-        <tr><td><div class="cell-main">Farm A</div><div class="cell-sub">East Java, Indonesia · 8 Ponds</div></td><td><span class="badge badge--warning">Warning</span></td><td><span class="status-text st--warning">Warning</span></td><td><span class="status-text st--normal">Normal</span></td><td><span class="status-text st--attention">Attention</span></td><td class="num">3</td><td class="text-muted">09:35</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-farm-detail.html">View</a></td></tr>
+        <tr><td><div class="cell-main">Farm A</div><div class="cell-sub">East Java, Indonesia · 8 Ponds</div></td><td><span class="badge badge--warning">Warning</span></td><td><span class="status-text st--warning">Warning</span></td><td><span class="status-text st--attention">Attention</span></td><td><span class="status-text st--attention">Attention</span></td><td class="num">3</td><td class="text-muted">09:35</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-farm-detail.html">View</a></td></tr>
         <tr><td><div class="cell-main">Farm C</div><div class="cell-sub">Banyuwangi, East Java · 6 Ponds</div></td><td><span class="badge badge--attention">Attention</span></td><td><span class="status-text st--attention">Attention</span></td><td><span class="status-text st--normal">Normal</span></td><td><span class="status-text st--normal">Normal</span></td><td class="num">1</td><td class="text-muted">09:28</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-farm-detail.html">View</a></td></tr>
         <tr><td><div class="cell-main">Farm B</div><div class="cell-sub">Lampung, Indonesia · 10 Ponds</div></td><td><span class="status-text st--normal">Normal</span></td><td><span class="status-text st--normal">Normal</span></td><td><span class="status-text st--normal">Normal</span></td><td><span class="status-text st--normal">Normal</span></td><td class="num">0</td><td class="text-muted">09:33</td><td class="actions"><a class="btn btn--link btn--sm" href="fm-farm-detail.html">View</a></td></tr>
       </tbody>
@@ -73,14 +73,21 @@
     </div>
   </section>
 
-  <!-- 3. Production Status Summary (FM-D-003) -->
+  <!-- 3. Production Status Summary (FM-D-003) — only company values that are meaningful (04_KPI §4) -->
   <section class="stack">
-    <div class="row-between"><h2 class="section-label">Production Status</h2><span class="caption">Company total / average · current cycle</span></div>
-    <div class="grid cols-4">
-      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Total Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">62.4<span class="kpi-unit">t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+4.1 t vs last week</div><div class="kpi-updated">Updated 28 Sep · Sampling</div></div>
-      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Avg. ABW</span><span class="kpi-type">Actual</span></div><div class="kpi-value">14.1<span class="kpi-unit">g</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.5 g vs last week</div><div class="kpi-updated">Updated 28 Sep · Sampling</div></div>
-      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Avg. Survival Rate</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">84<span class="kpi-unit">%</span></div><div class="kpi-compare"><i data-lucide="trending-down"></i>−1 pt vs last week</div><div class="kpi-updated">Updated 28 Sep · Sampling</div></div>
-      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Avg. FCR</span><span class="kpi-type">Actual</span></div><div class="kpi-value">1.37</div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.02 vs last week</div><div class="kpi-updated">Updated 28 Sep · Feeding records</div></div>
+    <div class="row-between"><h2 class="section-label">Production Status</h2><span class="caption">Company total · latest sampling 28 Sep · per-Farm status in the Farm Status table</span></div>
+    <div class="grid cols-3 gap-4">
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Total Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">55.6<span class="kpi-unit">t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+3.9 t vs last week</div><div class="kpi-updated">Sum of 32 Ponds · sampling 28 Sep</div></div>
+      <div class="kpi"><div class="kpi-head"><span class="kpi-name">Ponds behind growth target</span><span class="kpi-type">Actual</span></div><div class="kpi-value">7 / 32<span class="kpi-unit">Ponds</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1 vs last week</div><div class="kpi-updated">ABW −5% or more below target for the DOC</div></div>
+      <div class="card">
+        <div class="card-header" style="min-height:0"><span class="kpi-name">Behind growth target by Farm</span></div>
+        <table class="table table-compact"><tbody>
+          <tr><td class="cell-main">Farm A</td><td><span class="status-text st--attention">2 of 8 Ponds</span></td><td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td></tr>
+          <tr><td class="cell-main">Farm B</td><td><span class="status-text st--normal">0 of 10 Ponds</span></td><td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td></tr>
+          <tr><td class="cell-main">Farm C</td><td><span class="status-text st--normal">1 of 6 Ponds</span></td><td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td></tr>
+          <tr><td class="cell-main">Farm D</td><td><span class="status-text st--warning">4 of 8 Ponds</span></td><td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td></tr>
+        </tbody></table>
+      </div>
     </div>
   </section>
 

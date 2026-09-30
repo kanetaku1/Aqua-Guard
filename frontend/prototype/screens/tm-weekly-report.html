@@ -30,7 +30,7 @@
     <section class="card">
       <div class="card-body">
         <dl class="dl">
-          <div><dt>Reporting Period</dt><dd>22–28 Sep 2026 · DOC 55–62</dd></div>
+          <div><dt>Reporting Period</dt><dd>22–28 Sep 2026 · DOC 34–76</dd></div>
           <div><dt>Farm</dt><dd>Farm A</dd></div>
           <div><dt>Status</dt><dd><span class="badge badge--draft">Draft</span></dd></div>
           <div><dt>Last saved</dt><dd>28 Sep 20:15 · due 29 Sep</dd></div>
@@ -49,16 +49,31 @@
       </div>
     </section>
 
-    <!-- Production Status -->
+    <!-- Production Status — same structure as FM-06 -->
     <section class="stack">
       <div class="row-between"><h2 class="section-label">Production Status</h2><span class="source-tag"><i data-lucide="database"></i>From sampling 28 Sep</span></div>
-      <div class="grid cols-6 gap-4">
-        <div class="kpi"><div class="kpi-head"><span class="kpi-name">Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">18.4<span class="kpi-unit">t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.5 t</div><div class="kpi-updated">28 Sep</div></div>
-        <div class="kpi"><div class="kpi-head"><span class="kpi-name">ABW</span><span class="kpi-type">Actual</span></div><div class="kpi-value">14.2<span class="kpi-unit">g</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.6 g</div><div class="kpi-updated">28 Sep</div></div>
-        <div class="kpi"><div class="kpi-head"><span class="kpi-name">ADG</span><span class="kpi-type">Actual</span></div><div class="kpi-value">0.24<span class="kpi-unit">g/d</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.01</div><div class="kpi-updated">28 Sep</div></div>
-        <div class="kpi"><div class="kpi-head"><span class="kpi-name">Survival Rate</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">86<span class="kpi-unit">%</span></div><div class="kpi-compare"><i data-lucide="trending-down"></i>−1 pt</div><div class="kpi-updated">28 Sep</div></div>
-        <div class="kpi"><div class="kpi-head"><span class="kpi-name">FCR</span><span class="kpi-type">Actual</span></div><div class="kpi-value">1.32</div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.02</div><div class="kpi-updated">28 Sep</div></div>
-        <div class="kpi"><div class="kpi-head"><span class="kpi-name">Size Uniformity</span><span class="kpi-type">Actual</span></div><div class="kpi-value">78<span class="kpi-unit">%</span></div><div class="kpi-compare"><i data-lucide="arrow-right"></i>±0 pt</div><div class="kpi-updated">28 Sep</div></div>
+      <div class="grid cols-4 gap-4">
+        <div class="kpi"><div class="kpi-head"><span class="kpi-name">Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">11.6<span class="kpi-unit">t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.4 t vs previous week</div><div class="kpi-updated">Sum of 8 Ponds</div></div>
+        <div class="kpi"><div class="kpi-head"><span class="kpi-name">Survival Rate</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">88<span class="kpi-unit">%</span></div><div class="kpi-compare"><i data-lucide="trending-down"></i>−1 pt vs previous week</div><div class="kpi-updated">Weighted by stocked PL</div></div>
+        <div class="kpi"><div class="kpi-head"><span class="kpi-name">FCR</span><span class="kpi-type">Actual</span></div><div class="kpi-value">1.31</div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.02 vs previous week</div><div class="kpi-updated">Total feed ÷ biomass gain</div></div>
+        <div class="kpi"><div class="kpi-head"><span class="kpi-name">Growth vs Target</span><span class="kpi-type">Actual</span></div><div class="kpi-value">6 / 8<span class="kpi-unit">on track</span></div><div class="kpi-compare"><i data-lucide="triangle-alert"></i>2 Ponds behind (02, 05)</div><div class="kpi-updated">Behind = −5% or more</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div><h3 class="card-title">Pond Production Summary</h3><div class="card-sub">Calculated from sampling, feeding and mortality records</div></div><span class="caption">SR and Biomass estimated</span></div>
+        <table class="table">
+<thead><tr><th>Pond</th><th>Stocked</th><th class="num">DOC</th><th class="num">ABW</th><th class="num">Target</th><th>vs Target</th><th class="num">ADG</th><th class="num">SR</th><th class="num">FCR</th><th class="num">Biomass</th><th class="num">Uniformity</th></tr></thead>
+<tbody>
+<tr><td class="cell-main">Pond 01</td><td class="text-muted">15 Jul</td><td class="num">76</td><td class="num">18.0 g</td><td class="num text-muted">18.2 g</td><td><span class="status-text st--normal">−1% On track</span></td><td class="num">0.21</td><td class="num">88%</td><td class="num">1.38</td><td class="num">1.90 t</td><td class="num">81%</td></tr>
+<tr><td class="cell-main">Pond 02</td><td class="text-muted">29 Jul</td><td class="num">62</td><td class="num">13.8 g</td><td class="num text-muted">15.0 g</td><td><span class="status-text st--attention">−8% Behind</span></td><td class="num">0.21</td><td class="num">84%</td><td class="num">1.41</td><td class="num">1.74 t</td><td class="num">75%</td></tr>
+<tr><td class="cell-main">Pond 03</td><td class="text-muted">22 Jul</td><td class="num">69</td><td class="num">16.9 g</td><td class="num text-muted">16.6 g</td><td><span class="status-text st--normal">+2% On track</span></td><td class="num">0.23</td><td class="num">89%</td><td class="num">1.29</td><td class="num">1.80 t</td><td class="num">82%</td></tr>
+<tr><td class="cell-main">Pond 04</td><td class="text-muted">5 Aug</td><td class="num">55</td><td class="num">12.9 g</td><td class="num text-muted">13.3 g</td><td><span class="status-text st--normal">−3% On track</span></td><td class="num">0.23</td><td class="num">87%</td><td class="num">1.30</td><td class="num">1.35 t</td><td class="num">79%</td></tr>
+<tr><td class="cell-main">Pond 05</td><td class="text-muted">29 Jul</td><td class="num">62</td><td class="num">13.9 g</td><td class="num text-muted">15.0 g</td><td><span class="status-text st--attention">−7% Behind</span></td><td class="num">0.21</td><td class="num">82%</td><td class="num">1.44</td><td class="num">1.71 t</td><td class="num">74%</td></tr>
+<tr><td class="cell-main">Pond 06</td><td class="text-muted">12 Aug</td><td class="num">48</td><td class="num">11.8 g</td><td class="num text-muted">11.5 g</td><td><span class="status-text st--normal">+3% On track</span></td><td class="num">0.27</td><td class="num">90%</td><td class="num">1.21</td><td class="num">1.27 t</td><td class="num">83%</td></tr>
+<tr><td class="cell-main">Pond 07</td><td class="text-muted">19 Aug</td><td class="num">41</td><td class="num">9.4 g</td><td class="num text-muted">9.5 g</td><td><span class="status-text st--normal">−1% On track</span></td><td class="num">0.26</td><td class="num">91%</td><td class="num">1.15</td><td class="num">1.03 t</td><td class="num">85%</td></tr>
+<tr><td class="cell-main">Pond 08</td><td class="text-muted">26 Aug</td><td class="num">34</td><td class="num">7.6 g</td><td class="num text-muted">7.4 g</td><td><span class="status-text st--normal">+3% On track</span></td><td class="num">0.30</td><td class="num">92%</td><td class="num">1.10</td><td class="num">0.84 t</td><td class="num">84%</td></tr>
+</tbody>
+<tfoot><tr><td>Farm A</td><td class="text-muted">8 Ponds</td><td class="num">34–76</td><td class="num text-muted">—</td><td class="num text-muted">—</td><td>6 on track · 2 behind</td><td class="num text-muted">—</td><td class="num">88%</td><td class="num">1.31</td><td class="num">11.6 t</td><td class="num text-muted">—</td></tr></tfoot>
+</table>
       </div>
     </section>
 
@@ -143,12 +158,12 @@
   <section class="card" data-panel-group="tab" data-panel="history">
     <div class="card-header"><h2 class="card-title">Weekly Report History</h2></div>
     <table class="table">
-      <thead><tr><th>Reporting Period</th><th>Status</th><th class="num">ABW</th><th class="num">Survival Rate</th><th class="num">Major Issues</th><th>Submitted</th><th></th></tr></thead>
+      <thead><tr><th>Reporting Period</th><th>Status</th><th class="num">Biomass</th><th class="num">Survival Rate</th><th class="num">Major Issues</th><th>Submitted</th><th></th></tr></thead>
       <tbody>
-        <tr><td class="cell-main">22–28 Sep 2026</td><td><span class="badge badge--draft">Draft</span></td><td class="num">14.2 g</td><td class="num">86%</td><td class="num">3</td><td class="text-muted">—</td><td class="actions"><a class="btn btn--outline btn--sm" href="?tab=create">Continue</a></td></tr>
-        <tr><td class="cell-main">15–21 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">12.6 g</td><td class="num">87%</td><td class="num">1</td><td class="text-muted">22 Sep 10:10</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
-        <tr><td class="cell-main">8–14 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">11.0 g</td><td class="num">88%</td><td class="num">0</td><td class="text-muted">15 Sep 09:55</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
-        <tr><td class="cell-main">1–7 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">9.3 g</td><td class="num">89%</td><td class="num">0</td><td class="text-muted">8 Sep 10:30</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
+        <tr><td class="cell-main">22–28 Sep 2026</td><td><span class="badge badge--draft">Draft</span></td><td class="num">11.6 t</td><td class="num">88%</td><td class="num">3</td><td class="text-muted">—</td><td class="actions"><a class="btn btn--outline btn--sm" href="?tab=create">Continue</a></td></tr>
+        <tr><td class="cell-main">15–21 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">10.2 t</td><td class="num">89%</td><td class="num">1</td><td class="text-muted">22 Sep 10:10</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
+        <tr><td class="cell-main">8–14 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">8.9 t</td><td class="num">90%</td><td class="num">0</td><td class="text-muted">15 Sep 09:55</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
+        <tr><td class="cell-main">1–7 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">7.6 t</td><td class="num">90%</td><td class="num">0</td><td class="text-muted">8 Sep 10:30</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
       </tbody>
     </table>
   </section>

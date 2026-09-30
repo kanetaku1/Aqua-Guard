@@ -1,6 +1,6 @@
 # Web UI Prototype
 
-`frontend/docs/knowledge/` に基づく全画面の静的プロトタイプ。ビルド不要（HTML / CSS / 最小限のJS）。
+`frontend/docs/`（05_画面・機能要件書・06_画面構成ツリー・08_デザインシステム定義書）に基づく全画面の静的プロトタイプ。ビルド不要（HTML / CSS / 最小限のJS）。
 
 ## 見る
 
@@ -27,15 +27,16 @@ python -m http.server 8000 --directory frontend/prototype
 prototype/
 ├── index.html            全画面カタログ（サムネイル）
 ├── design-system.html    トークン・コンポーネント一覧
+├── mock_data.md          全画面共通のサンプルデータ
 ├── assets/
 │   ├── tokens.css        デザイントークン（ここだけ変えれば全画面に反映）
 │   ├── app.css           共通コンポーネント
 │   ├── layout.js         Global Header / Sidebar・タブ・Dialog/Drawer
-│   └── charts.js         Time-series / Bar chart（SVG）
+│   └── charts.js         Time-series / Bar / Growth vs Target chart（SVG）
 └── screens/              FM-01〜06, TM-01〜05
 ```
 
 ## ルール
 
-- 新しい色・余白・コンポーネントを画面内に直接書かない。必要なら `docs/knowledge/04_design_system.md` → `tokens.css` / `app.css` の順に追加する
-- 数値は `docs/knowledge/06_mock_data.md` に合わせる
+- 新しい色・余白・コンポーネントを画面内に直接書かない。必要なら `docs/07_UI・UX設計書.md` / `docs/08_デザインシステム定義書.md` → `tokens.css` / `app.css` の順に追加する
+- 数値は `mock_data.md`（このディレクトリ）に合わせる

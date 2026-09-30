@@ -90,6 +90,33 @@
     xLabels(f, cfg.labels, xc);
   }
 
+  /* Growth vs target: target ABW curve by DOC (+ ±5 % on-track band) and each Pond's ABW as a point.
+     Ponds have different DOC, so no averaged line is drawn (04_KPI・データ項目定義書 §4). */
+  function drawGrowth(node, cfg) {
+    var f = frame(node, cfg);
+    var x = function (d) { return f.pad.l + ((d - cfg.xMin) / (cfg.xMax - cfg.xMin)) * f.iw; };
+    var up = "", lo = "", mid = "";
+    cfg.target.forEach(function (p, i) {
+      up += (i ? " L" : "M") + x(p[0]).toFixed(1) + " " + f.y(p[1] * 1.05).toFixed(1);
+      mid += (i ? " L" : "M") + x(p[0]).toFixed(1) + " " + f.y(p[1]).toFixed(1);
+    });
+    cfg.target.slice().reverse().forEach(function (p) { lo += " L" + x(p[0]).toFixed(1) + " " + f.y(p[1] * 0.95).toFixed(1); });
+    el("path", { d: up + lo + " Z", fill: "#EDF4F2" }, f.svg);
+    el("path", { d: mid, fill: "none", stroke: C.muted, "stroke-width": 1.5, "stroke-dasharray": "5 4" }, f.svg);
+    for (var d = cfg.xMin; d <= cfg.xMax; d += cfg.xStep || 7) text(f.svg, x(d), f.H - 8, "DOC " + d, "middle");
+    var seen = {};
+    cfg.points.forEach(function (p) {
+      var color = p.status === "behind" ? C.threshold : C.actual;
+      el("circle", { cx: x(p.x), cy: f.y(p.y), r: 5, fill: color, stroke: "#fff", "stroke-width": 1.5 }, f.svg);
+      // Ponds with the same DOC: put the label of the lower point below it
+      var twin = cfg.points.filter(function (q) { return q.x === p.x; });
+      var below = twin.length > 1 && p.y === Math.min.apply(null, twin.map(function (q) { return q.y; }));
+      var t = text(f.svg, x(p.x), f.y(p.y) + (below ? 18 : -9), p.label, "middle");
+      t.setAttribute("fill", p.status === "behind" ? C.threshold : "#18323B");
+      t.setAttribute("font-weight", "700");
+    });
+  }
+
   function register(sel, cfg, fn) {
     var node = typeof sel === "string" ? document.querySelector(sel) : sel;
     if (node) registry.push({ node: node, cfg: cfg, fn: fn, done: false });
@@ -98,6 +125,7 @@
   window.Charts = {
     line: function (sel, cfg) { register(sel, cfg, drawLine); },
     bars: function (sel, cfg) { register(sel, cfg, drawBars); },
+    growth: function (sel, cfg) { register(sel, cfg, drawGrowth); },
     renderAll: function () {
       registry.forEach(function (r) {
         if (!r.done && r.node.clientWidth > 0) { r.fn(r.node, r.cfg); r.done = true; }
