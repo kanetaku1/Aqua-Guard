@@ -37,11 +37,15 @@
       ["FM-01","Dashboard","Which Farm should I look at?","screens/fm-dashboard.html"],
       ["FM-02","Farm List","Select a Farm · high-level condition","screens/fm-farms.html"],
       ["FM-03","Farm Detail","Integrated Farm overview (primary screen)","screens/fm-farm-detail.html"],
-      ["FM-03","Farm Detail · Issue Drawer","Risk / Issue detail (read-only)","screens/fm-farm-detail.html?issue=1"],
+      ["FM-03","Farm Detail · Alert Drawer","Alert from sensor data · TM actions · report as context (read-only)","screens/fm-farm-detail.html?issue=1"],
       ["FM-04","Reports · Daily","Submitted Daily Reports","screens/fm-reports.html"],
       ["FM-04","Reports · Weekly","Submitted Weekly Reports","screens/fm-reports.html?type=weekly"],
-      ["FM-05","Daily Report Detail","What happened on a particular day","screens/fm-daily-report.html"],
-      ["FM-06","Weekly Report Detail","How the Farm progressed during the week","screens/fm-weekly-report.html"]
+      ["FM-05","Daily Report Detail","Ponds at a glance · what happened on a particular day","screens/fm-daily-report.html"],
+      ["FM-05","Daily Report · Pond details","All per-Pond values in one table (expanded)","screens/fm-daily-report.html?details=1"],
+      ["FM-06","Weekly Report Detail","Growth chart, donuts (all Ponds), Ponds this week","screens/fm-weekly-report.html"],
+      ["FM-06","Weekly Report · Water quality trends tab","Aggregated from sensor data","screens/fm-weekly-report.html?pw=wq"],
+      ["FM-06","Weekly Report · Feeding & mortality tab","Per-Pond feeding and mortality","screens/fm-weekly-report.html?pw=feed"],
+      ["FM-06","Weekly Report · Laboratory tab","Per-Pond laboratory results","screens/fm-weekly-report.html?pw=lab"]
     ]'></div>
   </section>
 
@@ -50,20 +54,57 @@
     <div class="shots" data-shots='[
       ["TM-01","Dashboard","Which Pond needs attention?","screens/tm-dashboard.html"],
       ["TM-02","Pond List","Assigned Ponds with current values","screens/tm-ponds.html"],
+      ["TM-02","Pond List · Weekly Sampling","Record ABW for all Ponds","screens/tm-ponds.html?sampling=1"],
       ["TM-03","Pond Detail · IoT / Water Quality","Current values, time-series, history","screens/tm-pond-detail.html?tab=iot"],
       ["TM-03","Pond Detail · Alerts","Alert list and handling","screens/tm-pond-detail.html?tab=alerts"],
-      ["TM-03","Pond Detail · Alert Drawer","Alert detail · Acknowledge","screens/tm-pond-detail.html?tab=alerts&drawer=1"],
+      ["TM-03","Pond Detail · Alert Drawer","Acknowledge → review data → record action → resolve","screens/tm-pond-detail.html?tab=alerts&drawer=1"],
       ["TM-03","Pond Detail · Feeding","Record / history / edit","screens/tm-pond-detail.html?tab=feeding"],
+      ["TM-03","Pond Detail · Calendar","Date field with calendar","screens/tm-pond-detail.html?tab=feeding&calendar=1"],
       ["TM-03","Pond Detail · Mortality","Record / history / edit","screens/tm-pond-detail.html?tab=mortality"],
       ["TM-03","Pond Detail · Sampling","Record / history / ABW","screens/tm-pond-detail.html?tab=sampling"],
       ["TM-03","Pond Detail · Actuator","Status, control, history","screens/tm-pond-detail.html?tab=actuator"],
       ["TM-03","Pond Detail · Actuator Dialog","Confirmation Dialog","screens/tm-pond-detail.html?tab=actuator&dialog=1"],
       ["TM-03","Pond Detail · Toast","Save feedback","screens/tm-pond-detail.html?tab=feeding&toast=1"],
       ["TM-04","Daily Report · Create / Edit","Draft with referenced data","screens/tm-daily-report.html"],
+      ["TM-04","Daily Report · Edit Pond","Appetite, tray and health observations (no sensor values)","screens/tm-daily-report.html?pond=1"],
       ["TM-04","Daily Report · Submit Dialog","Submit confirmation","screens/tm-daily-report.html?submit=1"],
       ["TM-04","Daily Report · History","Past Daily Reports","screens/tm-daily-report.html?tab=history"],
       ["TM-05","Weekly Report · Create / Edit","Draft with referenced data","screens/tm-weekly-report.html"],
+      ["TM-05","Weekly Report · Water quality trends tab","Automatic + optional comment","screens/tm-weekly-report.html?pw=wq"],
+      ["TM-05","Weekly Report · Laboratory tab","Pond 08 pending","screens/tm-weekly-report.html?pw=lab"],
       ["TM-05","Weekly Report · History","Past Weekly Reports","screens/tm-weekly-report.html?tab=history"]
+    ]'></div>
+  </section>
+
+  <section class="stack">
+    <div class="row-between"><h2 class="section-label">Authentication</h2><span class="caption">All roles · before sign-in · no app shell</span></div>
+    <div class="shots" data-shots='[
+      ["AU-01","Login","Email + password","screens/auth-login.html"],
+      ["AU-01","Login · Error","Wrong credentials (attempts left)","screens/auth-login.html?error=1"],
+      ["AU-01","Login · Locked","Locked for 15 minutes","screens/auth-login.html?locked=1"],
+      ["AU-02","Forgot Password","Request a reset link","screens/auth-forgot-password.html"],
+      ["AU-02","Forgot Password · Sent","Same message for any email","screens/auth-forgot-password.html?sent=1"],
+      ["AU-03","Set Password · Invitation","First sign-in from invitation","screens/auth-set-password.html"],
+      ["AU-03","Set Password · Reset","New password from reset link","screens/auth-set-password.html?mode=reset"],
+      ["AU-03","Set Password · Expired","Link expired","screens/auth-set-password.html?expired=1"]
+    ]'></div>
+  </section>
+
+  <section class="stack">
+    <div class="row-between"><h2 class="section-label">System Administrator</h2><span class="caption">Users, master data and settings · no farm data</span></div>
+    <div class="shots" data-shots='[
+      ["AD-01","Users","Invite, role, assigned Farm","screens/ad-users.html"],
+      ["AD-01","Users · User Detail","Edit role and Farm","screens/ad-users.html?user=1"],
+      ["AD-01","Users · Invite","Invite a new user","screens/ad-users.html?invite=1"],
+      ["AD-01","Users · Deactivate","Confirmation","screens/ad-users.html?deactivate=1"],
+      ["AD-02","Farm List","Farm master","screens/ad-farms.html"],
+      ["AD-03","Farm Detail · Farm Info","Name, location, status","screens/ad-farm-detail.html?tab=info"],
+      ["AD-03","Farm Detail · Ponds","Pond master","screens/ad-farm-detail.html?tab=ponds"],
+      ["AD-03","Farm Detail · Devices","Sensors and actuators","screens/ad-farm-detail.html?tab=devices"],
+      ["AD-04","Settings · Thresholds","Boundary editor with range preview (1 error shown)","screens/ad-settings.html?tab=thresholds"],
+      ["AD-04","Settings · Growth Targets","Target growth curve","screens/ad-settings.html?tab=growth"],
+      ["AD-04","Settings · Rules","Deadlines, freshness, status rules","screens/ad-settings.html?tab=rules"],
+      ["AD-04","Settings · Save","Confirmation","screens/ad-settings.html?tab=thresholds&confirm=1"]
     ]'></div>
   </section>
 

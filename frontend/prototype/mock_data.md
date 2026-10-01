@@ -84,7 +84,7 @@ Previous week (14 Sep): Farm A biomass 8.9 t, SR 90 %, FCR 1.27.
 
 ## Farm A Ponds (Technical Manager view: Sari Wijaya)
 
-Thresholds: DO ≥ 4.5 mg/L (Critical < 3.5) · pH 7.5–8.5 · Temp 26–31 °C · TDS 15,000–25,000 mg/L · Turbidity 25–60 NTU · Water Level 120–150 cm.
+Thresholds (boundary values, Normal between the Attention boundaries — 04 §6.2): DO Normal ≥ 5.0 (Attention < 5.0, Warning < 4.5, Critical < 3.5) · pH 7.5–8.5 · Temp 26.5–30.5 °C (Warning < 26 / > 31) · TDS 16,000–24,000 mg/L · Turbidity 25–60 NTU · Water Level 120–150 cm.
 
 | Pond | Status | DO | pH | Temp | TDS | Turbidity | Level (cm) | Aerators | Active Alerts |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -119,4 +119,78 @@ Pond 02: Area 0.5 ha · Stocked 29 Jul 2026 · DOC 62 · Stocking 150,000 PL · 
 | Weekly | 22–28 Sep 2026 | Draft | — (due 29 Sep) |
 | Weekly | 15–21 Sep 2026 | Submitted | 22 Sep 10:10 |
 
-Daily Report 28 Sep (Farm A): DO 6.2 / 5.8 mg/L · pH 7.9 / 7.8 · Temp 28.1 / 28.4 °C · Salinity 15 / 15 ppt (morning / evening) · Secchi 38 cm · Water Level 134 cm · Total Feed 1,240 kg · 4×/day · Grower 2 (2.0 mm) · Mortality 186 pcs / 2.4 kg.
+### Daily Report 28 Sep (Farm A) — operational records per Pond (no sensor values, no Farm averages)
+
+Sensor data (every 3–5 min) is stored separately and is **not** part of a Report. Alerts are generated from sensor data independently of Reports; the report only references them.
+
+| Pond | Feed kg | Rounds | Feed type | Appetite | Tray | Mortality pcs / kg | Health | Observation | Aerators on |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Pond 01 | 190 | 4 | Grower 2 | Good | Clean | 18 / 0.25 | Normal | — | 2 / 2 |
+| Pond 02 | 152 | 4 | Grower 2 | Reduced | Leftover | 64 / 0.82 | Attention | Abnormal swimming — shrimp near the surface 05:30 | 4 / 4 |
+| Pond 03 | 180 | 4 | Grower 2 | Good | Clean | 15 / 0.20 | Normal | — | 2 / 2 |
+| Pond 04 | 140 | 4 | Grower 2 | Good | Clean | 22 / 0.28 | Normal | — | 2 / 2 |
+| Pond 05 | 168 | 4 | Grower 2 | Reduced | Clean | 31 / 0.40 | Attention | Reduced appetite in the afternoon heat | 4 / 4 |
+| Pond 06 | 150 | 4 | Grower 1 | Good | Clean | 12 / 0.15 | Normal | — | 2 / 2 |
+| Pond 07 | 140 | 4 | Grower 1 | Good | Clean | 14 / 0.17 | Normal | — | 2 / 2 |
+| Pond 08 | 120 | 4 | Grower 1 | Good | Clean | 10 / 0.13 | Normal | — | 2 / 2 |
+| **Farm A** | **1,240** | | | 2 reduced | 1 leftover | **186 / 2.40** | 2 Attention | | — |
+
+Alerts referenced on 28 Sep: Pond 02 DO below threshold (Warning, 05:20, 1 h 40 min, resolved) · Pond 05 Temperature above threshold (Attention, 14:10, 1 h 50 min, resolved) · Pond 08 Turbidity sensor offline (Attention, 22:10, ongoing).
+Equipment event: Pond 08 turbidity sensor offline 22:10 — replacement requested.
+
+Farm-wide: Weather Cloudy · Rainfall 4 mm · Light rain 13:00–14:00 · Generator standby (tested 07:00). Feed type Grower 2 (Ponds 01–05), Grower 1 (06–08), 4 rounds.
+
+Weekly per-Pond totals — 15–21 Sep: feed 1,291 / 1,035 / 1,222 / 951 / 1,136 / 1,019 / 951 / 815 kg (8,420); mortality 101 / 191 / 89 / 113 / **308** / 97 / 115 / 106 pcs (1,120; Pond 05 peak 18 Sep). 22–28 Sep: feed 8,610 kg; mortality 107 / **241** / 95 / 123 / 179 / 85 / 102 / 104 pcs (1,036). Daily values per Pond are in the page scripts.
+
+## Users (System Administrator view)
+
+Company email domain: `nusantarashrimp.co.id`. Signed-in admin: **Yusuf Rahman**.
+
+| Name | Role | Farm | Status | Last sign-in |
+| --- | --- | --- | --- | --- |
+| Yusuf Rahman | System Administrator | — | Active | 30 Sep 08:12 |
+| Nadia Kurnia | System Administrator | — | Active | 26 Sep 14:03 |
+| Hendra Kusuma | Farms Manager | All Farms | Active | 29 Sep 09:30 |
+| Rina Hartono | Farms Manager | All Farms | Invited (28 Sep, expires 1 Oct) | — |
+| Sari Wijaya | Technical Manager | Farm A | Active | 29 Sep 09:20 |
+| Budi Santoso | Technical Manager | Farm B | Active | 29 Sep 08:55 |
+| Dewi Lestari | Technical Manager | Farm C | Active | 29 Sep 07:40 |
+| Agus Pratama | Technical Manager | Farm D | Active | 29 Sep 06:15 |
+| Fajar Nugroho | Technical Manager | Farm D | Invited (29 Sep, expires 2 Oct) | — |
+| Eko Wibowo | Technical Manager | Farm B | Deactivated | 12 Aug 17:22 |
+
+A Technical Manager has exactly one Farm; a Farm may have more than one Technical Manager.
+
+## Farm / Pond / Device master
+
+| Farm | Location | Ponds | Status | Devices online |
+| --- | --- | --- | --- | --- |
+| Farm A | East Java, Indonesia | 9 (8 in operation, Pond 09 fallow) | Active | 70 / 71 (A-P08-TRB offline) |
+| Farm B | Lampung, Indonesia | 10 | Active | 88 / 88 |
+| Farm C | Banyuwangi, East Java | 6 | Active | 53 / 53 |
+| Farm D | Lombok, West Nusa Tenggara | 8 | Active | 69 / 71 |
+| Farm E | Sumbawa, West Nusa Tenggara | 0 | Inactive (being set up) | — |
+
+Farm A devices: 48 sensors (6 per operating Pond: DO, pH, Temperature, TDS, Turbidity, Water Level) + 23 actuators (20 aerators, 3 pumps). Device ID format: `A-P02-DO`, `A-P02-AER1`, `A-P02-PMP1`.
+Aerators / pumps per Pond: 02 and 05 = 4 + 1 pump, 08 = 2 + 1 pump, others = 2.
+
+Settings last updated 2 Sep 2026 by Yusuf Rahman. Farm D has a DO threshold override.
+
+### Weekly sampling (TM-02 batch entry)
+
+Sampled 28 Sep: 8 of 8 Ponds (see Pond Production Summary). Next sampling 5 Oct — prototype shows it in progress: Pond 01 100 pcs / 1,930 g → 19.3 g (−2%), Pond 02 100 / 1,480 → 14.8 g (−10% Behind), Pond 03 100 / 1,810 → 18.1 g (+1%); Ponds 04–08 not yet sampled. Target at DOC 82 / 68 / 75 = 19.6 / 16.4 / 18.0 g (interpolated / extrapolated from the curve).
+
+### Laboratory per Pond (recorded with weekly sampling)
+
+| Pond | 21 Sep: TAN / NO2 / Vibrio ×10³ / Alk. | 28 Sep: TAN / NO2 / Vibrio ×10³ / Alk. |
+| --- | --- | --- |
+| Pond 01 | 0.3 / 0.10 / 3.1 / 138 | 0.4 / 0.12 / 3.5 / 135 |
+| Pond 02 | 0.6 / 0.18 / **6.2** / 130 | 0.8 / 0.22 / **7.2** / 128 |
+| Pond 03 | 0.3 / 0.09 / 2.8 / 140 | 0.4 / 0.10 / 3.0 / 138 |
+| Pond 04 | 0.4 / 0.12 / 4.0 / 126 | 0.5 / 0.14 / 4.4 / 118 |
+| Pond 05 | 0.5 / 0.15 / **8.5** / 132 | 0.6 / 0.17 / **6.8** / 130 |
+| Pond 06 | 0.2 / 0.08 / 2.2 / 142 | 0.3 / 0.09 / 2.5 / 140 |
+| Pond 07 | 0.3 / 0.10 / 3.0 / 139 | 0.3 / 0.11 / 3.2 / 137 |
+| Pond 08 | 0.3 / 0.11 / 2.6 / 137 | Pending (expected 30 Sep) |
+
+Bold = Attention (Vibrio ≥ 5 × 10³ CFU/mL).

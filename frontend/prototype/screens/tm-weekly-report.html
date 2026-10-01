@@ -13,8 +13,8 @@
   <div class="page-header">
     <div>
       <div class="breadcrumb"><span>Reports</span><i data-lucide="chevron-right"></i><span>Weekly Report</span></div>
-      <h1 class="page-title">Weekly Report</h1>
-      <div class="page-meta"><span><i data-lucide="warehouse"></i>Farm A</span><span>Trend-oriented summary of the week for the Farms Manager</span></div>
+      <h1 class="page-title">Weekly Report · 22–28 Sep 2026 <span class="status-text status-text--lg st--draft">Draft</span></h1>
+      <div class="page-meta"><span><i data-lucide="warehouse"></i>Farm A · 8 Ponds · DOC 34–76</span><span><i data-lucide="clock"></i>Last saved 28 Sep 20:15 · due today</span></div>
     </div>
   </div>
 
@@ -23,173 +23,154 @@
     <a class="tab" data-tab="history" href="?tab=history">History</a>
   </nav>
 
-  <!-- ============ Create / Edit (TM-R-005, 006, 007) ============ -->
   <div class="stack" style="gap:24px" data-panel-group="tab" data-panel="create">
 
-    <!-- Report Header -->
     <section class="card">
-      <div class="card-body">
-        <dl class="dl">
-          <div><dt>Reporting Period</dt><dd>22–28 Sep 2026 · DOC 34–76</dd></div>
-          <div><dt>Farm</dt><dd>Farm A</dd></div>
-          <div><dt>Status</dt><dd><span class="badge badge--draft">Draft</span></dd></div>
-          <div><dt>Last saved</dt><dd>28 Sep 20:15 · due 29 Sep</dd></div>
-        </dl>
+      <div class="card-header"><h2 class="card-title">Summary</h2><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
+      <div class="card-body form-grid-4" style="grid-template-columns:repeat(5,minmax(0,1fr))">
+        <label class="field"><span class="field-label"><span>Farm Condition <span class="req">*</span></span></span><select class="select"><option>Warning</option></select></label>
+        <div class="field"><span class="field-label">Ponds behind target</span><div class="input is-readonly">2 of 8</div></div>
+        <div class="field"><span class="field-label">Total Feed</span><div class="input is-readonly">8,610 kg</div></div>
+        <div class="field"><span class="field-label">Mortality</span><div class="input is-readonly">1,036 pcs · 13.2 kg</div></div>
+        <div class="field"><span class="field-label">Alerts during the week</span><div class="input is-readonly">4 · 2 ongoing</div></div>
       </div>
     </section>
 
-    <!-- Report Summary -->
-    <section class="card">
-      <div class="card-header"><h2 class="card-title">Report Summary</h2><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
-      <div class="card-body form-grid-4">
-        <label class="field"><span class="field-label">Farm Condition (end of week)</span><select class="select"><option>Warning</option></select></label>
-        <div class="field"><span class="field-label">Major Issues</span><div class="input" style="display:flex;align-items:center;background:var(--color-bg-subtle)">3 open</div></div>
-        <div class="field"><span class="field-label">Total Feed</span><div class="input" style="display:flex;align-items:center;background:var(--color-bg-subtle)">8,610 kg</div></div>
-        <div class="field"><span class="field-label">Mortality</span><div class="input" style="display:flex;align-items:center;background:var(--color-bg-subtle)">1,036 pcs · 13.2 kg</div></div>
-      </div>
-    </section>
-
-    <!-- Production Status — same structure as FM-06 -->
     <section class="stack">
       <div class="row-between"><h2 class="section-label">Production Status</h2><span class="source-tag"><i data-lucide="database"></i>From sampling 28 Sep</span></div>
-      <div class="grid cols-4 gap-4">
-        <div class="kpi"><div class="kpi-head"><span class="kpi-name">Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">11.6<span class="kpi-unit">t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.4 t vs previous week</div><div class="kpi-updated">Sum of 8 Ponds</div></div>
-        <div class="kpi"><div class="kpi-head"><span class="kpi-name">Survival Rate</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">88<span class="kpi-unit">%</span></div><div class="kpi-compare"><i data-lucide="trending-down"></i>−1 pt vs previous week</div><div class="kpi-updated">Weighted by stocked PL</div></div>
-        <div class="kpi"><div class="kpi-head"><span class="kpi-name">FCR</span><span class="kpi-type">Actual</span></div><div class="kpi-value">1.31</div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.02 vs previous week</div><div class="kpi-updated">Total feed ÷ biomass gain</div></div>
-        <div class="kpi"><div class="kpi-head"><span class="kpi-name">Growth vs Target</span><span class="kpi-type">Actual</span></div><div class="kpi-value">6 / 8<span class="kpi-unit">on track</span></div><div class="kpi-compare"><i data-lucide="triangle-alert"></i>2 Ponds behind (02, 05)</div><div class="kpi-updated">Behind = −5% or more</div></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div><h3 class="card-title">Pond Production Summary</h3><div class="card-sub">Calculated from sampling, feeding and mortality records</div></div><span class="caption">SR and Biomass estimated</span></div>
-        <table class="table">
-<thead><tr><th>Pond</th><th>Stocked</th><th class="num">DOC</th><th class="num">ABW</th><th class="num">Target</th><th>vs Target</th><th class="num">ADG</th><th class="num">SR</th><th class="num">FCR</th><th class="num">Biomass</th><th class="num">Uniformity</th></tr></thead>
-<tbody>
-<tr><td class="cell-main">Pond 01</td><td class="text-muted">15 Jul</td><td class="num">76</td><td class="num">18.0 g</td><td class="num text-muted">18.2 g</td><td><span class="status-text st--normal">−1% On track</span></td><td class="num">0.21</td><td class="num">88%</td><td class="num">1.38</td><td class="num">1.90 t</td><td class="num">81%</td></tr>
-<tr><td class="cell-main">Pond 02</td><td class="text-muted">29 Jul</td><td class="num">62</td><td class="num">13.8 g</td><td class="num text-muted">15.0 g</td><td><span class="status-text st--attention">−8% Behind</span></td><td class="num">0.21</td><td class="num">84%</td><td class="num">1.41</td><td class="num">1.74 t</td><td class="num">75%</td></tr>
-<tr><td class="cell-main">Pond 03</td><td class="text-muted">22 Jul</td><td class="num">69</td><td class="num">16.9 g</td><td class="num text-muted">16.6 g</td><td><span class="status-text st--normal">+2% On track</span></td><td class="num">0.23</td><td class="num">89%</td><td class="num">1.29</td><td class="num">1.80 t</td><td class="num">82%</td></tr>
-<tr><td class="cell-main">Pond 04</td><td class="text-muted">5 Aug</td><td class="num">55</td><td class="num">12.9 g</td><td class="num text-muted">13.3 g</td><td><span class="status-text st--normal">−3% On track</span></td><td class="num">0.23</td><td class="num">87%</td><td class="num">1.30</td><td class="num">1.35 t</td><td class="num">79%</td></tr>
-<tr><td class="cell-main">Pond 05</td><td class="text-muted">29 Jul</td><td class="num">62</td><td class="num">13.9 g</td><td class="num text-muted">15.0 g</td><td><span class="status-text st--attention">−7% Behind</span></td><td class="num">0.21</td><td class="num">82%</td><td class="num">1.44</td><td class="num">1.71 t</td><td class="num">74%</td></tr>
-<tr><td class="cell-main">Pond 06</td><td class="text-muted">12 Aug</td><td class="num">48</td><td class="num">11.8 g</td><td class="num text-muted">11.5 g</td><td><span class="status-text st--normal">+3% On track</span></td><td class="num">0.27</td><td class="num">90%</td><td class="num">1.21</td><td class="num">1.27 t</td><td class="num">83%</td></tr>
-<tr><td class="cell-main">Pond 07</td><td class="text-muted">19 Aug</td><td class="num">41</td><td class="num">9.4 g</td><td class="num text-muted">9.5 g</td><td><span class="status-text st--normal">−1% On track</span></td><td class="num">0.26</td><td class="num">91%</td><td class="num">1.15</td><td class="num">1.03 t</td><td class="num">85%</td></tr>
-<tr><td class="cell-main">Pond 08</td><td class="text-muted">26 Aug</td><td class="num">34</td><td class="num">7.6 g</td><td class="num text-muted">7.4 g</td><td><span class="status-text st--normal">+3% On track</span></td><td class="num">0.30</td><td class="num">92%</td><td class="num">1.10</td><td class="num">0.84 t</td><td class="num">84%</td></tr>
+      <div class="notice"><i data-lucide="scale"></i><span><b>Weekly sampling 28 Sep: 8 of 8 Ponds sampled · laboratory 7 of 8 received.</b> <a href="tm-ponds.html?sampling=1">Record or correct sampling →</a></span></div>
+      <div class="grid kpis gap-4"><div class="kpi"><div class="kpi-head"><span class="kpi-name">Biomass</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">11.6<span class=kpi-unit>t</span></div><div class="kpi-compare"><i data-lucide="trending-up"></i>+1.4 t vs previous week</div><div class="kpi-updated">Sum of 8 Ponds</div></div><div class="kpi"><div class="kpi-head"><span class="kpi-name">Survival Rate</span><span class="kpi-type">Estimated</span></div><div class="kpi-value">88<span class=kpi-unit>%</span></div><div class="kpi-compare"><i data-lucide="trending-down"></i>−1 pt vs previous week</div><div class="kpi-updated">Weighted by stocked PL</div></div><div class="kpi"><div class="kpi-head"><span class="kpi-name">FCR</span><span class="kpi-type">Actual</span></div><div class="kpi-value">1.31</div><div class="kpi-compare"><i data-lucide="trending-up"></i>+0.02 vs previous week</div><div class="kpi-updated">Total feed ÷ biomass gain</div></div><div class="kpi"><div class="kpi-head"><span class="kpi-name">Growth vs Target</span><span class="kpi-type">Actual</span></div><div class="kpi-value">6 / 8<span class=kpi-unit>on track</span></div><div class="kpi-compare"><i data-lucide="triangle-alert"></i>2 Ponds behind (02, 05)</div><div class="kpi-updated">Sampling 28 Sep · 8 of 8 Ponds</div></div></div>
+    </section>
+
+    <div class="grid cols-2">
+      <section class="card"><div class="card-header"><div><h2 class="card-title">Growth vs Target</h2><div class="card-sub">Each Pond's ABW on 28 Sep against the target curve</div></div></div><div class="card-body"><div class="chart" id="growth"></div></div></section>
+      <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Feeding and mortality by Pond</h2><div class="card-sub">Share of the week's Farm total · all Ponds</div></div><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
+      <div class="card-body"><div class="subsection-title">Feeding</div><div class="chart" id="feed-donut"></div></div>
+      <div class="card-body" style="border-top:1px solid var(--color-border)"><div class="subsection-title">Mortality</div><div class="chart" id="mort-donut"></div></div>
+    </section>
+    </div>
+
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Ponds this week</h2><div class="card-sub">One row per Pond · pick a topic · no Farm averages · calculated from sampling, sensors and records</div></div><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
+      <nav class="tabs" data-tabs="pw" style="padding:0 24px">
+        <a class="tab" data-tab="growth" href="?pw=growth">Growth</a>
+        <a class="tab" data-tab="wq" href="?pw=wq">Water quality trends</a>
+        <a class="tab" data-tab="feed" href="?pw=feed">Feeding &amp; mortality</a>
+        <a class="tab" data-tab="lab" href="?pw=lab">Laboratory <span class="count" style="background:var(--color-water-blue)">1</span></a>
+      </nav>
+      <div data-panel-group="pw" data-panel="growth"><table class="table table-compact">
+        <thead><tr><th>Pond</th><th class="num">DOC</th><th class="num">ABW</th><th class="num">ADG</th><th>vs Target</th><th class="num">SR</th><th class="num">FCR</th><th class="num">Biomass</th><th class="num">Size uniformity</th></tr></thead>
+        <tbody><tr><td class="cell-main">Pond 01</td><td class="num">76</td><td class="num">18.0 g</td><td class="num">0.21 g</td><td><span class="status-text st--normal">−1% On track</span></td><td class="num">88%</td><td class="num">1.38</td><td class="num">1.90 t</td><td class="num">81%</td></tr>
+<tr><td class="cell-main">Pond 02</td><td class="num">62</td><td class="num">13.8 g</td><td class="num">0.21 g</td><td><span class="status-text st--attention">−8% Behind</span></td><td class="num">84%</td><td class="num">1.41</td><td class="num">1.74 t</td><td class="num">75%</td></tr>
+<tr><td class="cell-main">Pond 03</td><td class="num">69</td><td class="num">16.9 g</td><td class="num">0.23 g</td><td><span class="status-text st--normal">+2% On track</span></td><td class="num">89%</td><td class="num">1.29</td><td class="num">1.80 t</td><td class="num">82%</td></tr>
+<tr><td class="cell-main">Pond 04</td><td class="num">55</td><td class="num">12.9 g</td><td class="num">0.23 g</td><td><span class="status-text st--normal">−3% On track</span></td><td class="num">87%</td><td class="num">1.30</td><td class="num">1.35 t</td><td class="num">79%</td></tr>
+<tr><td class="cell-main">Pond 05</td><td class="num">62</td><td class="num">13.9 g</td><td class="num">0.21 g</td><td><span class="status-text st--attention">−7% Behind</span></td><td class="num">82%</td><td class="num">1.44</td><td class="num">1.71 t</td><td class="num">74%</td></tr>
+<tr><td class="cell-main">Pond 06</td><td class="num">48</td><td class="num">11.8 g</td><td class="num">0.27 g</td><td><span class="status-text st--normal">+3% On track</span></td><td class="num">90%</td><td class="num">1.21</td><td class="num">1.27 t</td><td class="num">83%</td></tr>
+<tr><td class="cell-main">Pond 07</td><td class="num">41</td><td class="num">9.4 g</td><td class="num">0.26 g</td><td><span class="status-text st--normal">−1% On track</span></td><td class="num">91%</td><td class="num">1.15</td><td class="num">1.03 t</td><td class="num">85%</td></tr>
+<tr><td class="cell-main">Pond 08</td><td class="num">34</td><td class="num">7.6 g</td><td class="num">0.30 g</td><td><span class="status-text st--normal">+3% On track</span></td><td class="num">92%</td><td class="num">1.10</td><td class="num">0.84 t</td><td class="num">84%</td></tr>
+</tbody></table></div>
+      <div data-panel-group="pw" data-panel="wq"><table class="table table-compact">
+        <thead><tr><th>Pond</th><th class="num">DO min</th><th class="num">pH range</th><th class="num">Temp max</th><th class="num">Days out of range</th><th class="num">Alerts</th><th>Trend</th></tr></thead>
+        <tbody><tr><td class="cell-main">Pond 01</td><td class="num ">5.1</td><td class="num">7.7–8.2</td><td class="num ">29.8</td><td class="num"><span class=text-muted>0</span></td><td class="num"><span class=text-muted>0</span></td><td><span class="trend"><i data-lucide="arrow-right"></i>Stable</span></td></tr>
+<tr><td class="cell-main">Pond 02</td><td class="num val-warning">4.3</td><td class="num">7.6–8.1</td><td class="num ">29.9</td><td class="num">7</td><td class="num">4</td><td><span class="trend"><i data-lucide="trending-down"></i>DO</span></td></tr>
+<tr><td class="cell-main">Pond 03</td><td class="num ">5.4</td><td class="num">7.8–8.2</td><td class="num ">29.5</td><td class="num"><span class=text-muted>0</span></td><td class="num"><span class=text-muted>0</span></td><td><span class="trend"><i data-lucide="arrow-right"></i>Stable</span></td></tr>
+<tr><td class="cell-main">Pond 04</td><td class="num ">5.0</td><td class="num">7.4–8.0</td><td class="num ">29.6</td><td class="num">1</td><td class="num">1</td><td><span class="trend"><i data-lucide="trending-down"></i>pH</span></td></tr>
+<tr><td class="cell-main">Pond 05</td><td class="num val-attention">4.9</td><td class="num">7.7–8.1</td><td class="num val-attention">30.8</td><td class="num">4</td><td class="num">2</td><td><span class="trend"><i data-lucide="trending-up"></i>Temp</span></td></tr>
+<tr><td class="cell-main">Pond 06</td><td class="num ">5.4</td><td class="num">7.9–8.3</td><td class="num ">29.3</td><td class="num"><span class=text-muted>0</span></td><td class="num"><span class=text-muted>0</span></td><td><span class="trend"><i data-lucide="arrow-right"></i>Stable</span></td></tr>
+<tr><td class="cell-main">Pond 07</td><td class="num ">5.3</td><td class="num">7.8–8.2</td><td class="num ">29.4</td><td class="num"><span class=text-muted>0</span></td><td class="num"><span class=text-muted>0</span></td><td><span class="trend"><i data-lucide="arrow-right"></i>Stable</span></td></tr>
+<tr><td class="cell-main">Pond 08</td><td class="num ">5.2</td><td class="num">7.8–8.1</td><td class="num ">29.5</td><td class="num"><span class=text-muted>0</span></td><td class="num">1</td><td><span class="trend"><i data-lucide="arrow-right"></i>Stable</span></td></tr>
+</tbody></table>
+        <div class="card-body" style="border-top:1px solid var(--color-border)"><label class="field"><span class="field-label">Comment (optional)</span><textarea class="textarea" style="min-height:64px" placeholder="Only if something needs explaining, e.g. DO dropped after heavy rain on Wednesday"></textarea></label></div>
+        <div class="card-footer" style="justify-content:flex-start"><span class="caption">Aggregated automatically from sensor data (every 3–5 min) · detailed time series are in Pond Detail</span></div></div>
+      <div data-panel-group="pw" data-panel="feed"><table class="table table-compact">
+        <thead><tr><th rowspan="2">Pond</th><th colspan="3">Feeding</th><th colspan="4">Mortality</th></tr>
+        <tr><th class="num">Week</th><th class="num">Days reduced appetite</th><th>vs prev. week</th><th class="num">Week</th><th class="num">per 10,000 stocked</th><th>Peak day</th><th>vs prev. week</th></tr></thead>
+        <tbody><tr><td class="cell-main">Pond 01</td><td class="num">1,318 kg</td><td class="num"><span class=text-muted>0</span></td><td><span class="trend"><i data-lucide="trending-up"></i>+4%</span></td><td class="num">107 pcs</td><td class="num">8.9</td><td class="text-muted">27 Sep (18)</td><td><span class="trend"><i data-lucide="trending-down"></i>−3%</span></td></tr>
+<tr><td class="cell-main">Pond 02</td><td class="num">1,059 kg</td><td class="num">4</td><td><span class="trend"><i data-lucide="trending-up"></i>+1%</span></td><td class="num">241 pcs</td><td class="num">16.1</td><td class="text-muted">28 Sep (64)</td><td><span class="trend"><i data-lucide="trending-up"></i>+26%</span></td></tr>
+<tr><td class="cell-main">Pond 03</td><td class="num">1,249 kg</td><td class="num"><span class=text-muted>0</span></td><td><span class="trend"><i data-lucide="trending-up"></i>+3%</span></td><td class="num">95 pcs</td><td class="num">7.9</td><td class="text-muted">26 Sep (16)</td><td><span class="trend"><i data-lucide="trending-down"></i>−5%</span></td></tr>
+<tr><td class="cell-main">Pond 04</td><td class="num">973 kg</td><td class="num"><span class=text-muted>0</span></td><td><span class="trend"><i data-lucide="trending-up"></i>+4%</span></td><td class="num">123 pcs</td><td class="num">10.2</td><td class="text-muted">28 Sep (22)</td><td><span class="trend"><i data-lucide="trending-up"></i>+8%</span></td></tr>
+<tr><td class="cell-main">Pond 05</td><td class="num">1,162 kg</td><td class="num">3</td><td><span class="trend"><i data-lucide="trending-up"></i>+2%</span></td><td class="num">179 pcs</td><td class="num">11.9</td><td class="text-muted">28 Sep (31)</td><td><span class="trend"><i data-lucide="trending-down"></i>−42%</span></td></tr>
+<tr><td class="cell-main">Pond 06</td><td class="num">1,042 kg</td><td class="num"><span class=text-muted>0</span></td><td><span class="trend"><i data-lucide="trending-up"></i>+5%</span></td><td class="num">85 pcs</td><td class="num">7.1</td><td class="text-muted">26 Sep (14)</td><td><span class="trend"><i data-lucide="trending-down"></i>−12%</span></td></tr>
+<tr><td class="cell-main">Pond 07</td><td class="num">973 kg</td><td class="num"><span class=text-muted>0</span></td><td><span class="trend"><i data-lucide="trending-up"></i>+6%</span></td><td class="num">102 pcs</td><td class="num">8.5</td><td class="text-muted">26 Sep (17)</td><td><span class="trend"><i data-lucide="trending-down"></i>−10%</span></td></tr>
+<tr><td class="cell-main">Pond 08</td><td class="num">834 kg</td><td class="num"><span class=text-muted>0</span></td><td><span class="trend"><i data-lucide="trending-up"></i>+7%</span></td><td class="num">104 pcs</td><td class="num">8.7</td><td class="text-muted">26 Sep (18)</td><td><span class="trend"><i data-lucide="trending-up"></i>+18%</span></td></tr>
 </tbody>
-<tfoot><tr><td>Farm A</td><td class="text-muted">8 Ponds</td><td class="num">34–76</td><td class="num text-muted">—</td><td class="num text-muted">—</td><td>6 on track · 2 behind</td><td class="num text-muted">—</td><td class="num">88%</td><td class="num">1.31</td><td class="num">11.6 t</td><td class="num text-muted">—</td></tr></tfoot>
-</table>
-      </div>
+        <tfoot><tr><td>Farm A total</td><td class="num">8,610 kg</td><td class="num">2 Ponds</td><td></td><td class="num">1,036 pcs</td><td class="num">10.2</td><td></td><td></td></tr></tfoot></table></div>
+      <div data-panel-group="pw" data-panel="lab"><table class="table table-compact">
+        <thead><tr><th>Pond</th><th class="num">TAN mg/L</th><th class="num">NO2 mg/L</th><th class="num">Vibrio ×10³ CFU/mL</th><th class="num">Alkalinity mg/L</th></tr></thead>
+        <tbody><tr><td class="cell-main">Pond 01</td><td class="num ">0.4</td><td class="num ">0.12</td><td class="num ">3.5</td><td class="num">135</td></tr>
+<tr><td class="cell-main">Pond 02</td><td class="num ">0.8</td><td class="num ">0.22</td><td class="num val-attention">7.2</td><td class="num">128</td></tr>
+<tr><td class="cell-main">Pond 03</td><td class="num ">0.4</td><td class="num ">0.10</td><td class="num ">3.0</td><td class="num">138</td></tr>
+<tr><td class="cell-main">Pond 04</td><td class="num ">0.5</td><td class="num ">0.14</td><td class="num ">4.4</td><td class="num">118</td></tr>
+<tr><td class="cell-main">Pond 05</td><td class="num ">0.6</td><td class="num ">0.17</td><td class="num val-attention">6.8</td><td class="num">130</td></tr>
+<tr><td class="cell-main">Pond 06</td><td class="num ">0.3</td><td class="num ">0.09</td><td class="num ">2.5</td><td class="num">140</td></tr>
+<tr><td class="cell-main">Pond 07</td><td class="num ">0.3</td><td class="num ">0.11</td><td class="num ">3.2</td><td class="num">137</td></tr>
+<tr><td class="cell-main">Pond 08</td><td colspan="4"><span class="status-text st--progress">Pending</span> <span class="caption">results expected 30 Sep</span></td></tr>
+</tbody></table>
+        <div class="card-footer" style="justify-content:flex-start"><span class="caption">Reference: TAN ≤ 1.0 · NO2 ≤ 0.5 · Vibrio &lt; 5 · Alkalinity 100–150</span></div></div>
     </section>
 
-    <!-- Water Quality Trends -->
     <section class="card">
-      <div class="card-header"><div><h2 class="card-title">Water Quality Trends</h2><div class="card-sub">Weekly summary · Farm average across 8 Ponds</div></div><span class="source-tag"><i data-lucide="radio"></i>From sensor data</span></div>
+      <div class="card-header"><div><h2 class="card-title">Major Alerts / Issues</h2><div class="card-sub">Aggregated automatically from the alert system · add cause, action and outcome where useful</div></div><span class="source-tag"><i data-lucide="bell"></i>From alerts</span></div>
       <table class="table table-compact">
-        <thead><tr><th>Parameter</th><th class="num">Min</th><th class="num">Avg</th><th class="num">Max</th><th>Range</th><th>Trend</th></tr></thead>
-        <tbody>
-          <tr><td>DO (mg/L)</td><td class="num val-warning">3.9</td><td class="num">5.6</td><td class="num">6.7</td><td class="text-muted">≥ 4.5</td><td><span class="trend"><i data-lucide="trending-down"></i>Decreasing</span></td></tr>
-          <tr><td>pH</td><td class="num val-attention">7.4</td><td class="num">7.9</td><td class="num">8.2</td><td class="text-muted">7.5–8.5</td><td><span class="trend"><i data-lucide="arrow-right"></i>Stable</span></td></tr>
-          <tr><td>Temperature (°C)</td><td class="num">27.8</td><td class="num">29.0</td><td class="num val-warning">31.6</td><td class="text-muted">26–31</td><td><span class="trend"><i data-lucide="trending-up"></i>Increasing</span></td></tr>
-          <tr><td>Salinity (ppt)</td><td class="num">14</td><td class="num">15</td><td class="num">16</td><td class="text-muted">10–25</td><td><span class="trend"><i data-lucide="arrow-right"></i>Stable</span></td></tr>
-          <tr><td>Water Level (cm)</td><td class="num">130</td><td class="num">134</td><td class="num">138</td><td class="text-muted">120–150</td><td><span class="trend"><i data-lucide="arrow-right"></i>Stable</span></td></tr>
-        </tbody>
+        <thead><tr><th>Alert</th><th>Severity</th><th>Occurred</th><th>Duration</th><th>Status</th><th>Cause / Action / Outcome</th></tr></thead>
+        <tbody><tr><td><div class="cell-main">DO below threshold</div><div class="cell-sub">Pond 02</div></td><td><span class="badge badge--warning">Warning</span></td><td>27 Sep 07:10</td><td>2 days · ongoing</td><td><span class="status-text st--progress">In Progress</span></td><td class="wrap" style="min-width:160px;max-width:220px">Low wind, high biomass · aeration + feed −10% · —</td></tr>
+<tr><td><div class="cell-main">Temperature above threshold</div><div class="cell-sub">Pond 05</div></td><td><span class="badge badge--warning">Warning</span></td><td>25 Sep 13:20</td><td>1 h</td><td><span class="status-text st--resolved">Resolved</span></td><td><a class="btn btn--link" href="#">Add note</a></td></tr>
+<tr><td><div class="cell-main">pH below threshold</div><div class="cell-sub">Pond 04</div></td><td><span class="badge badge--attention">Attention</span></td><td>28 Sep 03:30</td><td>40 min</td><td><span class="status-text st--resolved">Resolved</span></td><td><a class="btn btn--link" href="#">Add note</a></td></tr>
+<tr><td><div class="cell-main">Turbidity sensor offline</div><div class="cell-sub">Pond 08</div></td><td><span class="badge badge--attention">Attention</span></td><td>28 Sep 22:10</td><td>ongoing</td><td><span class="status-text st--ack">Acknowledged</span></td><td><a class="btn btn--link" href="#">Add note</a></td></tr>
+</tbody>
       </table>
-      <div class="card-body" style="border-top:1px solid var(--color-border)"><label class="field"><span class="field-label">Comment</span><textarea class="textarea" style="min-height:64px">DO decreasing in Pond 02 as biomass increases. Temperature peak in Pond 05 on 29 Sep.</textarea></label></div>
     </section>
 
-    <div class="grid cols-2">
-      <!-- Laboratory Results -->
-      <section class="card">
-        <div class="card-header"><h2 class="card-title">Laboratory Results</h2></div>
-        <div class="card-body form-grid">
-          <label class="field span-2"><span class="field-label">Sample Date</span><input class="input" value="26 Sep 2026"></label>
-          <label class="field"><span class="field-label">TAN</span><span class="input-group"><input class="input" value="0.5"><span class="input-unit">mg/L</span></span></label>
-          <label class="field"><span class="field-label">NO2</span><span class="input-group"><input class="input" value="0.15"><span class="input-unit">mg/L</span></span></label>
-          <label class="field"><span class="field-label">Vibrio (total)</span><span class="input-group"><input class="input" value="7.2 × 10³"><span class="input-unit">CFU/mL</span></span></label>
-          <label class="field"><span class="field-label">Alkalinity</span><span class="input-group"><input class="input" value="130"><span class="input-unit">mg/L</span></span></label>
-        </div>
-      </section>
-      <!-- Feeding / Mortality Summary -->
-      <section class="card">
-        <div class="card-header"><h2 class="card-title">Feeding / Mortality Summary</h2><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
-        <div class="card-body stack">
-          <dl class="dl dl-3">
-            <div><dt>Total Feed</dt><dd>8,610 kg</dd></div>
-            <div><dt>Daily Average</dt><dd>1,230 kg</dd></div>
-            <div><dt>Feed Type</dt><dd>Grower 2</dd></div>
-            <div><dt>Mortality</dt><dd>1,036 pcs</dd></div>
-            <div><dt>Total Weight</dt><dd>13.2 kg</dd></div>
-            <div><dt>Highest Pond</dt><dd>Pond 02 · 241 pcs</dd></div>
-          </dl>
-          <label class="field"><span class="field-label">Comment</span><textarea class="textarea" style="min-height:64px" placeholder="Notes on feeding and mortality"></textarea></label>
-        </div>
-      </section>
-    </div>
-
-    <div class="grid cols-2">
-      <!-- Major Alerts / Issues -->
-      <section class="card">
-        <div class="card-header"><div><h2 class="card-title">Major Alerts / Issues</h2><div class="card-sub">Select items to include</div></div><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
-        <div class="alert-list">
-          <div class="alert-row" style="grid-template-columns:4px auto 1fr auto"><span class="alert-bar alert-bar--warning"></span><span class="check is-on"></span>
-            <div><div class="alert-title">Pond 02 · DO decreasing</div><div class="alert-meta"><span>ISS-218 · since 27 Sep</span></div></div><span class="badge badge--warning">Warning</span></div>
-          <div class="alert-row" style="grid-template-columns:4px auto 1fr auto"><span class="alert-bar alert-bar--warning"></span><span class="check is-on"></span>
-            <div><div class="alert-title">Pond 05 · Temperature increasing</div><div class="alert-meta"><span>ISS-221 · 29 Sep</span></div></div><span class="badge badge--warning">Warning</span></div>
-          <div class="alert-row" style="grid-template-columns:4px auto 1fr auto"><span class="alert-bar alert-bar--attention"></span><span class="check"></span>
-            <div><div class="alert-title">Pond 04 · pH decreasing</div><div class="alert-meta"><span>ISS-220 · 29 Sep</span></div></div><span class="badge badge--attention">Attention</span></div>
-        </div>
-      </section>
-      <!-- Major Actions -->
-      <section class="card">
-        <div class="card-header"><h2 class="card-title">Major Actions</h2></div>
-        <div class="card-body stack" style="gap:16px">
-          <div class="row"><input class="input" value="27 Sep" style="width:88px"><input class="input" value="Pond 02 — additional aeration, feed reduced 10%"></div>
-          <div class="row"><input class="input" value="28 Sep" style="width:88px"><input class="input" value="Pond 08 — turbidity sensor replacement requested"></div>
-          <div class="row"><input class="input" placeholder="Date" style="width:88px"><input class="input" placeholder="Describe the action"></div>
-          <div><button class="btn btn--link btn--sm"><i data-lucide="plus"></i>Add action</button></div>
-        </div>
-      </section>
-    </div>
-
-    <!-- Weekly Technical Summary -->
     <section class="card">
-      <div class="card-header"><h2 class="card-title">Weekly Technical Summary</h2></div>
-      <div class="card-body"><textarea class="textarea" style="min-height:140px" placeholder="Summarize growth, water quality trends, issues and next week's plan for the Farms Manager"></textarea></div>
+        <div class="card-header"><h2 class="card-title">Major Actions</h2></div>
+        <table class="table table-compact"><tbody>
+          <tr><td class="text-muted">27 Sep</td><td>Pond 02</td><td class="wrap">Additional aeration, feed reduced 10%</td></tr>
+          <tr><td class="text-muted">28 Sep</td><td>Pond 08</td><td class="wrap">Turbidity sensor replacement requested</td></tr>
+        </tbody></table>
+        <div class="card-footer" style="justify-content:flex-start"><button class="btn btn--link"><i data-lucide="plus"></i>Add action</button></div>
+      </section>
+
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">Weekly Technical Summary <span class="req">*</span></h2></div>
+      <div class="card-body"><textarea class="textarea" style="min-height:140px" placeholder="Growth, water quality trends, issues and next week's plan"></textarea></div>
     </section>
+
+    <div class="action-bar" data-show-on-tab="create">
+      <div class="action-bar-status"><span class="status-text st--draft">Draft</span><span>Saved 28 Sep 20:15 · due today · Summary missing</span></div>
+      <span class="action-bar-spacer"></span>
+      <button class="btn btn--outline"><i data-lucide="save"></i>Save Draft</button>
+      <button class="btn btn--primary" data-open="submit"><i data-lucide="send"></i>Submit</button>
+    </div>
   </div>
 
-  <!-- ============ History (TM-R-008) ============ -->
   <section class="card" data-panel-group="tab" data-panel="history">
     <div class="card-header"><h2 class="card-title">Weekly Report History</h2></div>
     <table class="table">
-      <thead><tr><th>Reporting Period</th><th>Status</th><th class="num">Biomass</th><th class="num">Survival Rate</th><th class="num">Major Issues</th><th>Submitted</th><th></th></tr></thead>
+      <thead><tr><th>Reporting Period</th><th>Status</th><th class="num">Biomass</th><th class="num">Survival Rate</th><th class="num">Behind target</th><th>Submitted</th><th></th></tr></thead>
       <tbody>
-        <tr><td class="cell-main">22–28 Sep 2026</td><td><span class="badge badge--draft">Draft</span></td><td class="num">11.6 t</td><td class="num">88%</td><td class="num">3</td><td class="text-muted">—</td><td class="actions"><a class="btn btn--outline btn--sm" href="?tab=create">Continue</a></td></tr>
-        <tr><td class="cell-main">15–21 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">10.2 t</td><td class="num">89%</td><td class="num">1</td><td class="text-muted">22 Sep 10:10</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
-        <tr><td class="cell-main">8–14 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">8.9 t</td><td class="num">90%</td><td class="num">0</td><td class="text-muted">15 Sep 09:55</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
-        <tr><td class="cell-main">1–7 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">7.6 t</td><td class="num">90%</td><td class="num">0</td><td class="text-muted">8 Sep 10:30</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
+        <tr><td class="cell-main">22–28 Sep 2026</td><td><span class="status-text st--draft">Draft</span></td><td class="num">11.6 t</td><td class="num">88%</td><td class="num">2</td><td class="text-muted">—</td><td class="actions"><a class="btn btn--outline btn--sm" href="?tab=create">Continue</a></td></tr>
+        <tr><td class="cell-main">15–21 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">10.2 t</td><td class="num">89%</td><td class="num">2</td><td class="text-muted">22 Sep 10:10</td><td class="actions"><a class="btn btn--link" href="#">View</a></td></tr>
+        <tr><td class="cell-main">8–14 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">8.9 t</td><td class="num">90%</td><td class="num">1</td><td class="text-muted">15 Sep 09:55</td><td class="actions"><a class="btn btn--link" href="#">View</a></td></tr>
       </tbody>
     </table>
   </section>
-
-  <!-- Action Bar (UI/UX設計書 7) -->
-  <div class="action-bar" data-show-on-tab="create">
-    <div class="action-bar-status"><span class="badge badge--draft">Draft</span><span>Saved 28 Sep 20:15 · due today</span></div>
-    <span class="action-bar-spacer"></span>
-    <button class="btn btn--outline"><i data-lucide="save"></i>Save Draft</button>
-    <button class="btn btn--primary" data-open="submit"><i data-lucide="send"></i>Submit</button>
-  </div>
 
 </div></main>
 
 <div class="overlay" id="submit">
   <div class="dialog" role="dialog">
-    <div class="dialog-body">
-      <h2 class="dialog-title">Submit Weekly Report for 22–28 Sep?</h2>
-      <p class="text-secondary">The report will be shared with the Farms Manager and can no longer be edited.</p>
-    </div>
+    <div class="dialog-body"><h2 class="dialog-title">Submit Weekly Report for 22–28 Sep?</h2><p class="text-muted">The report will be shared with the Farms Manager and can no longer be edited. Pond 08 laboratory results are still pending.</p></div>
     <div class="dialog-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--primary" data-close>Submit</button></div>
   </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
 <script src="../assets/charts.js"></script>
+<script>
+Charts.growth("#growth", { target: [[20,3.4],[27,5.3],[34,7.4],[41,9.5],[48,11.5],[55,13.3],[62,15.0],[69,16.6],[76,18.2]], points: [{x:76,y:18.0,label:"P01",status:"on"},{x:62,y:13.8,label:"P02",status:"behind"},{x:69,y:16.9,label:"P03",status:"on"},{x:55,y:12.9,label:"P04",status:"on"},{x:62,y:13.9,label:"P05",status:"behind"},{x:48,y:11.8,label:"P06",status:"on"},{x:41,y:9.4,label:"P07",status:"on"},{x:34,y:7.6,label:"P08",status:"on"}], xMin: 20, xMax: 83, xStep: 14, yMin: 0, yMax: 20, ticks: 4, unit: "g", height: 400 });
+Charts.donut("#feed-donut", { palette: "feed", unit: "kg", all: true, items: [{"name": "Pond 01", "value": 1318}, {"name": "Pond 02", "value": 1059}, {"name": "Pond 03", "value": 1249}, {"name": "Pond 04", "value": 973}, {"name": "Pond 05", "value": 1162}, {"name": "Pond 06", "value": 1042}, {"name": "Pond 07", "value": 973}, {"name": "Pond 08", "value": 834}] });
+Charts.donut("#mort-donut", { palette: "mortality", unit: "pcs", all: true, items: [{"name": "Pond 01", "value": 107}, {"name": "Pond 02", "value": 241}, {"name": "Pond 03", "value": 95}, {"name": "Pond 04", "value": 123}, {"name": "Pond 05", "value": 179}, {"name": "Pond 06", "value": 85}, {"name": "Pond 07", "value": 102}, {"name": "Pond 08", "value": 104}] });
+</script>
 <script src="../assets/layout.js"></script>
 </body>
 </html>

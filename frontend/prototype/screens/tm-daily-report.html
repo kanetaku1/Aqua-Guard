@@ -13,8 +13,8 @@
   <div class="page-header">
     <div>
       <div class="breadcrumb"><span>Reports</span><i data-lucide="chevron-right"></i><span>Daily Report</span></div>
-      <h1 class="page-title">Daily Report</h1>
-      <div class="page-meta"><span><i data-lucide="warehouse"></i>Farm A</span><span>Structured report for the Farms Manager · sections match the submitted view</span></div>
+      <h1 class="page-title">Daily Report · 29 Sep 2026 <span class="status-text status-text--lg st--draft">Draft</span></h1>
+      <div class="page-meta"><span><i data-lucide="warehouse"></i>Farm A · 8 Ponds</span><span><i data-lucide="clock"></i>Last saved 09:20 · due 18:00</span></div>
     </div>
   </div>
 
@@ -23,174 +23,155 @@
     <a class="tab" data-tab="history" href="?tab=history">History</a>
   </nav>
 
-  <!-- ============ Create / Edit (TM-R-001, 002, 003) ============ -->
   <div class="stack" style="gap:24px" data-panel-group="tab" data-panel="create">
 
-    <!-- Report Header -->
+    <!-- Completion — operational records only; sensor data is not part of the Report -->
     <section class="card">
-      <div class="card-body">
-        <dl class="dl">
-          <div><dt>Report Date</dt><dd>29 Sep 2026</dd></div>
-          <div><dt>Farm</dt><dd>Farm A</dd></div>
-          <div><dt>Status</dt><dd><span class="badge badge--draft">Draft</span></dd></div>
-          <div><dt>Last saved</dt><dd>09:20 · due 18:00</dd></div>
-        </dl>
+      <div class="card-header"><div><h2 class="card-title">Report completion</h2><div class="card-sub">Feeding, mortality, equipment, alerts and actions are collected automatically from records · sensor data stays in Pond Detail and is not re-entered here</div></div>
+        <div style="width:240px"><div class="row-between caption" style="margin-bottom:4px"><span>80% ready</span><span>2 items to fill</span></div><div class="progress"><span style="width:80%"></span></div></div></div>
+      <div class="checklist" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+        <div><span class="status-text st--normal"><b>Feeding · Mortality</b></span><span class="caption">Records · 8 of 8 Ponds · 2 of 4 rounds so far</span></div>
+        <div><span class="status-text st--normal"><b>Equipment · Alerts · Actions</b></span><span class="caption">Automatic · 1 equipment event · 3 alerts</span></div>
+        <div><span class="status-text st--neutral"><b>Health</b></span><span class="caption">Optional · 1 Pond observed</span></div>
+        <div><span class="status-text st--attention"><b>Farm input</b></span><span class="caption">Weather and Summary needed</span></div>
       </div>
     </section>
 
-    <!-- Report Summary -->
+    <!-- Feeding · Mortality · Health (per Pond, one table) -->
     <section class="card">
-      <div class="card-header"><h2 class="card-title">Report Summary</h2><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
-      <div class="card-body form-grid-4">
-        <label class="field"><span class="field-label"><span>Farm Condition <span class="req">*</span></span></span><select class="select"><option>Warning</option></select></label>
-        <div class="field"><span class="field-label">Alerts / Issues</span><div class="input" style="display:flex;align-items:center;background:var(--color-bg-subtle)">4 active</div></div>
-        <div class="field"><span class="field-label">Total Feed (so far)</span><div class="input" style="display:flex;align-items:center;background:var(--color-bg-subtle)">596 kg</div></div>
-        <div class="field"><span class="field-label">Mortality (so far)</span><div class="input" style="display:flex;align-items:center;background:var(--color-bg-subtle)">74 pcs · 0.98 kg</div></div>
-      </div>
+      <div class="card-header"><div><h2 class="card-title">Feeding · Mortality · Health</h2><div class="card-sub">Today so far, per Pond · Edit a Pond to record appetite, tray condition and health observations</div></div><span class="source-tag"><i data-lucide="database"></i>From Pond records</span></div>
+      <table class="table table-compact">
+        <thead><tr><th rowspan="2">Pond</th><th colspan="4">Feeding</th><th colspan="2">Mortality</th><th colspan="2">Health condition</th><th rowspan="2"></th></tr>
+        <tr><th class="num">Amount</th><th class="num">Rounds</th><th>Appetite</th><th>Tray</th><th class="num">pcs</th><th class="num">Weight</th><th>Condition</th><th>Observation</th></tr></thead>
+        <tbody><tr><td class="cell-main">Pond 01</td><td class="num">91 kg</td><td class="num">2 / 4</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">6</td><td class="num">0.08 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="wrap text-secondary" style="min-width:160px;max-width:220px">—</td><td class="actions"><a class="btn btn--link" href="#" data-open="pond">Edit</a></td></tr>
+<tr><td class="cell-main">Pond 02</td><td class="num">74 kg</td><td class="num">2 / 4</td><td><span class="status-text st--attention">Reduced</span></td><td><span class="status-text st--attention">Leftover</span></td><td class="num">22</td><td class="num">0.30 kg</td><td><span class="status-text st--attention">Attention</span></td><td class="wrap text-secondary" style="min-width:160px;max-width:220px">Abnormal swimming, reduced appetite</td><td class="actions"><a class="btn btn--link" href="#" data-open="pond">Edit</a></td></tr>
+<tr><td class="cell-main">Pond 03</td><td class="num">86 kg</td><td class="num">2 / 4</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">5</td><td class="num">0.07 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="wrap text-secondary" style="min-width:160px;max-width:220px">—</td><td class="actions"><a class="btn btn--link" href="#" data-open="pond">Edit</a></td></tr>
+<tr><td class="cell-main">Pond 04</td><td class="num">67 kg</td><td class="num">2 / 4</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">7</td><td class="num">0.09 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="wrap text-secondary" style="min-width:160px;max-width:220px">—</td><td class="actions"><a class="btn btn--link" href="#" data-open="pond">Edit</a></td></tr>
+<tr><td class="cell-main">Pond 05</td><td class="num">80 kg</td><td class="num">2 / 4</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">19</td><td class="num">0.24 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="wrap text-secondary" style="min-width:160px;max-width:220px">—</td><td class="actions"><a class="btn btn--link" href="#" data-open="pond">Edit</a></td></tr>
+<tr><td class="cell-main">Pond 06</td><td class="num">72 kg</td><td class="num">2 / 4</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">5</td><td class="num">0.07 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="wrap text-secondary" style="min-width:160px;max-width:220px">—</td><td class="actions"><a class="btn btn--link" href="#" data-open="pond">Edit</a></td></tr>
+<tr><td class="cell-main">Pond 07</td><td class="num">68 kg</td><td class="num">2 / 4</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">6</td><td class="num">0.08 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="wrap text-secondary" style="min-width:160px;max-width:220px">—</td><td class="actions"><a class="btn btn--link" href="#" data-open="pond">Edit</a></td></tr>
+<tr><td class="cell-main">Pond 08</td><td class="num">58 kg</td><td class="num">2 / 4</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">4</td><td class="num">0.05 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="wrap text-secondary" style="min-width:160px;max-width:220px">—</td><td class="actions"><a class="btn btn--link" href="#" data-open="pond">Edit</a></td></tr>
+</tbody>
+        <tfoot><tr><td>Farm A</td><td class="num">596 kg</td><td></td><td>1 reduced</td><td>1 leftover</td><td class="num">74</td><td class="num">0.98 kg</td><td>1 noted</td><td></td><td></td></tr></tfoot>
+      </table>
     </section>
 
     <div class="grid cols-2">
-      <!-- Water Quality -->
+      <!-- Environment / Weather (Farm) -->
       <section class="card">
-        <div class="card-header"><div><h2 class="card-title">Water Quality</h2><div class="card-sub">Farm average across 8 Ponds · editable</div></div><span class="source-tag"><i data-lucide="radio"></i>From sensor data</span></div>
-        <table class="table table-compact">
-          <thead><tr><th>Parameter</th><th>Morning (06:00)</th><th>Evening (17:00)</th></tr></thead>
-          <tbody>
-            <tr><td>DO (mg/L)</td><td><input class="input" value="5.3" style="height:32px"></td><td><input class="input" placeholder="After 17:00" style="height:32px"></td></tr>
-            <tr><td>pH</td><td><input class="input" value="7.8" style="height:32px"></td><td><input class="input" placeholder="After 17:00" style="height:32px"></td></tr>
-            <tr><td>Temperature (°C)</td><td><input class="input" value="28.3" style="height:32px"></td><td><input class="input" placeholder="After 17:00" style="height:32px"></td></tr>
-            <tr><td>Salinity (ppt)</td><td><input class="input" value="15" style="height:32px"></td><td><input class="input" placeholder="After 17:00" style="height:32px"></td></tr>
-          </tbody>
-        </table>
-        <div class="card-body form-grid" style="border-top:1px solid var(--color-border)">
-          <label class="field"><span class="field-label">Secchi Depth</span><span class="input-group"><input class="input" value="36"><span class="input-unit">cm</span></span></label>
-          <label class="field"><span class="field-label">Water Level</span><span class="input-group"><input class="input" value="134"><span class="input-unit">cm</span></span></label>
-        </div>
-      </section>
-
-      <!-- Feeding -->
-      <section class="card">
-        <div class="card-header"><h2 class="card-title">Feeding</h2><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
+        <div class="card-header"><h2 class="card-title">Environment / Weather <span class="req">*</span></h2><span class="caption">Once for the whole Farm</span></div>
         <div class="card-body form-grid">
-          <label class="field"><span class="field-label">Total Feed</span><span class="input-group"><input class="input" value="596"><span class="input-unit">kg</span></span><span class="helper">2 of 4 rounds recorded</span></label>
-          <label class="field"><span class="field-label">Frequency</span><span class="input-group"><input class="input" value="4"><span class="input-unit">/ day</span></span></label>
-          <label class="field span-2"><span class="field-label"><span>Feed Type <span class="req">*</span></span></span><select class="select"><option>Grower 2 (2.0 mm)</option></select></label>
-          <label class="field span-2"><span class="field-label">Appetite / Tray Status</span><textarea class="textarea" style="min-height:64px">Good in most Ponds. Pond 02 leftover &lt; 5% at 09:00 round.</textarea></label>
+          <label class="field"><span class="field-label"><span>Weather <span class="req">*</span></span></span><select class="select"><option>Select</option><option>Sunny</option><option>Cloudy</option><option>Rain</option><option>Heavy rain</option></select></label>
+          <label class="field"><span class="field-label">Rainfall</span><span class="input-group"><input class="input" placeholder="0"><span class="input-unit">mm</span></span></label>
+          <label class="field span-2"><span class="field-label">Environmental events</span><input class="input" placeholder="e.g. Heavy rain 14:00–15:30, strong wind"></label>
         </div>
       </section>
-    </div>
-
-    <div class="grid cols-2">
-      <!-- Mortality -->
+      <!-- Equipment Status -->
       <section class="card">
-        <div class="card-header"><h2 class="card-title">Mortality</h2><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
+        <div class="card-header"><div><h2 class="card-title">Equipment Status</h2><div class="card-sub">Aerators 19 / 20 · Pumps 2 / 3 · Generator standby (tested 07:00)</div></div><span class="source-tag"><i data-lucide="database"></i>Actuators</span></div>
         <table class="table table-compact">
-          <thead><tr><th>Pond</th><th class="num">Count</th><th class="num">Weight</th></tr></thead>
-          <tbody>
-            <tr><td>Pond 02</td><td class="num">22</td><td class="num">0.30 kg</td></tr>
-            <tr><td>Pond 05</td><td class="num">19</td><td class="num">0.24 kg</td></tr>
-            <tr><td>Other Ponds (6)</td><td class="num">33</td><td class="num">0.44 kg</td></tr>
-            <tr><td class="strong">Total</td><td class="num strong">74</td><td class="num strong">0.98 kg</td></tr>
-          </tbody>
+          <thead><tr><th>Equipment</th><th>Failure</th><th>Action</th><th>Status</th></tr></thead>
+          <tbody><tr><td><div class="cell-main">Aerator 4</div><div class="cell-sub">Pond 05</div></td><td><div class="wrap">Motor overheating</div><div class="cell-sub">06:20</div></td><td class="wrap">Stopped, technician called</td><td><span class="status-text st--progress">In Progress</span></td></tr></tbody>
         </table>
-        <div class="card-footer" style="justify-content:flex-start"><span class="caption">Pond-level records are managed in Pond Detail › Mortality</span></div>
+        <div class="card-footer" style="justify-content:flex-start"><button class="btn btn--link"><i data-lucide="plus"></i>Add equipment event</button></div>
       </section>
-
-      <div class="stack" style="gap:24px">
-        <!-- Health Condition -->
-        <section class="card">
-          <div class="card-header"><h2 class="card-title">Health Condition</h2></div>
-          <div class="card-body"><textarea class="textarea" placeholder="Observations: activity, appearance, symptoms"></textarea></div>
-        </section>
-        <!-- Environment / Equipment -->
-        <section class="card">
-          <div class="card-header"><h2 class="card-title">Environment / Equipment</h2></div>
-          <div class="card-body form-grid-4" style="grid-template-columns:repeat(3,minmax(0,1fr))">
-            <label class="field"><span class="field-label">Weather</span><select class="select"><option>Sunny</option></select></label>
-            <label class="field"><span class="field-label">Rainfall</span><span class="input-group"><input class="input" value="0"><span class="input-unit">mm</span></span></label>
-            <label class="field"><span class="field-label">Aerator</span><select class="select"><option>19/20 On</option></select></label>
-            <label class="field"><span class="field-label">Pump</span><select class="select"><option>Normal</option></select></label>
-            <label class="field"><span class="field-label">Generator</span><select class="select"><option>Standby</option></select></label>
-          </div>
-        </section>
-      </div>
     </div>
 
-    <!-- Alerts / Issues -->
+    <!-- Major Alerts / Issues — referenced from the alert system, never re-entered -->
     <section class="card">
-      <div class="card-header"><div><h2 class="card-title">Alerts / Issues</h2><div class="card-sub">Select the items to include in this report</div></div><span class="source-tag"><i data-lucide="database"></i>From records</span></div>
-      <div class="alert-list">
-        <div class="alert-row" style="grid-template-columns:4px auto 1fr auto"><span class="alert-bar alert-bar--warning"></span><span class="check is-on"></span>
-          <div><div class="alert-title">Pond 02 · DO below threshold (4.1 mg/L &lt; 4.5)</div><div class="alert-meta"><span>ALT-1042 · 07:50</span></div></div>
-          <div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--unack">Unacknowledged</span></div></div>
-        <div class="alert-row" style="grid-template-columns:4px auto 1fr auto"><span class="alert-bar alert-bar--warning"></span><span class="check is-on"></span>
-          <div><div class="alert-title">Pond 05 · Temperature above threshold (31.6 °C &gt; 31.0)</div><div class="alert-meta"><span>ALT-1041 · 05:40</span></div></div>
-          <div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--ack">Acknowledged</span></div></div>
-        <div class="alert-row" style="grid-template-columns:4px auto 1fr auto"><span class="alert-bar alert-bar--attention"></span><span class="check is-on"></span>
-          <div><div class="alert-title">Pond 04 · pH below threshold (7.4 &lt; 7.5)</div><div class="alert-meta"><span>ALT-1039 · 03:30</span></div></div>
-          <div class="alert-side"><span class="badge badge--attention">Attention</span><span class="badge badge--state badge--progress">In Progress</span></div></div>
-        <div class="alert-row" style="grid-template-columns:4px auto 1fr auto"><span class="alert-bar alert-bar--attention"></span><span class="check"></span>
-          <div><div class="alert-title">Pond 08 · Turbidity sensor offline</div><div class="alert-meta"><span>ALT-1035 · 28 Sep 22:10</span></div></div>
-          <div class="alert-side"><span class="badge badge--attention">Attention</span><span class="badge badge--state badge--ack">Acknowledged</span></div></div>
-      </div>
+      <div class="card-header"><div><h2 class="card-title">Major Alerts / Issues</h2><div class="card-sub">Generated by the system from sensor data · included automatically — uncheck to leave one out · values are not re-entered</div></div><span class="source-tag"><i data-lucide="bell"></i>From alerts</span></div>
+      <table class="table table-compact">
+        <thead><tr><th style="width:32px"></th><th>Pond</th><th>Alert</th><th>Severity</th><th>Occurred</th><th>Duration</th><th>Handling</th><th></th></tr></thead>
+        <tbody><tr><td><span class="check is-on"></span></td><td class="cell-main">Pond 02</td><td><div>DO below threshold</div><div class="cell-sub">ALT-1042</div></td><td><span class="badge badge--warning">Warning</span></td><td>07:50</td><td>1 h 45 min · ongoing</td><td><span class="status-text st--unack">Unacknowledged</span></td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html?tab=alerts&drawer=1">View Alert</a><a class="btn btn--link" href="tm-pond-detail.html?tab=iot">View Data</a></td></tr>
+<tr><td><span class="check is-on"></span></td><td class="cell-main">Pond 05</td><td><div>Temperature above threshold</div><div class="cell-sub">ALT-1041</div></td><td><span class="badge badge--warning">Warning</span></td><td>05:40</td><td>3 h 55 min · ongoing</td><td><span class="status-text st--ack">Acknowledged</span></td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html?tab=alerts&drawer=1">View Alert</a><a class="btn btn--link" href="tm-pond-detail.html?tab=iot">View Data</a></td></tr>
+<tr><td><span class="check is-on"></span></td><td class="cell-main">Pond 04</td><td><div>pH below threshold</div><div class="cell-sub">ALT-1039</div></td><td><span class="badge badge--attention">Attention</span></td><td>03:30</td><td>6 h 05 min · ongoing</td><td><span class="status-text st--progress">In Progress</span></td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html?tab=alerts&drawer=1">View Alert</a><a class="btn btn--link" href="tm-pond-detail.html?tab=iot">View Data</a></td></tr>
+<tr><td><span class="check"></span></td><td class="cell-main">Pond 08</td><td><div>Turbidity sensor offline</div><div class="cell-sub">ALT-1035</div></td><td><span class="badge badge--attention">Attention</span></td><td>28 Sep 22:10</td><td>11 h · ongoing</td><td><span class="status-text st--ack">Acknowledged</span></td><td class="actions"><a class="btn btn--link" href="tm-pond-detail.html?tab=alerts&drawer=1">View Alert</a><a class="btn btn--link" href="tm-pond-detail.html?tab=iot">View Data</a></td></tr>
+</tbody>
+      </table>
     </section>
 
-    <div class="grid cols-2">
-      <!-- Actions Taken -->
-      <section class="card">
-        <div class="card-header"><h2 class="card-title">Actions Taken</h2><span class="source-tag"><i data-lucide="database"></i>Actuator log</span></div>
-        <div class="card-body stack gap-3" style="gap:16px">
-          <div class="row"><input class="input" value="05:40" style="width:88px"><input class="input" value="Pond 02 — Aerators 3, 4 switched on (manual override)"></div>
-          <div class="row"><input class="input" value="06:10" style="width:88px"><input class="input" value="Pond 05 — water exchange 10% started"></div>
-          <div class="row"><input class="input" placeholder="Time" style="width:88px"><input class="input" placeholder="Describe the action"></div>
-          <div><button class="btn btn--link btn--sm"><i data-lucide="plus"></i>Add action</button></div>
-        </div>
-      </section>
-      <!-- Technical Manager Summary -->
-      <section class="card">
-        <div class="card-header"><h2 class="card-title">Technical Manager Summary</h2></div>
-        <div class="card-body"><textarea class="textarea" style="min-height:160px" placeholder="Summarize the day's condition, issues and follow-up for the Farms Manager"></textarea></div>
-      </section>
+    <!-- Actions Taken -->
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Actions Taken</h2><div class="card-sub">Actions recorded while handling alerts and actuator operations are added automatically</div></div></div>
+      <table class="table table-compact">
+        <thead><tr><th>Time</th><th>Pond</th><th>Action</th><th>Result / Outcome</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td class="text-muted">05:40</td><td>Pond 02</td><td class="wrap">Increased aeration — aerators 3 and 4 on (manual override)</td><td class="wrap">Monitoring recovery</td><td><span class="source-tag">Actuator log</span></td></tr>
+          <tr><td class="text-muted">06:10</td><td>Pond 05</td><td class="wrap">Water exchange 10%</td><td class="wrap">Temperature 31.6 → 30.9 °C by 08:00</td><td><span class="source-tag">Alert handling</span></td></tr>
+          <tr><td class="text-muted">06:30</td><td>Pond 05</td><td class="wrap">Equipment inspection — Aerator 4</td><td class="wrap">Motor overheating, technician called</td><td><span class="source-tag">Manual</span></td></tr>
+        </tbody>
+      </table>
+      <div class="card-footer" style="justify-content:flex-start"><button class="btn btn--link"><i data-lucide="plus"></i>Add action</button></div>
+    </section>
+
+    <!-- Technical Manager Summary -->
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Technical Manager Summary <span class="req">*</span></h2><div class="card-sub">What happened today, what you observed and what you did</div></div></div>
+      <div class="card-body"><textarea class="textarea" style="min-height:120px" placeholder="e.g. Heavy rain in the afternoon. Pond 02 raised a DO warning and aeration was increased. No abnormal mortality."></textarea></div>
+    </section>
+
+    <div class="action-bar" data-show-on-tab="create">
+      <div class="action-bar-status"><span class="status-text st--draft">Draft</span><span>80% ready · Weather and Summary missing</span></div>
+      <span class="action-bar-spacer"></span>
+      <button class="btn btn--outline"><i data-lucide="save"></i>Save Draft</button>
+      <button class="btn btn--primary" data-open="submit"><i data-lucide="send"></i>Submit</button>
     </div>
   </div>
 
-  <!-- ============ History (TM-R-004) ============ -->
   <section class="card" data-panel-group="tab" data-panel="history">
-    <div class="card-header"><h2 class="card-title">Daily Report History</h2><select class="select" style="width:180px;height:32px;font-size:14px"><option>Last 30 days</option></select></div>
+    <div class="card-header"><h2 class="card-title">Daily Report History</h2></div>
     <table class="table">
-      <thead><tr><th>Date</th><th>Status</th><th class="num">Issues</th><th class="num">Total Feed</th><th class="num">Mortality</th><th>Submitted</th><th></th></tr></thead>
+      <thead><tr><th>Date</th><th>Status</th><th class="num">Ponds needing attention</th><th class="num">Total Feed</th><th class="num">Mortality</th><th>Submitted</th><th></th></tr></thead>
       <tbody>
-        <tr><td class="cell-main">29 Sep 2026</td><td><span class="badge badge--draft">Draft</span></td><td class="num">3</td><td class="num">596 kg</td><td class="num">74 pcs</td><td class="text-muted">—</td><td class="actions"><a class="btn btn--outline btn--sm" href="?tab=create">Continue</a></td></tr>
-        <tr><td class="cell-main">28 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="num">1,240 kg</td><td class="num">186 pcs</td><td class="text-muted">28 Sep 18:20</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
-        <tr><td class="cell-main">27 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="num">1,225 kg</td><td class="num">142 pcs</td><td class="text-muted">27 Sep 18:05</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
-        <tr><td class="cell-main">26 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">0</td><td class="num">1,210 kg</td><td class="num">118 pcs</td><td class="text-muted">26 Sep 17:52</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
-        <tr><td class="cell-main">25 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">0</td><td class="num">1,195 kg</td><td class="num">121 pcs</td><td class="text-muted">25 Sep 18:11</td><td class="actions"><a class="btn btn--link btn--sm" href="#">View</a></td></tr>
+        <tr><td class="cell-main">29 Sep 2026</td><td><span class="status-text st--draft">Draft</span></td><td class="num">3</td><td class="num">596 kg</td><td class="num">74 pcs</td><td class="text-muted">—</td><td class="actions"><a class="btn btn--outline btn--sm" href="?tab=create">Continue</a></td></tr>
+        <tr><td class="cell-main">28 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">2</td><td class="num">1,240 kg</td><td class="num">186 pcs</td><td class="text-muted">28 Sep 18:20</td><td class="actions"><a class="btn btn--link" href="#">View</a></td></tr>
+        <tr><td class="cell-main">27 Sep 2026</td><td><span class="status-text st--submitted">Submitted</span></td><td class="num">1</td><td class="num">1,245 kg</td><td class="num">170 pcs</td><td class="text-muted">27 Sep 18:05</td><td class="actions"><a class="btn btn--link" href="#">View</a></td></tr>
       </tbody>
     </table>
   </section>
 
-  <!-- Action Bar (UI/UX設計書 7) -->
-  <div class="action-bar" data-show-on-tab="create">
-    <div class="action-bar-status"><span class="badge badge--draft">Draft</span><span>Saved 09:20 · due today 18:00</span></div>
-    <span class="action-bar-spacer"></span>
-    <button class="btn btn--outline"><i data-lucide="save"></i>Save Draft</button>
-    <button class="btn btn--primary" data-open="submit"><i data-lucide="send"></i>Submit</button>
-  </div>
-
 </div></main>
 
-<!-- Submit Confirmation Dialog (?submit=1) -->
+<!-- Pond editor (?pond=1) — operational records and observations only -->
+<div class="overlay" id="pond">
+  <aside class="drawer">
+    <div class="drawer-header"><div><div class="caption">Daily Report · 29 Sep</div><h2 class="dialog-title">Pond 02</h2></div><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="drawer-body">
+      <div class="form-grid">
+        <div class="field"><span class="field-label">Feed so far <span class="source-tag">Records</span></span><div class="input is-readonly">74 kg · 2 / 4 rounds</div></div>
+        <div class="field"><span class="field-label">Mortality <span class="source-tag">Records</span></span><div class="input is-readonly">22 pcs · 0.30 kg</div></div>
+        <label class="field"><span class="field-label">Appetite</span><select class="select"><option>Reduced</option><option>Good</option><option>Poor</option></select></label>
+        <label class="field"><span class="field-label">Feeding tray (anco)</span><select class="select"><option>Leftover</option><option>Clean</option><option>Much leftover</option></select></label>
+        <label class="field span-2"><span class="field-label">Abnormal mortality observation</span><input class="input" placeholder="Only if mortality looked unusual"></label>
+      </div>
+      <a class="btn btn--link" href="tm-pond-detail.html?tab=feeding" style="align-self:flex-start">Correct feeding or mortality records in Pond 02<i data-lucide="arrow-right"></i></a>
+      <hr class="divider">
+      <label class="field"><span class="field-label">Health condition</span><select class="select"><option>Attention</option><option>Normal</option><option>Warning</option><option>Critical</option></select></label>
+      <div class="field"><span class="field-label">Observations</span>
+        <div class="stack" style="gap:8px">
+          <span class="row"><span class="check is-on"></span>Reduced appetite</span>
+          <span class="row"><span class="check is-on"></span>Abnormal swimming</span>
+          <span class="row"><span class="check"></span>Gill discoloration</span>
+          <span class="row"><span class="check"></span>Shell condition</span>
+          <span class="row"><span class="check"></span>Other visible abnormality</span>
+        </div></div>
+      <label class="field"><span class="field-label">Note</span><textarea class="textarea">Some shrimp near the surface at 05:30</textarea></label>
+      <div class="notice"><i data-lucide="info"></i><span>Water quality is recorded by the sensors and is not entered here. <a href="tm-pond-detail.html?tab=iot">View Pond 02 water quality data</a></span></div>
+    </div>
+    <div class="drawer-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--primary" data-close>Save Pond 02</button></div>
+  </aside>
+</div>
+
 <div class="overlay" id="submit">
   <div class="dialog" role="dialog">
     <div class="dialog-body">
       <h2 class="dialog-title">Submit Daily Report for 29 Sep?</h2>
-      <p class="text-secondary">The report will be shared with the Farms Manager and can no longer be edited.</p>
-      <div class="notice notice--warning"><i data-lucide="triangle-alert"></i><span>Evening water quality and Health Condition are empty.</span></div>
+      <p class="text-muted">The report will be shared with the Farms Manager and can no longer be edited.</p>
+      <div class="notice notice--warning"><i data-lucide="triangle-alert"></i><span>Weather and Technical Manager Summary are required. Alerts and actions recorded after submission appear in tomorrow's report.</span></div>
     </div>
     <div class="dialog-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--primary" data-close>Submit</button></div>
   </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
 <script src="../assets/charts.js"></script>
 <script src="../assets/layout.js"></script>

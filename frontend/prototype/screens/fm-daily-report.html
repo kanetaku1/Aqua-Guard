@@ -10,143 +10,108 @@
 <body data-role="fm" data-nav="reports" data-sub="daily">
 <main class="main"><div class="page">
 
-  <!-- Report Header -->
   <div class="page-header">
     <div>
       <div class="breadcrumb"><a href="fm-reports.html">Reports</a><i data-lucide="chevron-right"></i><a href="fm-reports.html">Daily Reports</a><i data-lucide="chevron-right"></i><span>Farm A · 28 Sep 2026</span></div>
-      <h1 class="page-title">Daily Report · Farm A <span class="badge badge--submitted badge--lg">Submitted</span></h1>
-      <div class="page-meta">
-        <span><i data-lucide="calendar"></i>28 Sep 2026</span>
-        <span><i data-lucide="user"></i>Technical Manager: Sari Wijaya</span>
-        <span><i data-lucide="send"></i>Submitted 28 Sep, 18:20</span>
-      </div>
+      <h1 class="page-title">Daily Report · Farm A <span class="status-text status-text--lg st--submitted">Submitted</span></h1>
+      <div class="page-meta"><span><i data-lucide="calendar"></i>28 Sep 2026</span><span><i data-lucide="user"></i>Technical Manager: Sari Wijaya</span><span><i data-lucide="send"></i>Submitted 28 Sep, 18:20</span></div>
     </div>
-    <div class="page-actions">
-      <a class="btn btn--outline" href="#"><i data-lucide="chevron-left"></i>27 Sep</a>
-      <button class="btn btn--outline" disabled>29 Sep<i data-lucide="chevron-right"></i></button>
-    </div>
+    <div class="page-actions"><a class="btn btn--outline" href="#"><i data-lucide="chevron-left"></i>27 Sep</a><button class="btn btn--outline" disabled>29 Sep<i data-lucide="chevron-right"></i></button></div>
   </div>
 
-  <!-- Report Summary -->
+  <!-- 1 Report Summary (Farm) -->
+  <section class="card"><div class="card-body"><dl class="dl" style="grid-template-columns:repeat(5,minmax(0,1fr))">
+    <div><dt>Farm Condition</dt><dd><span class="badge badge--warning">Warning</span></dd></div>
+    <div><dt>Ponds needing attention</dt><dd>2 of 8 (02, 05)</dd></div>
+    <div><dt>Total Feed</dt><dd class="num">1,240 kg</dd></div>
+    <div><dt>Mortality</dt><dd class="num">186 pcs · 2.40 kg</dd></div>
+    <div><dt>Alerts during the day</dt><dd>3 · 2 resolved</dd></div>
+  </dl></div></section>
+
+  <!-- 2 Ponds at a glance — operations and observations (no sensor values) -->
   <section class="card">
-    <div class="card-header"><h2 class="card-title">Report Summary</h2></div>
-    <div class="card-body">
-      <dl class="dl">
-        <div><dt>Farm Condition</dt><dd><span class="badge badge--warning">Warning</span></dd></div>
-        <div><dt>Alerts / Issues</dt><dd>1 issue · Pond 02 DO</dd></div>
-        <div><dt>Total Feed</dt><dd class="num">1,240 kg</dd></div>
-        <div><dt>Mortality</dt><dd class="num">186 pcs · 2.4 kg</dd></div>
-      </dl>
-    </div>
+    <div class="card-header"><div><h2 class="card-title">Ponds at a glance</h2><div class="card-sub">Feeding, mortality and health recorded on 28 Sep · Ponds with alerts or observations are outlined</div></div></div>
+    <div class="card-body"><div class="pond-tiles"><div class="pond-tile"><div class="row-between"><b>Pond 01</b><span class="status-text st--normal">Normal</span></div><dl class="pond-tile-values"><div><dt>Feed</dt><dd>190<small> kg</small></dd></div><div><dt>Appetite</dt><dd>Good</dd></div><div><dt>Mortality</dt><dd>18<small> pcs</small></dd></div><div><dt>Health</dt><dd>Normal</dd></div></dl><div class="pond-tile-note">&nbsp;</div></div>
+<div class="pond-tile is-warning"><div class="row-between"><b>Pond 02</b><span class="badge badge--warning">Warning</span></div><dl class="pond-tile-values"><div><dt>Feed</dt><dd>152<small> kg</small></dd></div><div><dt>Appetite</dt><dd>Reduced</dd></div><div><dt>Mortality</dt><dd>64<small> pcs</small></dd></div><div><dt>Health</dt><dd>Attention</dd></div></dl><div class="pond-tile-note">DO alert 05:20 · resolved 07:00</div></div>
+<div class="pond-tile"><div class="row-between"><b>Pond 03</b><span class="status-text st--normal">Normal</span></div><dl class="pond-tile-values"><div><dt>Feed</dt><dd>180<small> kg</small></dd></div><div><dt>Appetite</dt><dd>Good</dd></div><div><dt>Mortality</dt><dd>15<small> pcs</small></dd></div><div><dt>Health</dt><dd>Normal</dd></div></dl><div class="pond-tile-note">&nbsp;</div></div>
+<div class="pond-tile"><div class="row-between"><b>Pond 04</b><span class="status-text st--normal">Normal</span></div><dl class="pond-tile-values"><div><dt>Feed</dt><dd>140<small> kg</small></dd></div><div><dt>Appetite</dt><dd>Good</dd></div><div><dt>Mortality</dt><dd>22<small> pcs</small></dd></div><div><dt>Health</dt><dd>Normal</dd></div></dl><div class="pond-tile-note">&nbsp;</div></div>
+<div class="pond-tile is-attention"><div class="row-between"><b>Pond 05</b><span class="badge badge--attention">Attention</span></div><dl class="pond-tile-values"><div><dt>Feed</dt><dd>168<small> kg</small></dd></div><div><dt>Appetite</dt><dd>Reduced</dd></div><div><dt>Mortality</dt><dd>31<small> pcs</small></dd></div><div><dt>Health</dt><dd>Attention</dd></div></dl><div class="pond-tile-note">Temperature alert 14:10 · resolved 16:00</div></div>
+<div class="pond-tile"><div class="row-between"><b>Pond 06</b><span class="status-text st--normal">Normal</span></div><dl class="pond-tile-values"><div><dt>Feed</dt><dd>150<small> kg</small></dd></div><div><dt>Appetite</dt><dd>Good</dd></div><div><dt>Mortality</dt><dd>12<small> pcs</small></dd></div><div><dt>Health</dt><dd>Normal</dd></div></dl><div class="pond-tile-note">&nbsp;</div></div>
+<div class="pond-tile"><div class="row-between"><b>Pond 07</b><span class="status-text st--normal">Normal</span></div><dl class="pond-tile-values"><div><dt>Feed</dt><dd>140<small> kg</small></dd></div><div><dt>Appetite</dt><dd>Good</dd></div><div><dt>Mortality</dt><dd>14<small> pcs</small></dd></div><div><dt>Health</dt><dd>Normal</dd></div></dl><div class="pond-tile-note">&nbsp;</div></div>
+<div class="pond-tile"><div class="row-between"><b>Pond 08</b><span class="status-text st--normal">Normal</span></div><dl class="pond-tile-values"><div><dt>Feed</dt><dd>120<small> kg</small></dd></div><div><dt>Appetite</dt><dd>Good</dd></div><div><dt>Mortality</dt><dd>10<small> pcs</small></dd></div><div><dt>Health</dt><dd>Normal</dd></div></dl><div class="pond-tile-note">Turbidity sensor offline from 22:10</div></div>
+</div></div>
   </section>
 
-  <div class="grid cols-2">
-    <!-- Water Quality -->
-    <section class="card">
-      <div class="card-header"><div><h2 class="card-title">Water Quality</h2><div class="card-sub">Farm average across 8 Ponds</div></div></div>
-      <table class="table">
-        <thead><tr><th>Parameter</th><th class="num">Morning</th><th class="num">Evening</th></tr></thead>
-        <tbody>
-          <tr><td>DO</td><td class="num">6.2 mg/L</td><td class="num">5.8 mg/L</td></tr>
-          <tr><td>pH</td><td class="num">7.9</td><td class="num">7.8</td></tr>
-          <tr><td>Temperature</td><td class="num">28.1 °C</td><td class="num">28.4 °C</td></tr>
-          <tr><td>Salinity</td><td class="num">15 ppt</td><td class="num">15 ppt</td></tr>
-        </tbody>
-      </table>
-      <div class="card-body" style="border-top:1px solid var(--color-border)">
-        <dl class="dl dl-2"><div><dt>Secchi Depth</dt><dd>38 cm</dd></div><div><dt>Water Level</dt><dd>134 cm</dd></div></dl>
-      </div>
-    </section>
-
-    <!-- Feeding -->
-    <section class="card">
-      <div class="card-header"><h2 class="card-title">Feeding</h2></div>
-      <div class="card-body">
-        <dl class="dl dl-2">
-          <div><dt>Total Feed</dt><dd>1,240 kg</dd></div>
-          <div><dt>Frequency</dt><dd>4 times / day</dd></div>
-          <div><dt>Feed Type</dt><dd>Grower 2 (2.0 mm)</dd></div>
-          <div><dt>Appetite / Tray Status</dt><dd>Good — trays empty within 2 hrs</dd></div>
-        </dl>
-        <p class="helper" style="margin-top:16px">Pond 02: feed reduced by 10% in the evening due to low DO.</p>
-      </div>
-    </section>
-  </div>
+  <!-- 3 Feeding · Mortality · Health · Equipment per Pond (collapsed) -->
+  <details class="card card-details" data-open-param="details">
+    <summary class="card-header"><div><h2 class="card-title">Pond details</h2><div class="card-sub">Feeding · mortality · health · equipment — 8 Ponds</div></div><span class="btn btn--link">Show<i data-lucide="chevron-down"></i></span></summary>
+    <table class="table table-compact">
+      <thead><tr><th rowspan="2">Pond</th><th colspan="5">Feeding</th><th colspan="2">Mortality</th><th rowspan="2">Health</th><th rowspan="2" class="num">Aerators</th><th rowspan="2">Observation</th></tr>
+      <tr><th class="num">Amount</th><th class="num">Rounds</th><th>Feed type</th><th>Appetite</th><th>Tray</th><th class="num">pcs</th><th class="num">Weight</th></tr></thead>
+      <tbody><tr><td class="cell-main">Pond 01</td><td class="num">190 kg</td><td class="num">4 / 4</td><td>Grower 2</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">18</td><td class="num">0.25 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="num">2 / 2</td><td class="wrap text-secondary" style="min-width:200px">—</td></tr>
+<tr><td class="cell-main">Pond 02</td><td class="num">152 kg</td><td class="num">4 / 4</td><td>Grower 2</td><td><span class="status-text st--attention">Reduced</span></td><td><span class="status-text st--attention">Leftover</span></td><td class="num">64</td><td class="num">0.82 kg</td><td><span class="status-text st--attention">Attention</span></td><td class="num">4 / 4</td><td class="wrap text-secondary" style="min-width:200px">Abnormal swimming, reduced appetite</td></tr>
+<tr><td class="cell-main">Pond 03</td><td class="num">180 kg</td><td class="num">4 / 4</td><td>Grower 2</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">15</td><td class="num">0.20 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="num">2 / 2</td><td class="wrap text-secondary" style="min-width:200px">—</td></tr>
+<tr><td class="cell-main">Pond 04</td><td class="num">140 kg</td><td class="num">4 / 4</td><td>Grower 2</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">22</td><td class="num">0.28 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="num">2 / 2</td><td class="wrap text-secondary" style="min-width:200px">—</td></tr>
+<tr><td class="cell-main">Pond 05</td><td class="num">168 kg</td><td class="num">4 / 4</td><td>Grower 2</td><td><span class="status-text st--attention">Reduced</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">31</td><td class="num">0.40 kg</td><td><span class="status-text st--attention">Attention</span></td><td class="num">4 / 4</td><td class="wrap text-secondary" style="min-width:200px">Reduced appetite in the afternoon heat</td></tr>
+<tr><td class="cell-main">Pond 06</td><td class="num">150 kg</td><td class="num">4 / 4</td><td>Grower 1</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">12</td><td class="num">0.15 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="num">2 / 2</td><td class="wrap text-secondary" style="min-width:200px">—</td></tr>
+<tr><td class="cell-main">Pond 07</td><td class="num">140 kg</td><td class="num">4 / 4</td><td>Grower 1</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">14</td><td class="num">0.17 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="num">2 / 2</td><td class="wrap text-secondary" style="min-width:200px">—</td></tr>
+<tr><td class="cell-main">Pond 08</td><td class="num">120 kg</td><td class="num">4 / 4</td><td>Grower 1</td><td><span class="status-text st--normal">Good</span></td><td><span class="status-text st--normal">Clean</span></td><td class="num">10</td><td class="num">0.13 kg</td><td><span class="status-text st--normal">Normal</span></td><td class="num">2 / 2</td><td class="wrap text-secondary" style="min-width:200px">—</td></tr>
+</tbody>
+      <tfoot><tr><td>Farm A</td><td class="num">1,240 kg</td><td></td><td></td><td>2 reduced</td><td>1 leftover</td><td class="num">186</td><td class="num">2.40 kg</td><td>2 noted</td><td></td><td></td></tr></tfoot>
+    </table>
+  </details>
 
   <div class="grid cols-2">
-    <!-- Mortality -->
+    <!-- 4 Environment / Weather -->
     <section class="card">
-      <div class="card-header"><h2 class="card-title">Mortality</h2><span class="caption">Total 186 pcs · 2.4 kg</span></div>
+      <div class="card-header"><h2 class="card-title">Environment / Weather</h2></div>
+      <div class="card-body"><dl class="dl dl-2">
+        <div><dt>Weather</dt><dd>Cloudy</dd></div>
+        <div><dt>Rainfall</dt><dd class="num">4 mm</dd></div>
+        <div style="grid-column:span 2"><dt>Environmental events</dt><dd>Light rain 13:00–14:00</dd></div>
+      </dl></div>
+    </section>
+    <!-- 5 Equipment Status -->
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Equipment Status</h2><div class="card-sub">Aerators 20 / 20 · Pumps 3 / 3 · Generator standby</div></div></div>
       <table class="table table-compact">
-        <thead><tr><th>Pond</th><th class="num">Count</th><th class="num">Weight</th><th>Note</th></tr></thead>
-        <tbody>
-          <tr><td>Pond 01</td><td class="num">18</td><td class="num">0.25 kg</td><td class="text-muted">—</td></tr>
-          <tr><td>Pond 02</td><td class="num">64</td><td class="num">0.82 kg</td><td>Low DO in early morning</td></tr>
-          <tr><td>Pond 03</td><td class="num">15</td><td class="num">0.20 kg</td><td class="text-muted">—</td></tr>
-          <tr><td>Pond 04</td><td class="num">22</td><td class="num">0.28 kg</td><td class="text-muted">—</td></tr>
-          <tr><td>Pond 05</td><td class="num">31</td><td class="num">0.40 kg</td><td class="text-muted">—</td></tr>
-          <tr><td>Pond 06–08</td><td class="num">36</td><td class="num">0.45 kg</td><td class="text-muted">—</td></tr>
-        </tbody>
+        <thead><tr><th>Equipment</th><th>Failure</th><th>Action</th><th>Status</th></tr></thead>
+        <tbody><tr><td><div class="cell-main">Turbidity sensor</div><div class="cell-sub">Pond 08</div></td><td><div>Offline</div><div class="cell-sub">22:10</div></td><td class="wrap">Replacement requested</td><td><span class="status-text st--ack">Open</span></td></tr></tbody>
       </table>
     </section>
-
-    <div class="stack" style="gap:24px">
-      <!-- Health Condition -->
-      <section class="card">
-        <div class="card-header"><h2 class="card-title">Health Condition</h2></div>
-        <div class="card-body"><p class="prose">Shrimp active and feeding well in most Ponds. Some shrimp in Pond 02 observed near the surface at 05:30. No visible white spots or gill discoloration. Hepatopancreas appearance normal in sampled shrimp.</p></div>
-      </section>
-      <!-- Environment / Equipment -->
-      <section class="card">
-        <div class="card-header"><h2 class="card-title">Environment / Equipment</h2></div>
-        <div class="card-body">
-          <dl class="dl dl-3">
-            <div><dt>Weather</dt><dd>Cloudy</dd></div>
-            <div><dt>Rainfall</dt><dd>4 mm</dd></div>
-            <div><dt>Aerator</dt><dd>All running</dd></div>
-            <div><dt>Pump</dt><dd>Normal</dd></div>
-            <div><dt>Generator</dt><dd>Standby · tested</dd></div>
-          </dl>
-        </div>
-      </section>
-    </div>
   </div>
 
-  <!-- Alerts / Issues (no Acknowledge / Resolve / Edit for Farms Manager) -->
+  <!-- 6 Major Alerts / Issues — from the alert system -->
   <section class="card">
-    <div class="card-header"><h2 class="card-title">Alerts / Issues</h2><span class="caption">Referenced in this report</span></div>
-    <div class="alert-list">
-      <div class="alert-row"><span class="alert-bar alert-bar--warning"></span>
-        <div><div class="alert-title">Water Quality · DO below threshold (4.3 mg/L &lt; 4.5)</div><div class="alert-meta"><span><i data-lucide="waves"></i>Pond 02</span><span><i data-lucide="clock"></i>Since 27 Sep 07:10</span><span>ISS-218</span></div></div>
-        <div class="alert-side"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--progress">In Progress</span></div>
-        <span></span></div>
-    </div>
+    <div class="card-header"><div><h2 class="card-title">Major Alerts / Issues</h2><div class="card-sub">Alerts generated by the system during 28 Sep · current alerts are always on Dashboard and Farm Detail</div></div><span class="source-tag"><i data-lucide="bell"></i>From alerts</span></div>
+    <table class="table table-compact">
+      <thead><tr><th>Pond</th><th>Alert</th><th>Severity</th><th>Occurred</th><th>Duration</th><th>Status</th><th></th></tr></thead>
+      <tbody><tr><td class="cell-main">Pond 02</td><td>DO below threshold</td><td><span class="badge badge--warning">Warning</span></td><td>05:20</td><td>1 h 40 min</td><td><span class="status-text st--resolved">Resolved</span></td><td class="actions"><a class="btn btn--link" href="fm-farm-detail.html?issue=1">View in Farm Detail</a></td></tr>
+<tr><td class="cell-main">Pond 05</td><td>Temperature above threshold</td><td><span class="badge badge--attention">Attention</span></td><td>14:10</td><td>1 h 50 min</td><td><span class="status-text st--resolved">Resolved</span></td><td class="actions"><a class="btn btn--link" href="fm-farm-detail.html?issue=1">View in Farm Detail</a></td></tr>
+<tr><td class="cell-main">Pond 08</td><td>Turbidity sensor offline</td><td><span class="badge badge--attention">Attention</span></td><td>22:10</td><td>ongoing</td><td><span class="status-text st--ack">Acknowledged</span></td><td class="actions"><a class="btn btn--link" href="fm-farm-detail.html?issue=1">View in Farm Detail</a></td></tr>
+</tbody>
+    </table>
   </section>
 
-  <div class="grid cols-2">
-    <!-- Actions Taken -->
-    <section class="card">
-      <div class="card-header"><h2 class="card-title">Actions Taken</h2></div>
-      <div class="card-body">
-        <table class="table table-compact"><tbody>
-          <tr><td class="text-muted" style="width:64px">05:40</td><td>Pond 02 — 2 additional aerators switched on (manual override)</td></tr>
-          <tr><td class="text-muted">16:00</td><td>Pond 02 — evening feed reduced by 10%</td></tr>
-          <tr><td class="text-muted">17:30</td><td>Pond 08 — turbidity sensor checked, replacement requested</td></tr>
-        </tbody></table>
-      </div>
-    </section>
-    <!-- Technical Manager Summary -->
-    <section class="card">
-      <div class="card-header"><h2 class="card-title">Technical Manager Summary</h2></div>
-      <div class="card-body">
-        <div class="prose">
-          <p>Overall Farm condition stable except Pond 02, where morning DO remained below threshold for the second day. Additional aeration improved DO to 5.1 mg/L by 09:00.</p>
-          <p>Will continue close monitoring of Pond 02 overnight and review feeding amount tomorrow morning.</p>
-        </div>
-        <p class="caption" style="margin-top:16px">— Sari Wijaya, Technical Manager</p>
-      </div>
-    </section>
-  </div>
+  <!-- 7 Actions Taken -->
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">Actions Taken</h2></div>
+    <table class="table table-compact">
+      <thead><tr><th>Time</th><th>Pond</th><th>Action</th><th>Result / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td class="text-muted">05:40</td><td>Pond 02</td><td class="wrap">Increased aeration — aerators 3 and 4 on</td><td class="wrap">DO back within range by 07:00</td></tr>
+        <tr><td class="text-muted">14:00</td><td>Pond 05</td><td class="wrap">Afternoon feed reduced by 10%</td><td class="wrap">Temperature alert resolved 16:00</td></tr>
+        <tr><td class="text-muted">16:00</td><td>Pond 02</td><td class="wrap">Evening feed reduced by 10%</td><td class="wrap">Monitoring overnight</td></tr>
+        <tr><td class="text-muted">22:30</td><td>Pond 08</td><td class="wrap">Turbidity sensor checked</td><td class="wrap">Replacement requested</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 8 Technical Manager Summary -->
+  <section class="card">
+    <div class="card-header"><h2 class="card-title">Technical Manager Summary</h2><span class="caption">— Sari Wijaya</span></div>
+    <div class="card-body"><div class="prose"><p>Light rain in the early afternoon. Pond 02 raised a DO warning before sunrise; aeration was increased and DO recovered by 07:00, but appetite stayed reduced and some shrimp were swimming near the surface. Pond 05 reached the temperature limit in the afternoon, so feeding was reduced. No abnormal mortality elsewhere. Pond 02 will be watched overnight.</p></div></div>
+  </section>
 
 </div></main>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>

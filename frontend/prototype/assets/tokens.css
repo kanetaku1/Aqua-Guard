@@ -12,7 +12,7 @@
   --color-tide-line: #D6E3E5;    /* 境界線・区切り線 */
   /* status */
   --color-status-green: #237A57;  /* 正常・安定・完了 */
-  --color-attention: #A15C00;     /* 注意・確認推奨 */
+  --color-attention: #7A5A00;     /* 注意・確認推奨（文字色。目印は --status-attention-marker） */
   --color-status-orange: #B54708; /* 警告・対応が必要 */
   --color-status-red: #B42318;    /* 重大・即時対応が必要 */
   --color-status-blue: #1769AA;   /* 情報・参考・システム通知 */
@@ -40,11 +40,12 @@
   --color-bg-subtle: var(--color-mist);
   --color-surface: var(--color-white);
 
-  /* Status tints (derived: 8% background / 35% border) */
-  --status-normal-fg: var(--color-status-green);  --status-normal-bg: #EDF4F2;  --status-normal-border: #B2D0C4;
-  --status-attention-fg: var(--color-attention);  --status-attention-bg: #F7F2EB; --status-attention-border: #DEC6A6;
-  --status-warning-fg: var(--color-status-orange); --status-warning-bg: #F9F0EB; --status-warning-border: #E5BFA9;
-  --status-critical-fg: var(--color-status-red);  --status-critical-bg: #F9EDED; --status-critical-border: #E5B2AE;
+  /* Status roles (デザインシステム定義書 ステータス): marker = dots, bars, bands · fg = text · fill = Badge surface · bg = pale area · border = Badge border
+     Hues are separated yellow -> orange -> red so severities read apart even as small dots. */
+  --status-normal-marker: #237A57;    --status-normal-fg: var(--color-status-green);   --status-normal-bg: #EDF4F2;    --status-normal-border: #B2D0C4;
+  --status-attention-marker: #E0A800; --status-attention-fg: var(--color-attention);   --status-attention-fill: #FFF4CC; --status-attention-bg: #FFF8E1; --status-attention-border: #E0A800;
+  --status-warning-marker: #EC6A0C;   --status-warning-fg: var(--color-status-orange); --status-warning-fill: #FFE8D6;   --status-warning-bg: #FFF1E6;   --status-warning-border: #EC6A0C;
+  --status-critical-marker: #D92D20;  --status-critical-fg: var(--color-status-red);   --status-critical-fill: #D92D20;  --status-critical-bg: #FDECEA;  --status-critical-border: #D92D20;
   --status-info-fg: var(--color-status-blue);     --status-info-bg: #ECF3F8;     --status-info-border: #AECAE1;
   --status-neutral-fg: var(--color-slate);        --status-neutral-bg: #F2F4F4;  --status-neutral-border: #C6CDD0;
 

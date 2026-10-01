@@ -2,7 +2,7 @@
 
 | 項目 | 内容 |
 | --- | --- |
-| 版 | v2.2（2026-09-30：文書体系の整理を反映） |
+| 版 | v2.5（2026-10-01：センサー・Alert・Reportの分離）／ v2.4（2026-10-01：状態色の色相分離、Badge / Indicator の判定ルールを反映） |
 | 対象 | Smart Shrimp Pond Management System — Web UI（Farms Manager / Technical Manager） |
 | 関連文書 | 01〜06（業務・権限・用語・KPI・画面の正）、08_デザインシステム定義書（Design System v2：見た目の確定値）、Figma「UI Style Guidelines」（v2の元になった原典） |
 | 実装 | `frontend/prototype/`（`assets/tokens.css` / `assets/app.css` / `design-system.html`） |
@@ -37,6 +37,10 @@ Design System v2 はFigmaの原典を本書 §3 のレビューに基づいて�
 6. **データの鮮度と欠損を隠さない** — 取得時刻、更新遅延、センサー断を常に見える場所に出す。
 7. **重大操作は人が確認する** — Actuator操作・レポート提出は確認ダイアログを通し、Safety Layerの制約を明示する。
 8. **一つの意味には一つの表現** — 同じ意味の情報は、どの画面でも同じ部品・同じサイズ・同じ位置で表示する。
+9. **重複させるなら見え方を変える（G1）** — 1つの画面・隣り合う画面で同じ内容を出すときは、粒度か形を変えて役割を分ける。例：Farm Status 表＝「どのFarmが・なぜ」（Pond数の事実）／Risk / Issue＝個々の問題（Pond・傾向・対応状態）。TM Dashboard＝今の水質／Pond List＝成長と当日の記録。同じ表を2か所に置かない。
+10. **状態には根拠を添える** — Status だけを並べない。状態の隣に「なぜ」（Main reason、該当Pond数、値）を示す。名前を変えただけの集約状態（例：Overall）は作らない。
+11. **2つの問いには2つの仕組みで答える** — 「今何が起きているか（What is happening now?）」は Sensor Data ＋ Alert ＋ Environmental / Pond Trend（Dashboard、Farm Detail、Pond Detail）で答える。「何が起き、何を観察し、TMが何をしたか（What happened, what was observed, what did the TM do?）」は Daily / Weekly Report で答える。Reportにセンサー値を転記せず、AlertをReportに依存させない（違いは 03_用語定義 §7「Report と Alert の違い」）。
+    > Sensors continuously observe. Alerts continuously detect. Technical Managers operate and respond. Reports document human operational activity. Farms Managers oversee Farm-level conditions and review operational reports.
 
 ### 2.1 目指す印象と避けること
 
@@ -66,7 +70,7 @@ FigmaのUI Style Guidelines（01〜09）を画面に適用した結果、以下�
 | # | 課題 | 数値 | 本書での対応 |
 | --- | --- | --- | --- |
 | C1 | Mangrove Green（補助ボタン）と Status Green（正常）がほぼ同色 | 色差 **1.16:1** | 緑のボタンは「正常／完了」と誤認されるため、**Secondary（緑）ボタンを廃止**。Mangrove Greenはグラフのデータ色（実績・成長・給餌）に限定 |
-| C2 | Water Blue（リンク・主要操作）と Status Blue（情報）が近い | 色差 **1.25:1** | 「From sensor data」等の情報タグを青にするとリンクに見えるため、**参照元タグはニュートラル（Slate/Mist）**。Status Blueは通知バナーのアイコンと枠に限定 |
+| C2 | Water Blue（リンク・主要操作）と Status Blue（情報）が近い | 色差 **1.25:1** | 「From records」等の情報タグを青にするとリンクに見えるため、**参照元タグはニュートラル（Slate/Mist）**。Status Blueは通知バナーのアイコンと枠に限定 |
 | C3 | 状態バッジの多用で画面が騒がしい（例：Farm一覧で1行4個×4行＝16個） | — | **Status Badge と Status Indicator を使い分ける**（§8） |
 
 ### 3.3 定義の不足
@@ -100,7 +104,7 @@ FigmaのUI Style Guidelines（01〜09）を画面に適用した結果、以下�
 | Text | Ink | `#18323B` | 本文、見出し、主要数値 | — |
 | Muted | Slate | `#5B7078` | 補足、単位、更新時刻、表見出し、非活性アイコン | 主要数値 |
 | Divider | Tide Line | `#D6E3E5` | カード・表・区切りの線（装飾） | 入力欄の枠（A1） |
-| Status | Green / Attention / Orange / Red | `#237A57` / `#A15C00` / `#B54708` / `#B42318` | 状態表示のみ | 装飾、ボタン（Dangerを除く） |
+| Status | Green / Yellow / Orange / Red | 目印 `#237A57` / `#E0A800` / `#EC6A0C` / `#D92D20`、文字 `#237A57` / `#7A5A00` / `#B54708` / `#B42318` | 状態表示のみ（§4.2 の役割分担に従う） | 装飾、ボタン（Dangerを除く） |
 | Info | Status Blue | `#1769AA` | 情報バナー（アイコン・枠） | リンク、参照元タグ（C2） |
 
 ### 4.2 補完色
@@ -108,8 +112,11 @@ FigmaのUI Style Guidelines（01〜09）を画面に適用した結果、以下�
 | 用途 | 値 | 算出 |
 | --- | --- | --- |
 | 操作部品の枠線（Control Border） | `#7C8D93` | 白背景に対し3.45:1 |
-| 状態色の背景 | Normal `#EDF4F2` / Attention `#F7F2EB` / Warning `#F9F0EB` / Critical `#F9EDED` / Info `#ECF3F8` | 状態色を8%の濃さに |
-| 状態色の枠線 | Normal `#B2D0C4` / Attention `#DEC6A6` / Warning `#E5BFA9` / Critical `#E5B2AE` / Info `#AECAE1` | 状態色を35%の濃さに |
+| 状態色の目印（Marker） | Normal `#237A57` / Attention `#E0A800` / Warning `#EC6A0C` / Critical `#D92D20` | 点・重大度バー・色帯・Status Strip・グラフの閾値。**黄→橙→赤と色相を離し**、小さな点でも区別できるようにする |
+| 状態色の文字（Text） | Normal `#237A57` / Attention `#7A5A00` / Warning `#B54708` / Critical `#B42318` | 範囲外の値・Badgeの文字。白・淡色の上で4.5:1以上 |
+| Badgeの面（Fill） | Attention `#FFF4CC` / Warning `#FFE8D6` / Critical `#D92D20`（白文字） | Badgeだけに使う。Criticalは塗りつぶし |
+| Badgeの枠（Border） | Attention `#E0A800` / Warning `#EC6A0C` / Critical `#D92D20` | 目印と同じ |
+| 淡い背景（領域の異常） | Normal `#EDF4F2` / Attention `#FFF8E1` / Warning `#FFF1E6` / Critical `#FDECEA` / Info `#ECF3F8` | 閾値外の帯、警告バナー、閾値エディタの Normal 列 |
 | 選択中の背景 | `#E1F0F4` | Water Blueを12%の濃さに |
 | フォーカスリング | `#C1DEE8` | 原典の値 |
 | 表の行ホバー | `#F9FBFB` | 原典のPagination無効背景 |
@@ -139,9 +146,14 @@ FigmaのUI Style Guidelines（01〜09）を画面に適用した結果、以下�
 | Slate / Mist | 4.86 | AA ✓ |
 | Water Blue / White（リンク文字・ボタン） | 4.64 | AA ✓（余裕が小さいため、細字12pxのリンクは使わない） |
 | White / Deep Water（ヘッダー） | 7.56 | AA ✓ |
-| Attention / White | 5.19 | AA ✓ |
-| Status Orange / White | 5.43 | AA ✓ |
-| Status Red / White | 6.57 | AA ✓ |
+| Attention文字 `#7A5A00` / White | 6.38 | AA ✓ |
+| Attention文字 / Badge面 `#FFF4CC` | 5.79 | AA ✓ |
+| Warning文字 `#B54708` / White | 5.43 | AA ✓ |
+| Warning文字 / Badge面 `#FFE8D6` | 4.59 | AA ✓ |
+| Critical文字 `#B42318` / White | 6.57 | AA ✓ |
+| White / Critical面 `#D92D20` | 4.84 | AA ✓ |
+| 目印 Warning `#EC6A0C` / White | 3.20 | 非テキスト 3:1 ✓ |
+| 目印 Attention `#E0A800` / White | 2.15 | 非テキスト ✗ → 黄の目印は**必ず文字ラベルかアイコンと併記**する（色だけで伝えない） |
 | Status Green / White | 5.26 | AA ✓ |
 | Tide Line / White（入力欄の枠） | 1.31 | ✗ → Control Borderに変更（A1） |
 
@@ -271,7 +283,7 @@ FigmaのUI Style Guidelines（01〜09）を画面に適用した結果、以下�
 | **Toast** | 右下、幅360、Deep Water | 操作結果の通知だけ（4秒で消える）。重要な情報は画面側に残す |
 | **Notice** | アイコン＋文、Info（青）／ Warning（橙） | 画面や領域の前提・制約（Safety Layer等）を示す |
 | **Empty / Loading / Error** | アイコン24＋一文＋次の操作 | Loadingはスケルトン表示で、前回値を最新値と誤解させない |
-| **Tag** | 値種別（Actual / Estimated / Forecast）、参照元（From sensor data / From records） | XS 24、Mist背景＋Slate文字。リンクの色は使わない（C2） |
+| **Tag** | 値種別（Actual / Estimated / Forecast）、参照元（From records / From sensor DB〔Weeklyの自動集計〕/ Alert handling / Actuator log） | XS 24、Mist背景＋Slate文字。リンクの色は使わない（C2） |
 
 ### 7.1 ボタンの使い分けと配置
 
@@ -286,7 +298,7 @@ FigmaのUI Style Guidelines（01〜09）を画面に適用した結果、以下�
 
 - 並べ方：右端に最も重要な操作、その左に取消。Dangerは単独で置かず、必ず取消と並べる。
 - アイコンは補助として左側に置く（16px）。アイコンだけのボタンは閉じる（✕）に限る。
-- 無効状態のボタンは、なぜ押せないかをHelper textで示す（例：「Evening values available after 17:00」）。
+- 無効状態のボタンは、なぜ押せないかをHelper textで示す（例：「Weather and Summary are required」）。
 
 ---
 
@@ -296,30 +308,43 @@ FigmaのUI Style Guidelines（01〜09）を画面に適用した結果、以下�
 
 | 系統 | 値 | 色 |
 | --- | --- | --- |
-| 重大度（Condition / Severity） | Normal < Attention < Warning < Critical | Green / Attention / Orange / Red |
+| 重大度（Condition / Severity） | Normal < Attention < Warning < Critical | Green / Yellow / Orange / Red（アイコン：なし / `circle-alert` / `triangle-alert` / `octagon-alert`） |
 | レポート状態 | Draft（下書き）→ Submitted（提出済み） | Slate / Green（完了） |
 | アラートの対応状態（用語定義） | Unacknowledged（未確認）→ Acknowledged（確認済み）→ In Progress（対応中）→ Resolved（解決済み） | Red / Slate / Water Blue（進行中）/ Green |
-| データ品質 | Live / Delayed / Offline / No data | Green / Attention / Red / Slate |
+| データ品質 | Live / Delayed / Offline / No data | Green / Yellow / Red / Slate |
+| アカウント | Active / Invited / Deactivated | Green / Water Blue（進行中）/ Slate |
+| マスタの稼働状態 | Farm: Active / Inactive、Pond: In operation / Fallow、機器: Online / Offline | Green / Slate（機器のOfflineは Red） |
 
-### 8.2 Badge と Indicator の使い分け（色のバランスを保つためのルール）
+### 8.2 Badge と Indicator の使い分け
 
-| 表示 | 部品 | 例 |
+**判定は1つの質問で決める：「これは、この行・カード・ページが表す対象の“重さ（重大度）”で、Attention 以上か？」**
+Yes なら **Status Badge**、それ以外はすべて **Status Indicator**。
+
+| 部品 | 見た目 | 意味 |
 | --- | --- | --- |
-| 対象物の**主状態**が注意以上 | **Status Badge** | Farm A のWarning、Pond 02 のWarning、アラートの重大度 |
-| 対象物の主状態が **Normal** | **Status Indicator**（点＋文字） | 一覧のNormal、正常なセンサー |
-| 補助的な状態（Farmの内訳：環境・生産・運用） | Status Indicator | ダッシュボードの内訳の列 |
-| アラートの対応状態 | Status Indicator | In Progress、Acknowledged |
-| レポートの Submitted（完了） | Status Indicator | レポート一覧 |
-| レポートの Draft（対応が必要） | Status Badge | TMのレポート状態 |
-| 設備・センサーの状態 | Status Indicator | On / Off / Online / Offline |
-| 凡例・件数の集計 | Status Badge | ステータス集計の見出し |
-| ページタイトル横 | Status Badge（32）。Normalでも表示 | Farm B · Normal |
+| **Status Badge** | **塗りのあるチップ**＋重大度アイコン＋太字。Attention＝淡い黄の面・黄の枠、Warning＝淡い橙の面・橙の枠、**Critical＝赤の塗りつぶし・白文字** | 「この対象は対応が必要」。重大度専用 |
+| **Status Indicator** | **面も枠もない**。色の点（8px）＋通常の文字 | 状態の記録・説明。目立たせない |
+
+| 表示するもの | 部品 | 理由・例 |
+| --- | --- | --- |
+| 対象の重大度が Attention / Warning / Critical | **Badge** | 一覧の Status 列（Farm D Critical、Pond 02 Warning）、Alert・Issue の Severity、ページタイトル横（lg）、Report の Pond Tile、Sensor Tile |
+| 対象の重大度が Normal | Indicator | 一覧の Normal、ページタイトル横の Normal（lg） |
+| 内訳・補助の状態（主語が対象そのものではない） | Indicator | Farm Status の Water quality / Growth / Operations の列・タイル、Report の Health 列、Growth vs target |
+| 対応状態（Alert・Issue） | Indicator | Unacknowledged（赤の点）/ Acknowledged（Slate）/ In Progress（Water Blue）/ Resolved（Green） |
+| Report 状態 | Indicator | Draft（Slate）/ Submitted（Green）。Draft の緊急度は期限の文字と Continue ボタンで示す |
+| データ品質・設備・センサー・アカウント・マスタ | Indicator | Live / Offline、On / Off、Active / Invited |
+| 状態別の件数（Status Summary）・凡例 | Indicator | 見出しは点＋文字、件数は Display |
+
+ルール：
+- **1つの行・カードに Badge は最大1つ**（その対象の重大度）。2つ目以降の状態は Indicator にする。
+- 同じ列に Badge（異常）と Indicator（Normal）が混ざるのは意図どおり。異常な行だけが面を持つので、どこを見るべきかが分かる。
+- Badge の色・面・アイコンを重大度以外（Draft、対応状態、件数の見出しなど）に使わない。
 
 > 効果：Farm一覧で16個あったバッジが、異常なFarmの主状態の3個に減り、「どこを見るべきか」がすぐ分かる。
 
 ### 8.3 範囲外の値
 
-表やタイルの数値が閾値を外れたら、**値を状態色で太字にし、前に警告アイコン（12px）を付ける**。正常な値はInkのまま。
+表やタイルの数値が閾値を外れたら、**値を状態色の文字色で太字にし、前に重大度のアイコン（12px：Attention＝円、Warning＝三角、Critical＝八角形）を付ける**。正常な値はInkのまま。形でも重さが分かるので、色覚に頼らない。
 
 ---
 
@@ -361,7 +386,7 @@ FigmaのUI Style Guidelines（01〜09）を画面に適用した結果、以下�
 | 最初の問い | Which Farm needs attention? | Which Pond needs attention? |
 | 情報の粒度 | Farmへの集約、傾向（↓ Decreasing）、期間 | Pondごとの現在値、時系列、生データ |
 | 数値の見せ方 | KPI Card、傾向、重大度 | センサー値のタイル、表、グラフ |
-| 操作 | 閲覧・絞り込み・移動のみ | 記録・確認（Acknowledge）・機器操作・提出 |
+| 操作 | 閲覧・絞り込み・移動のみ（Alertも閲覧のみ） | 記録・Alertの確認（Acknowledge）・対応の記録（Record action）・解決（Resolve）・機器操作・提出 |
 | 使う機器 | PC（1280px以上） | PC・タブレット（768px以上、タッチ操作） |
 
 ### 11.1 生産KPIの集計ルール
@@ -378,6 +403,67 @@ FigmaのUI Style Guidelines（01〜09）を画面に適用した結果、以下�
 - 成長グラフは平均線を描かず、目標曲線に各池の現在値を点で重ねる（DOCが異なる池を同じ図で比較できる）。
 - Farms Managerは池ごとの生産サマリーを閲覧できる（サンプリング・給餌・死亡の記録から算出したKPIであり、生のセンサー値ではないため）。個々の記録（1回ごとの給餌・サンプリング等）はTechnical Managerの画面に留める。
 - Farm間の数値を順位付け・比較する表示はしない（Farm Comparisonは対象外）。
+
+### 11.2 認証画面（AU）
+
+| 観点 | ルール |
+| --- | --- |
+| レイアウト | App Shellを持たない。Mist背景の中央に幅400のカード1枚。装飾的な画像・キャッチコピーは置かない |
+| 操作 | 主要操作は全幅の Primary L（48）1つ。タブレットの現場でも押しやすくする |
+| 言語 | ログイン前に右上で切り替えられる。ログイン後はユーザー設定を優先 |
+| エラー | どの項目が違うかを示さない（「Email or password is incorrect」）。残り回数とロックの時間は示す |
+| アカウントの有無 | 再設定メールの送信後は、登録の有無にかかわらず同じ文言にする |
+| パスワード | 条件をチェックリストで入力中に示し、満たすまで確定ボタンを無効にする |
+
+### 11.3 管理画面（AD）
+
+| 観点 | ルール |
+| --- | --- |
+| 業務データ | センサー値・Alert・生産KPI・Reportは表示しない。機器は接続状態（Online / Offline）のみ |
+| 編集の形 | 一覧 → Drawerで詳細・追加（一覧の文脈を保つ）。設定値はタブ内の表で直接編集し、まとめて保存する |
+| 保存 | 判定に影響する設定は確認ダイアログで「適用範囲・適用開始・過去のデータは変わらない」を示す |
+| 取り消せない操作 | 無効化は Danger の確認ダイアログを通す。削除は提供しない |
+| 入力の矛盾 | 範囲の逆転などはその欄にエラーを表示し、保存ボタンを無効にする |
+| 閾値の入力 | **境界値エディタ**：1つの欄に数値1つ。範囲（A–B）を入力させない。Low side（Critical・Warning・Attention < ）と High side（Attention・Warning・Critical > ）を左右に置き、Normal は中央に自動表示。使わない側は “Not used”。行の下に色帯と境界値のプレビューを出し、入力の結果を目で確かめられるようにする |
+| 誰が変えたか | 設定・マスタの画面に「最終更新者・日時」を表示する |
+
+### 11.4 Pond単位とFarm単位の表現
+
+同じ画面にPondの値とFarmの値を並べるときは、データの性質（04 §4.1）で表現を決める。1つのFarmは約10池を想定する。
+
+| 性質 | 表現 | ルール |
+| --- | --- | --- |
+| 積み重なる量・Daily（給餌・死亡） | **Pondごとの数値の表** | 最下行（tfoot）に合計。数値と同じ内容を繰り返すだけの横棒や構成比（Share）は置かない |
+| 積み重なる量・Weekly（給餌・死亡） | **ドーナツグラフ ＋ Pondごとの数値の表（タブ内）** | ドーナツは週合計に占める割合。**全Pondを表示し、Othersにまとめない**。値の大きい順に同系色の濃→淡（最大10段）、凡例は1列の Pond・値・%（6池以上は行間を詰める）。中央に合計 |
+| 状態の値（水質・検査） | **Pond×項目の表**（Weekly のみ） | Daily Report にはセンサー値を出さない（その日のAlertとセンサーデータへのリンクのみ）。Weekly の水質は Sensor Database から週次で自動集計した傾向（DO min・pH range・Temp max・範囲外の日数・Alert件数・Trend）。平均は出さない。範囲外の値は状態色＋アイコン |
+| 観察・設備 | **Pondごとの一覧** | 注意以上のPondを先頭に並べ、Normalは Status Indicator で控えめに |
+| Farm共通 | **1つの値** | Pondの表の中に混ぜない |
+
+ドーナツの色：給餌は Mangrove Green、死亡は Slate の濃淡（08 §ドーナツ）。状態色は使わない（死亡＝異常と誤認させないため）。
+
+**Pondが多くてもReportを短くする**（10池を想定）：
+
+| 手法 | 使いどころ |
+| --- | --- |
+| **Ponds at a glance**（Pondタイル） | Daily の俯瞰。1池1枚、代表値4つ（Feed・Appetite・Mortality・Health）＋その日のAlertの1行。センサー値は出さない。注意以上は枠で強調 |
+| **1つの表にまとめる** | 項目ごとに別の表（給餌・死亡・健康・設備）を並べず、Pondを行にした1つの表にする。TM Daily は行の Edit から Pond 単位の Drawer（摂餌・健康状態・観察）で入力 |
+| **折りたたみ** | FM Daily の Pond details は初期で閉じる（俯瞰で足りない時だけ開く） |
+| **タブ** | Weekly の Pond 別データは「Growth / Water quality trends / Feeding & mortality / Laboratory」のタブで1枚のカードにまとめる |
+| **横に並べる** | 短いカード同士（Alerts と Actions、Growth グラフとドーナツ）は 6 : 6 で並べる |
+
+### 11.5 日付の入力
+
+日付はすべてカレンダー（Date Field）から選ぶ。表示形式は `DD MMM YYYY`。今日を枠で、選択中を Water Blue で示す。記録の日付は未来日を無効にし、予定日（次回サンプリングなど）だけ未来日を選べる。
+
+### 11.6 自動で集まるReport（確認中心の入力）
+
+Reportは人の運用業務を記録するもので、センサーの計測値を記録するものではない（§2 原則11、03_用語定義 §7）。
+
+- **センサー値を入力・転記しない。** Daily Report に水質の欄（朝・夕の値など）は持たない。水質の履歴は Pond Detail › IoT / Water Quality にあり、Reportからはリンク（View Water Quality Data）で参照する。Weekly の Water quality trends は Sensor Database から自動集計し、TMは任意のコメントだけを加える。
+- **Alert と対応は自動で参照する。** Major Alerts / Issues はその日（Weeklyはその週）のAlertをAlertシステムから取り込む。TMは項目を除外（Weekly は Cause / Action / Outcome を追記）できるが、値を入力し直さない。Actions Taken は Alert 対応の記録（Alert handling）と Actuator の操作（Actuator log）から自動で入り、手入力（Add action）を追加できる。ReportはAlertの前提ではない。
+- 給餌・死亡・設備・生産KPIは記録から自動で集め、読み取り専用で表示する。「From records」「Alert handling」「Actuator log」等のタグで出どころを示す。値の修正は元の記録（Pond Detail）で行う。
+- 画面上部に完成度のチェックリスト（Feeding · Mortality〔records〕／ Equipment〔auto〕／ Health〔任意〕／ Farm input〔Weather*・Summary*〕）を置き、残りの作業が分かるようにする。水質の項目は持たない。
+- TMが入力するのは、観察（摂餌・トレイ、健康状態と観察項目。Daily は Pond ごとの Drawer）、Farm共通の項目（天候・降雨・環境上の出来事・発電機）、手入力の対応、所見（Technical Manager Summary* / Weekly Technical Summary*）だけ。所見がReportの存在理由であり、常に入力欄として表示する。
 
 ---
 
@@ -417,6 +503,8 @@ FigmaのUI Style Guidelines（01〜09）を画面に適用した結果、以下�
 | 767px以下 | 将来の対応 | 確認と入力だけに絞る |
 
 ページ全体の横スクロールは起こさない。表だけ、カードの中で横スクロールさせる。
+
+1280px で主要な表（FM Farm Status、TM Pond Status、Pond List、Report の表）が横スクロールなしで収まるよう、列は7〜12に抑える。セルの数値・名前は折り返さない（`white-space: nowrap`）。文章の列（Main reason・観察）だけ折り返す。
 
 ---
 

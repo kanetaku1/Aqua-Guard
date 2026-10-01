@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>AU-01 Login · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-top">
+    <select class="select" aria-label="Language"><option>English</option><option>Bahasa Indonesia</option></select>
+  </div>
+
+  <main class="auth-main">
+    <section class="auth-card">
+      <!-- 1 Brand -->
+      <div class="auth-brand">
+        <span class="auth-logo"><i data-lucide="waves"></i></span>
+        <h1 class="auth-title">Smart Shrimp Pond</h1>
+        <span class="auth-sub">Nusantara Shrimp Co.</span>
+      </div>
+
+      <!-- 3 State notices (AU-004) -->
+      <div class="notice notice--warning hidden" data-state="error"><i data-lucide="triangle-alert"></i><span>Email or password is incorrect. <b>3 attempts left</b> before your account is locked for 15 minutes.</span></div>
+      <div class="notice notice--warning hidden" data-state="locked"><i data-lucide="lock"></i><span>Your account is locked for 15 minutes after 5 failed attempts. Try again later or <a href="auth-forgot-password.html">reset your password</a>.</span></div>
+      <div class="notice notice--warning hidden" data-state="deactivated"><i data-lucide="user-x"></i><span>This account is deactivated. Contact your system administrator.</span></div>
+      <div class="notice hidden" data-state="expired"><i data-lucide="info"></i><span>You were signed out after 12 hours of inactivity. Sign in to continue where you left off.</span></div>
+
+      <!-- 2 Sign-in form (AU-001, 002) -->
+      <form class="stack" onsubmit="return false">
+        <label class="field"><span class="field-label"><span>Email <span class="req">*</span></span></span>
+          <input class="input" type="email" value="sari.wijaya@nusantarashrimp.co.id" autocomplete="username"></label>
+        <label class="field"><span class="field-label"><span>Password <span class="req">*</span></span></span>
+          <span class="input-reveal"><input class="input" type="password" value="password123" autocomplete="current-password" data-error-field><button class="icon-btn" type="button" aria-label="Show password"><i data-lucide="eye"></i></button></span>
+        </label>
+        <div class="row-between"><span></span><a class="btn btn--link" href="auth-forgot-password.html">Forgot password?</a></div>
+        <button class="btn btn--primary btn--lg btn--block" data-disable-on="locked">Sign in</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- 4 Footer -->
+  <footer class="auth-foot">Need help? Contact your system administrator · v0.1 · Times shown in WIB (UTC+7)</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script>
+  // Prototype states: ?error=1 · ?locked=1 · ?deactivated=1 · ?expired=1
+  var p = new URLSearchParams(location.search);
+  document.querySelectorAll("[data-state]").forEach(function (n) { if (p.has(n.dataset.state)) n.classList.remove("hidden"); });
+  if (p.has("error")) document.querySelector("[data-error-field]").classList.add("is-error");
+  if (p.has("locked")) document.querySelector("[data-disable-on]").setAttribute("disabled", "");
+</script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>

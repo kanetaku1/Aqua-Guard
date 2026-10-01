@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>AD-03 Farm Detail · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body data-role="ad" data-nav="farms">
+<main class="main"><div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb"><a href="ad-farms.html">Farms &amp; Ponds</a><i data-lucide="chevron-right"></i><span>Farm A</span></div>
+      <h1 class="page-title">Farm A <span class="status-text st--normal" style="font-size:14px;font-weight:400">Active</span></h1>
+      <div class="page-meta"><span><i data-lucide="map-pin"></i>East Java, Indonesia</span><span><i data-lucide="user"></i>Technical Manager: Sari Wijaya</span><span><i data-lucide="clock"></i>Updated 2 Sep 2026 by Yusuf Rahman</span></div>
+    </div>
+  </div>
+
+  <nav class="tabs" data-tabs="tab">
+    <a class="tab" data-tab="info" href="?tab=info"><i data-lucide="warehouse"></i>Farm Info</a>
+    <a class="tab" data-tab="ponds" href="?tab=ponds"><i data-lucide="waves"></i>Ponds</a>
+    <a class="tab" data-tab="devices" href="?tab=devices"><i data-lucide="radio"></i>Devices <span class="count">1</span></a>
+  </nav>
+
+  <!-- ============ Farm Info (AD-F-003) ============ -->
+  <div class="grid cols-8-4" data-panel-group="tab" data-panel="info">
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">Farm information</h2></div>
+      <div class="card-body form-grid">
+        <label class="field"><span class="field-label"><span>Farm name <span class="req">*</span></span></span><input class="input" value="Farm A"></label>
+        <label class="field"><span class="field-label"><span>Location <span class="req">*</span></span></span><input class="input" value="East Java, Indonesia"></label>
+        <label class="field"><span class="field-label">Time zone</span><select class="select"><option>WIB (UTC+7)</option></select></label>
+        <div class="field"><span class="field-label">Status</span><span class="row" style="height:40px"><span class="toggle is-on"></span>Active — visible to Farms Manager and Technical Manager</span></div>
+      </div>
+      <div class="card-footer"><button class="btn btn--outline">Cancel</button><button class="btn btn--primary">Save changes</button></div>
+    </section>
+    <section class="card">
+      <div class="card-header"><h2 class="card-title">Assigned users</h2><a class="btn btn--link" href="ad-users.html">Users<i data-lucide="arrow-right"></i></a></div>
+      <table class="table table-compact"><tbody>
+        <tr><td><div class="cell-main">Sari Wijaya</div><div class="cell-sub">Technical Manager</div></td><td class="actions"><span class="status-text st--normal">Active</span></td></tr>
+      </tbody></table>
+      <div class="card-footer" style="justify-content:flex-start"><span class="caption">Farms Managers see all active Farms. Assign Technical Managers in Users.</span></div>
+    </section>
+  </div>
+
+  <!-- ============ Ponds (AD-F-004) ============ -->
+  <section class="card" data-panel-group="tab" data-panel="ponds">
+    <div class="card-header"><div><h2 class="card-title">Ponds</h2><div class="card-sub">9 Ponds · 3.8 ha · 8 in operation</div></div><button class="btn btn--primary btn--sm" data-open="addpond"><i data-lucide="plus"></i>Add pond</button></div>
+    <table class="table">
+      <thead><tr><th>Pond</th><th class="num">Area</th><th>Status</th><th class="num">Sensors</th><th class="num">Actuators</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="cell-main">Pond 01</td><td class="num">0.4 ha</td><td><span class="status-text st--normal">In operation</span></td><td class="num">6</td><td class="num">2</td><td class="actions"><a class="btn btn--link" href="#" data-open="addpond">Edit</a></td></tr>
+        <tr><td class="cell-main">Pond 02</td><td class="num">0.5 ha</td><td><span class="status-text st--normal">In operation</span></td><td class="num">6</td><td class="num">5</td><td class="actions"><a class="btn btn--link" href="#" data-open="addpond">Edit</a></td></tr>
+        <tr><td class="cell-main">Pond 03</td><td class="num">0.4 ha</td><td><span class="status-text st--normal">In operation</span></td><td class="num">6</td><td class="num">2</td><td class="actions"><a class="btn btn--link" href="#" data-open="addpond">Edit</a></td></tr>
+        <tr><td class="cell-main">Pond 04</td><td class="num">0.4 ha</td><td><span class="status-text st--normal">In operation</span></td><td class="num">6</td><td class="num">2</td><td class="actions"><a class="btn btn--link" href="#" data-open="addpond">Edit</a></td></tr>
+        <tr><td class="cell-main">Pond 05</td><td class="num">0.5 ha</td><td><span class="status-text st--normal">In operation</span></td><td class="num">6</td><td class="num">5</td><td class="actions"><a class="btn btn--link" href="#" data-open="addpond">Edit</a></td></tr>
+        <tr><td class="cell-main">Pond 06</td><td class="num">0.4 ha</td><td><span class="status-text st--normal">In operation</span></td><td class="num">6</td><td class="num">2</td><td class="actions"><a class="btn btn--link" href="#" data-open="addpond">Edit</a></td></tr>
+        <tr><td class="cell-main">Pond 07</td><td class="num">0.4 ha</td><td><span class="status-text st--normal">In operation</span></td><td class="num">6</td><td class="num">2</td><td class="actions"><a class="btn btn--link" href="#" data-open="addpond">Edit</a></td></tr>
+        <tr><td class="cell-main">Pond 08</td><td class="num">0.4 ha</td><td><span class="status-text st--normal">In operation</span></td><td class="num">6</td><td class="num">3</td><td class="actions"><a class="btn btn--link" href="#" data-open="addpond">Edit</a></td></tr>
+        <tr class="is-muted"><td class="cell-main">Pond 09</td><td class="num">0.4 ha</td><td><span class="status-text st--neutral st--muted">Fallow</span></td><td class="num">0</td><td class="num">0</td><td class="actions"><a class="btn btn--link" href="#" data-open="addpond">Edit</a></td></tr>
+      </tbody>
+      <tfoot><tr><td>Farm A</td><td class="num">3.8 ha</td><td>8 in operation · 1 fallow</td><td class="num">48</td><td class="num">23</td><td></td></tr></tfoot>
+    </table>
+    <div class="card-footer" style="justify-content:flex-start"><span class="caption">Fallow Ponds are hidden from monitoring screens. Stocking, feeding and sampling are recorded by the Technical Manager.</span></div>
+  </section>
+
+  <!-- ============ Devices (AD-F-005) ============ -->
+  <div class="stack" style="gap:24px" data-panel-group="tab" data-panel="devices">
+    <div class="notice notice--warning"><i data-lucide="radio"></i><span><b>1 device offline:</b> A-P08-TRB (Turbidity, Pond 08) since 28 Sep 22:10.</span></div>
+    <section class="card">
+      <div class="card-header">
+        <div><h2 class="card-title">Devices</h2><div class="card-sub">71 devices · 48 sensors · 23 actuators</div></div>
+        <button class="btn btn--primary btn--sm" data-open="adddevice"><i data-lucide="plus"></i>Add device</button>
+      </div>
+      <div class="card-body" style="padding-bottom:16px">
+        <div class="filter-bar">
+          <select class="select"><option>Pond: Pond 02</option></select>
+          <select class="select"><option>Type: All</option></select>
+          <select class="select"><option>Connection: All</option></select>
+        </div>
+      </div>
+      <table class="table">
+        <thead><tr><th>Device ID</th><th>Type</th><th>Measures / Function</th><th>Pond</th><th>Connection</th><th>Last seen</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="cell-main">A-P02-DO</td><td>Sensor</td><td><span class="row"><i data-lucide="wind" class="text-muted"></i>DO</span></td><td>Pond 02</td><td><span class="status-text st--normal">Online</span></td><td>09:35</td><td class="actions"><a class="btn btn--link" href="#" data-open="adddevice">Edit</a></td></tr>
+          <tr><td class="cell-main">A-P02-PH</td><td>Sensor</td><td><span class="row"><i data-lucide="beaker" class="text-muted"></i>pH</span></td><td>Pond 02</td><td><span class="status-text st--normal">Online</span></td><td>09:35</td><td class="actions"><a class="btn btn--link" href="#" data-open="adddevice">Edit</a></td></tr>
+          <tr><td class="cell-main">A-P02-TMP</td><td>Sensor</td><td><span class="row"><i data-lucide="thermometer" class="text-muted"></i>Temperature</span></td><td>Pond 02</td><td><span class="status-text st--normal">Online</span></td><td>09:35</td><td class="actions"><a class="btn btn--link" href="#" data-open="adddevice">Edit</a></td></tr>
+          <tr><td class="cell-main">A-P02-TDS</td><td>Sensor</td><td><span class="row"><i data-lucide="gauge" class="text-muted"></i>TDS</span></td><td>Pond 02</td><td><span class="status-text st--normal">Online</span></td><td>09:35</td><td class="actions"><a class="btn btn--link" href="#" data-open="adddevice">Edit</a></td></tr>
+          <tr><td class="cell-main">A-P02-TRB</td><td>Sensor</td><td><span class="row"><i data-lucide="eye" class="text-muted"></i>Turbidity</span></td><td>Pond 02</td><td><span class="status-text st--normal">Online</span></td><td>09:35</td><td class="actions"><a class="btn btn--link" href="#" data-open="adddevice">Edit</a></td></tr>
+          <tr><td class="cell-main">A-P02-LVL</td><td>Sensor</td><td><span class="row"><i data-lucide="ruler" class="text-muted"></i>Water Level</span></td><td>Pond 02</td><td><span class="status-text st--normal">Online</span></td><td>09:35</td><td class="actions"><a class="btn btn--link" href="#" data-open="adddevice">Edit</a></td></tr>
+          <tr><td class="cell-main">A-P02-AER1</td><td>Actuator</td><td><span class="row"><i data-lucide="fan" class="text-muted"></i>Aerator · 2 HP</span></td><td>Pond 02</td><td><span class="status-text st--normal">Online</span></td><td>09:35</td><td class="actions"><a class="btn btn--link" href="#" data-open="adddevice">Edit</a></td></tr>
+          <tr><td class="cell-main">A-P02-AER2</td><td>Actuator</td><td><span class="row"><i data-lucide="fan" class="text-muted"></i>Aerator · 2 HP</span></td><td>Pond 02</td><td><span class="status-text st--normal">Online</span></td><td>09:35</td><td class="actions"><a class="btn btn--link" href="#" data-open="adddevice">Edit</a></td></tr>
+          <tr><td class="cell-main">A-P02-AER3</td><td>Actuator</td><td><span class="row"><i data-lucide="fan" class="text-muted"></i>Aerator · 2 HP</span></td><td>Pond 02</td><td><span class="status-text st--normal">Online</span></td><td>09:35</td><td class="actions"><a class="btn btn--link" href="#" data-open="adddevice">Edit</a></td></tr>
+          <tr><td class="cell-main">A-P02-AER4</td><td>Actuator</td><td><span class="row"><i data-lucide="fan" class="text-muted"></i>Aerator · 2 HP</span></td><td>Pond 02</td><td><span class="status-text st--normal">Online</span></td><td>09:35</td><td class="actions"><a class="btn btn--link" href="#" data-open="adddevice">Edit</a></td></tr>
+          <tr><td class="cell-main">A-P02-PMP1</td><td>Actuator</td><td><span class="row"><i data-lucide="droplets" class="text-muted"></i>Water pump · 15 m³/h</span></td><td>Pond 02</td><td><span class="status-text st--normal">Online</span></td><td>09:35</td><td class="actions"><a class="btn btn--link" href="#" data-open="adddevice">Edit</a></td></tr>
+        </tbody>
+      </table>
+      <div class="card-footer" style="justify-content:space-between">
+        <span class="caption">Showing 11 devices in Pond 02</span>
+        <span class="caption">Device values are not shown here — monitoring is in the Technical Manager screens.</span>
+      </div>
+    </section>
+  </div>
+
+</div></main>
+
+<!-- Pond Drawer (?addpond=1) -->
+<div class="overlay" id="addpond">
+  <aside class="drawer">
+    <div class="drawer-header"><h2 class="dialog-title">Pond</h2><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="drawer-body">
+      <label class="field"><span class="field-label"><span>Pond name <span class="req">*</span></span></span><input class="input" value="Pond 09"></label>
+      <label class="field"><span class="field-label"><span>Area <span class="req">*</span></span></span><span class="input-group"><input class="input" value="0.4"><span class="input-unit">ha</span></span></label>
+      <div class="field"><span class="field-label">Status</span>
+        <div class="choice-list">
+          <label class="choice"><span class="radio"></span><span><b>In operation</b><br><span class="caption">Shown in monitoring and production screens.</span></span></label>
+          <label class="choice is-on"><span class="radio is-on"></span><span><b>Fallow</b><br><span class="caption">Resting or preparing. Hidden from monitoring screens.</span></span></label>
+        </div>
+      </div>
+    </div>
+    <div class="drawer-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--primary">Save pond</button></div>
+  </aside>
+</div>
+
+<!-- Device Drawer (?adddevice=1) -->
+<div class="overlay" id="adddevice">
+  <aside class="drawer">
+    <div class="drawer-header"><h2 class="dialog-title">Add device</h2><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="drawer-body">
+      <label class="field"><span class="field-label"><span>Device ID <span class="req">*</span></span></span><input class="input" value="A-P08-TRB2"><span class="helper">The ID printed on the device or gateway.</span></label>
+      <label class="field"><span class="field-label"><span>Type <span class="req">*</span></span></span><select class="select"><option>Sensor</option><option>Actuator</option></select></label>
+      <label class="field"><span class="field-label"><span>Measures <span class="req">*</span></span></span><select class="select"><option>Turbidity (NTU)</option></select></label>
+      <label class="field"><span class="field-label"><span>Pond <span class="req">*</span></span></span><select class="select"><option>Pond 08</option></select></label>
+      <div class="notice"><i data-lucide="info"></i><span>The device appears as <b>Online</b> after it sends its first reading.</span></div>
+    </div>
+    <div class="drawer-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--primary">Add device</button></div>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="../assets/charts.js"></script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>

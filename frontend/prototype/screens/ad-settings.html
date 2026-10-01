@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>AD-04 Settings · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body data-role="ad" data-nav="settings" data-sub="thresholds" data-sub-from="tab">
+<main class="main"><div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Settings</h1>
+      <div class="page-meta"><span>Rules used to judge water quality, growth and reports. Changes apply from the time they are saved.</span></div>
+    </div>
+  </div>
+
+  <nav class="tabs" data-tabs="tab">
+    <a class="tab" data-tab="thresholds" href="?tab=thresholds"><i data-lucide="sliders-vertical"></i>Thresholds</a>
+    <a class="tab" data-tab="growth" href="?tab=growth"><i data-lucide="trending-up"></i>Growth Targets</a>
+    <a class="tab" data-tab="rules" href="?tab=rules"><i data-lucide="clipboard-list"></i>Rules</a>
+  </nav>
+
+  <!-- ============ Thresholds (AD-S-001) — boundary editor: one number per boundary, Normal is derived ============ -->
+  <div class="stack" style="gap:24px" data-panel-group="tab" data-panel="thresholds">
+    <div class="row-between">
+      <label class="field" style="width:320px"><span class="field-label">Apply to</span><select class="select"><option>Default — all Farms</option><option>Farm A (uses default)</option><option>Farm D (1 override)</option></select></label>
+      <span class="caption">Last updated 2 Sep 2026 by Yusuf Rahman</span>
+    </div>
+    <div class="notice"><i data-lucide="info"></i><span>Enter only the <b>boundary</b> where each status starts. Normal is calculated between the two Attention boundaries. Values must move away from Normal: Attention → Warning → Critical. Leave a side “Not used” when a parameter has no limit on that side.</span></div>
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Water quality (sensors)</h2><div class="card-sub">Pond Alerts are raised from Warning, or when Attention lasts 30 min (Rules)</div></div></div>
+      <table class="table th-table"><thead><tr><th rowspan="2">Parameter</th><th colspan="3" class="th-side">Low side — status when the value is below</th><th rowspan="2" class="th-normal">Normal</th><th colspan="3" class="th-side">High side — status when the value is above</th></tr><tr><th class="th-cell"><span class="status-text st--critical">Critical</span></th><th class="th-cell"><span class="status-text st--warning">Warning</span></th><th class="th-cell"><span class="status-text st--attention">Attention</span></th><th class="th-cell"><span class="status-text st--attention">Attention</span></th><th class="th-cell"><span class="status-text st--warning">Warning</span></th><th class="th-cell"><span class="status-text st--critical">Critical</span></th></tr></thead><tbody><tr class="th-row"><td rowspan="2"><div class="cell-main row" style="gap:8px"><i data-lucide="wind" class="text-muted"></i>DO</div><div class="cell-sub">mg/L · Low only</div></td><td class="th-cell"><input class="input th-input" value="3.5"></td><td class="th-cell"><input class="input th-input" value="4.5"></td><td class="th-cell"><input class="input th-input" value="5.0"></td><td class="th-normal"><b>≥ 5.0</b></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-cell"><span class="th-off">Not used</span></td></tr>
+<tr class="th-preview"><td colspan="7"><div class="th-scale"><div class="th-scale-bar"><span style="width:25.00%;background:var(--status-critical-marker)"></span><span style="width:16.67%;background:var(--status-warning-marker)"></span><span style="width:8.33%;background:var(--status-attention-marker)"></span><span style="width:50.00%;background:var(--status-normal-marker)"></span></div><div class="th-scale-ticks"><span style="left:25.00%">3.5</span><span style="left:41.67%">4.5</span><span style="left:50.00%">5.0</span></div></div></td></tr>
+<tr class="th-row"><td rowspan="2"><div class="cell-main row" style="gap:8px"><i data-lucide="beaker" class="text-muted"></i>pH</div><div class="cell-sub">no unit · Low and high</div></td><td class="th-cell"><input class="input th-input" value="7.0"></td><td class="th-cell"><input class="input th-input" value="7.3"></td><td class="th-cell"><input class="input th-input" value="7.5"></td><td class="th-normal"><b>7.5 – 8.5</b></td><td class="th-cell"><input class="input th-input" value="8.5"></td><td class="th-cell"><input class="input th-input is-error" value="8.4"></td><td class="th-cell"><input class="input th-input" value="9.0"></td></tr>
+<tr class="th-preview"><td colspan="7"><div class="th-scale"><div class="th-scale-bar"><span style="width:14.29%;background:var(--status-critical-marker)"></span><span style="width:10.71%;background:var(--status-warning-marker)"></span><span style="width:7.14%;background:var(--status-attention-marker)"></span><span style="width:35.71%;background:var(--status-normal-marker)"></span><span style="width:7.14%;background:var(--status-attention-marker)"></span><span style="width:10.71%;background:var(--status-warning-marker)"></span><span style="width:14.29%;background:var(--status-critical-marker)"></span></div><div class="th-scale-ticks"><span style="left:14.29%">7.0</span><span style="left:25.00%">7.3</span><span style="left:32.14%">7.5</span><span style="left:67.86%">8.5</span><span style="left:75.00%">8.7</span><span style="left:85.71%">9.0</span></div></div><div class="helper is-error" style="margin-top:4px">Warning (8.4) must be above Attention (8.5).</div></td></tr>
+<tr class="th-row"><td rowspan="2"><div class="cell-main row" style="gap:8px"><i data-lucide="thermometer" class="text-muted"></i>Temperature</div><div class="cell-sub">°C · Low and high</div></td><td class="th-cell"><input class="input th-input" value="24"></td><td class="th-cell"><input class="input th-input" value="26"></td><td class="th-cell"><input class="input th-input" value="26.5"></td><td class="th-normal"><b>26.5 – 30.5</b></td><td class="th-cell"><input class="input th-input" value="30.5"></td><td class="th-cell"><input class="input th-input" value="31"></td><td class="th-cell"><input class="input th-input" value="33"></td></tr>
+<tr class="th-preview"><td colspan="7"><div class="th-scale"><div class="th-scale-bar"><span style="width:15.38%;background:var(--status-critical-marker)"></span><span style="width:15.38%;background:var(--status-warning-marker)"></span><span style="width:3.85%;background:var(--status-attention-marker)"></span><span style="width:30.77%;background:var(--status-normal-marker)"></span><span style="width:3.85%;background:var(--status-attention-marker)"></span><span style="width:15.38%;background:var(--status-warning-marker)"></span><span style="width:15.38%;background:var(--status-critical-marker)"></span></div><div class="th-scale-ticks"><span style="left:15.38%">24</span><span style="left:30.77%">26</span><span style="left:34.62%">26.5</span><span style="left:65.38%">30.5</span><span style="left:69.23%">31</span><span style="left:84.62%">33</span></div></div></td></tr>
+<tr class="th-row"><td rowspan="2"><div class="cell-main row" style="gap:8px"><i data-lucide="gauge" class="text-muted"></i>TDS</div><div class="cell-sub">mg/L · Low and high</div></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-cell"><input class="input th-input" value="15,000"></td><td class="th-cell"><input class="input th-input" value="16,000"></td><td class="th-normal"><b>16,000 – 24,000</b></td><td class="th-cell"><input class="input th-input" value="24,000"></td><td class="th-cell"><input class="input th-input" value="25,000"></td><td class="th-cell"><span class="th-off">Not used</span></td></tr>
+<tr class="th-preview"><td colspan="7"><div class="th-scale"><div class="th-scale-bar"><span style="width:18.75%;background:var(--status-warning-marker)"></span><span style="width:6.25%;background:var(--status-attention-marker)"></span><span style="width:50.00%;background:var(--status-normal-marker)"></span><span style="width:6.25%;background:var(--status-attention-marker)"></span><span style="width:18.75%;background:var(--status-warning-marker)"></span></div><div class="th-scale-ticks"><span style="left:18.75%">15,000</span><span style="left:25.00%">16,000</span><span style="left:75.00%">24,000</span><span style="left:81.25%">25,000</span></div></div></td></tr>
+<tr class="th-row"><td rowspan="2"><div class="cell-main row" style="gap:8px"><i data-lucide="eye" class="text-muted"></i>Turbidity</div><div class="cell-sub">NTU · Low and high</div></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-cell"><input class="input th-input" value="20"></td><td class="th-cell"><input class="input th-input" value="25"></td><td class="th-normal"><b>25 – 60</b></td><td class="th-cell"><input class="input th-input" value="60"></td><td class="th-cell"><input class="input th-input" value="80"></td><td class="th-cell"><span class="th-off">Not used</span></td></tr>
+<tr class="th-preview"><td colspan="7"><div class="th-scale"><div class="th-scale-bar"><span style="width:11.76%;background:var(--status-warning-marker)"></span><span style="width:5.88%;background:var(--status-attention-marker)"></span><span style="width:41.18%;background:var(--status-normal-marker)"></span><span style="width:23.53%;background:var(--status-attention-marker)"></span><span style="width:17.65%;background:var(--status-warning-marker)"></span></div><div class="th-scale-ticks"><span style="left:11.76%">20</span><span style="left:17.65%">25</span><span style="left:58.82%">60</span><span style="left:82.35%">80</span></div></div></td></tr>
+<tr class="th-row"><td rowspan="2"><div class="cell-main row" style="gap:8px"><i data-lucide="ruler" class="text-muted"></i>Water Level</div><div class="cell-sub">cm · Low and high</div></td><td class="th-cell"><input class="input th-input" value="105"></td><td class="th-cell"><input class="input th-input" value="115"></td><td class="th-cell"><input class="input th-input" value="120"></td><td class="th-normal"><b>120 – 150</b></td><td class="th-cell"><input class="input th-input" value="150"></td><td class="th-cell"><input class="input th-input" value="155"></td><td class="th-cell"><span class="th-off">Not used</span></td></tr>
+<tr class="th-preview"><td colspan="7"><div class="th-scale"><div class="th-scale-bar"><span style="width:14.29%;background:var(--status-critical-marker)"></span><span style="width:14.29%;background:var(--status-warning-marker)"></span><span style="width:7.14%;background:var(--status-attention-marker)"></span><span style="width:42.86%;background:var(--status-normal-marker)"></span><span style="width:7.14%;background:var(--status-attention-marker)"></span><span style="width:14.29%;background:var(--status-warning-marker)"></span></div><div class="th-scale-ticks"><span style="left:14.29%">105</span><span style="left:28.57%">115</span><span style="left:35.71%">120</span><span style="left:78.57%">150</span><span style="left:85.71%">155</span></div></div></td></tr>
+</tbody></table>
+    </section>
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Laboratory (weekly sampling)</h2><div class="card-sub">Highlighted in Weekly Reports · no Alerts are raised</div></div></div>
+      <table class="table th-table"><thead><tr><th rowspan="2">Parameter</th><th colspan="3" class="th-side">Low side — status when the value is below</th><th rowspan="2" class="th-normal">Normal</th><th colspan="3" class="th-side">High side — status when the value is above</th></tr><tr><th class="th-cell"><span class="status-text st--critical">Critical</span></th><th class="th-cell"><span class="status-text st--warning">Warning</span></th><th class="th-cell"><span class="status-text st--attention">Attention</span></th><th class="th-cell"><span class="status-text st--attention">Attention</span></th><th class="th-cell"><span class="status-text st--warning">Warning</span></th><th class="th-cell"><span class="status-text st--critical">Critical</span></th></tr></thead><tbody><tr class="th-row"><td rowspan="2"><div class="cell-main row" style="gap:8px"><i data-lucide="flask-conical" class="text-muted"></i>TAN</div><div class="cell-sub">mg/L · High only</div></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-normal"><b>≤ 1.0</b></td><td class="th-cell"><input class="input th-input" value="1.0"></td><td class="th-cell"><input class="input th-input" value="2.0"></td><td class="th-cell"><span class="th-off">Not used</span></td></tr>
+<tr class="th-preview"><td colspan="7"><div class="th-scale"><div class="th-scale-bar"><span style="width:33.33%;background:var(--status-normal-marker)"></span><span style="width:33.33%;background:var(--status-attention-marker)"></span><span style="width:33.33%;background:var(--status-warning-marker)"></span></div><div class="th-scale-ticks"><span style="left:33.33%">1.0</span><span style="left:66.67%">2.0</span></div></div></td></tr>
+<tr class="th-row"><td rowspan="2"><div class="cell-main row" style="gap:8px"><i data-lucide="flask-conical" class="text-muted"></i>NO2</div><div class="cell-sub">mg/L · High only</div></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-normal"><b>≤ 0.5</b></td><td class="th-cell"><input class="input th-input" value="0.5"></td><td class="th-cell"><input class="input th-input" value="1.0"></td><td class="th-cell"><span class="th-off">Not used</span></td></tr>
+<tr class="th-preview"><td colspan="7"><div class="th-scale"><div class="th-scale-bar"><span style="width:33.33%;background:var(--status-normal-marker)"></span><span style="width:33.33%;background:var(--status-attention-marker)"></span><span style="width:33.33%;background:var(--status-warning-marker)"></span></div><div class="th-scale-ticks"><span style="left:33.33%">0.5</span><span style="left:66.67%">1.0</span></div></div></td></tr>
+<tr class="th-row"><td rowspan="2"><div class="cell-main row" style="gap:8px"><i data-lucide="microscope" class="text-muted"></i>Vibrio</div><div class="cell-sub">×10³ CFU/mL · High only</div></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-normal"><b>≤ 5</b></td><td class="th-cell"><input class="input th-input" value="5"></td><td class="th-cell"><input class="input th-input" value="10"></td><td class="th-cell"><span class="th-off">Not used</span></td></tr>
+<tr class="th-preview"><td colspan="7"><div class="th-scale"><div class="th-scale-bar"><span style="width:33.33%;background:var(--status-normal-marker)"></span><span style="width:33.33%;background:var(--status-attention-marker)"></span><span style="width:33.33%;background:var(--status-warning-marker)"></span></div><div class="th-scale-ticks"><span style="left:33.33%">5</span><span style="left:66.67%">10</span></div></div></td></tr>
+<tr class="th-row"><td rowspan="2"><div class="cell-main row" style="gap:8px"><i data-lucide="flask-conical" class="text-muted"></i>Alkalinity</div><div class="cell-sub">mg/L · Low and high</div></td><td class="th-cell"><span class="th-off">Not used</span></td><td class="th-cell"><input class="input th-input" value="80"></td><td class="th-cell"><input class="input th-input" value="100"></td><td class="th-normal"><b>100 – 150</b></td><td class="th-cell"><input class="input th-input" value="150"></td><td class="th-cell"><input class="input th-input" value="180"></td><td class="th-cell"><span class="th-off">Not used</span></td></tr>
+<tr class="th-preview"><td colspan="7"><div class="th-scale"><div class="th-scale-bar"><span style="width:14.29%;background:var(--status-warning-marker)"></span><span style="width:14.29%;background:var(--status-attention-marker)"></span><span style="width:35.71%;background:var(--status-normal-marker)"></span><span style="width:21.43%;background:var(--status-attention-marker)"></span><span style="width:14.29%;background:var(--status-warning-marker)"></span></div><div class="th-scale-ticks"><span style="left:14.29%">80</span><span style="left:28.57%">100</span><span style="left:64.29%">150</span><span style="left:85.71%">180</span></div></div></td></tr>
+</tbody></table>
+    </section>
+    <div class="action-bar" data-show-on-tab="thresholds">
+      <div class="action-bar-status"><span class="status-text st--attention">2 unsaved changes</span><span class="caption">pH high side · 1 error to fix</span></div>
+      <span class="action-bar-spacer"></span>
+      <button class="btn btn--outline">Discard changes</button>
+      <button class="btn btn--primary" data-open="confirm">Save changes</button>
+    </div>
+  </div>
+
+  <!-- ============ Growth Targets (AD-S-002) ============ -->
+  <div class="grid cols-8-4" data-panel-group="tab" data-panel="growth">
+    <section class="card">
+      <div class="card-header"><div><h2 class="card-title">Target growth curve</h2><div class="card-sub">Target ABW by DOC · values between points are interpolated</div></div><span class="caption">Updated 2 Sep 2026 by Yusuf Rahman</span></div>
+      <div class="card-body"><div class="chart-legend" style="margin-bottom:16px"><span><i class="legend-line dashed"></i>Target ABW</span><span><i class="legend-band" style="background:#EDF4F2;border-color:#B2D0C4"></i>On-track band</span></div><div class="chart" id="curve"></div></div>
+      <div class="card-footer"><button class="btn btn--outline">Discard changes</button><button class="btn btn--primary" data-open="confirm">Save changes</button></div>
+    </section>
+    <div class="stack" style="gap:24px">
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">Curve points</h2><button class="btn btn--link"><i data-lucide="plus"></i>Add point</button></div>
+        <table class="table table-compact">
+          <thead><tr><th class="num">DOC</th><th class="num">Target ABW (g)</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="num">27</td><td class="num"><span class="range-pair" style="justify-content:flex-end"><input class="input" value="5.3"></span></td><td class="actions"><button class="icon-btn" aria-label="Remove"><i data-lucide="x"></i></button></td></tr>
+            <tr><td class="num">34</td><td class="num"><span class="range-pair" style="justify-content:flex-end"><input class="input" value="7.4"></span></td><td class="actions"><button class="icon-btn" aria-label="Remove"><i data-lucide="x"></i></button></td></tr>
+            <tr><td class="num">41</td><td class="num"><span class="range-pair" style="justify-content:flex-end"><input class="input" value="9.5"></span></td><td class="actions"><button class="icon-btn" aria-label="Remove"><i data-lucide="x"></i></button></td></tr>
+            <tr><td class="num">48</td><td class="num"><span class="range-pair" style="justify-content:flex-end"><input class="input" value="11.5"></span></td><td class="actions"><button class="icon-btn" aria-label="Remove"><i data-lucide="x"></i></button></td></tr>
+            <tr><td class="num">55</td><td class="num"><span class="range-pair" style="justify-content:flex-end"><input class="input" value="13.3"></span></td><td class="actions"><button class="icon-btn" aria-label="Remove"><i data-lucide="x"></i></button></td></tr>
+            <tr><td class="num">62</td><td class="num"><span class="range-pair" style="justify-content:flex-end"><input class="input" value="15.0"></span></td><td class="actions"><button class="icon-btn" aria-label="Remove"><i data-lucide="x"></i></button></td></tr>
+            <tr><td class="num">69</td><td class="num"><span class="range-pair" style="justify-content:flex-end"><input class="input" value="16.6"></span></td><td class="actions"><button class="icon-btn" aria-label="Remove"><i data-lucide="x"></i></button></td></tr>
+            <tr><td class="num">76</td><td class="num"><span class="range-pair" style="justify-content:flex-end"><input class="input" value="18.2"></span></td><td class="actions"><button class="icon-btn" aria-label="Remove"><i data-lucide="x"></i></button></td></tr>
+          </tbody>
+        </table>
+      </section>
+      <section class="card">
+        <div class="card-header"><h2 class="card-title">On-track band</h2></div>
+        <div class="card-body form-grid">
+          <label class="field span-2"><span class="field-label"><span>Tolerance <span class="req">*</span></span></span><span class="input-group"><input class="input" value="5"><span class="input-unit">± %</span></span><span class="helper">Behind = ABW below target by this % or more. Ahead = above by this % or more.</span></label>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ============ Rules (AD-S-003) ============ -->
+  <div class="stack" style="gap:24px" data-panel-group="tab" data-panel="rules">
+    <div class="grid cols-2">
+      <section class="card">
+        <div class="card-header"><div><h2 class="card-title">Report deadlines</h2><div class="card-sub">Overdue reports raise the Farm's Operational Status</div></div></div>
+        <div class="card-body form-grid">
+          <label class="field"><span class="field-label"><span>Daily Report due <span class="req">*</span></span></span><span class="input-group"><input class="input" value="18:00"><span class="input-unit">same day</span></span></label>
+          <label class="field"><span class="field-label"><span>Weekly Report due <span class="req">*</span></span></span><select class="select"><option>Monday 12:00 (next week)</option></select></label>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-header"><div><h2 class="card-title">Data freshness</h2><div class="card-sub">Shown as Live / Delayed / Offline</div></div></div>
+        <div class="card-body form-grid">
+          <label class="field"><span class="field-label"><span>Delayed after <span class="req">*</span></span></span><span class="input-group"><input class="input" value="15"><span class="input-unit">min</span></span></label>
+          <label class="field"><span class="field-label"><span>Offline after <span class="req">*</span></span></span><span class="input-group"><input class="input is-error" value="10"><span class="input-unit">min</span></span><span class="helper is-error">Must be longer than “Delayed after” (15 min).</span></label>
+        </div>
+      </section>
+    </div>
+    <div class="grid cols-2">
+      <section class="card">
+        <div class="card-header"><div><h2 class="card-title">Alerts</h2></div></div>
+        <div class="card-body form-grid">
+          <label class="field span-2"><span class="field-label"><span>Raise an Alert when Attention lasts <span class="req">*</span></span></span><span class="input-group"><input class="input" value="30"><span class="input-unit">min</span></span><span class="helper">Warning and Critical always raise an Alert immediately.</span></label>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-header"><div><h2 class="card-title">Farm Production Status</h2><div class="card-sub">Share of Ponds behind the growth target</div></div></div>
+        <div class="card-body form-grid">
+          <label class="field"><span class="field-label"><span>Attention from <span class="req">*</span></span></span><span class="input-group"><input class="input" value="25"><span class="input-unit">%</span></span></label>
+          <label class="field"><span class="field-label"><span>Warning from <span class="req">*</span></span></span><span class="input-group"><input class="input" value="50"><span class="input-unit">%</span></span></label>
+        </div>
+      </section>
+    </div>
+    <div class="row-between"><span class="caption">Last updated 2 Sep 2026 by Yusuf Rahman</span><div class="row"><button class="btn btn--outline">Discard changes</button><button class="btn btn--primary" disabled>Save changes</button></div></div>
+  </div>
+
+</div></main>
+
+<!-- Save Confirmation (?confirm=1) -->
+<div class="overlay" id="confirm">
+  <div class="dialog" role="dialog">
+    <div class="dialog-body">
+      <h2 class="dialog-title">Save water quality thresholds?</h2>
+      <p class="text-muted">New thresholds apply to all Farms that use the default (Farm A, B, C). Farm D keeps its DO override.</p>
+      <dl class="dl dl-2" style="background:var(--color-mist);padding:16px;border-radius:8px">
+        <div><dt>Applies from</dt><dd>Now (30 Sep 2026)</dd></div>
+        <div><dt>Past Alerts and Reports</dt><dd>Not changed</dd></div>
+      </dl>
+    </div>
+    <div class="dialog-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--primary" data-close>Save changes</button></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="../assets/charts.js"></script>
+<script>
+  Charts.growth("#curve", { target: [[27,5.3],[34,7.4],[41,9.5],[48,11.5],[55,13.3],[62,15.0],[69,16.6],[76,18.2]], points: [], xMin: 20, xMax: 83, xStep: 7, yMin: 0, yMax: 20, ticks: 4, unit: "g", height: 320 });
+</script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>

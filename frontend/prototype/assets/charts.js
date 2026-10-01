@@ -8,7 +8,7 @@
   var NS = "http://www.w3.org/2000/svg";
   var C = {
     primary: "#087EA4", actual: "#2F855A", muted: "#5B7078", grid: "#D6E3E5", text: "#5B7078",
-    band: "#F9F0EB", threshold: "#B54708"
+    band: "#FFF1E6", threshold: "#EC6A0C"
   };
   var registry = [];
 
@@ -85,7 +85,7 @@
     var xc = function (i) { return f.pad.l + slot * i + slot / 2; };
     cfg.values.forEach(function (v, i) {
       var yTop = f.y(v);
-      el("rect", { x: xc(i) - bw / 2, y: yTop, width: bw, height: f.pad.t + f.ih - yTop, rx: 2, fill: cfg.highlight === i ? C.threshold : cfg.style === "actual" ? C.actual : C.primary, opacity: cfg.highlight === i ? 1 : 0.85 }, f.svg);
+      el("rect", { x: xc(i) - bw / 2, y: yTop, width: bw, height: f.pad.t + f.ih - yTop, rx: 2, fill: cfg.highlight === i ? C.threshold : cfg.style === "actual" ? C.actual : cfg.style === "neutral" ? C.muted : C.primary, opacity: cfg.highlight === i ? 1 : 0.85 }, f.svg);
     });
     xLabels(f, cfg.labels, xc);
   }
@@ -117,18 +117,56 @@
     });
   }
 
+  /* Donut: every Pond ranked by value in one hue (dark -> light, cfg.all; no "Others"), total in the centre, legend with values (07 §11.4). */
+  var DONUT = { feed: ["#1F5A40", "#27684F", "#2F855A", "#4A9571", "#66A788", "#82B99F", "#9ECAB6", "#BAD9CB", "#D1E6DC", "#E4F0EA"],
+    mortality: ["#2C3F46", "#364E56", "#4A5F67", "#5B7078", "#6F8289", "#84959B", "#9AA8AD", "#B0BCC0", "#C7D0D3", "#DDE3E5"], others: "#D6E3E5" };
+  function drawDonut(node, cfg) {
+    var top = cfg.all ? cfg.items.length : (cfg.top || 3), pal = DONUT[cfg.palette || "feed"];
+    var items = cfg.items.slice().sort(function (a, b) { return b.value - a.value; });
+    var total = items.reduce(function (a, i) { return a + i.value; }, 0);
+    var segs = items.slice(0, top).map(function (it, k) { return { name: it.name, value: it.value, color: pal[k] }; });
+    var rest = items.slice(top);
+    if (rest.length) segs.push({ name: "Others (" + rest.length + " Ponds)", value: rest.reduce(function (a, i) { return a + i.value; }, 0), color: DONUT.others });
+    var S = 160, R = 60, SW = 24, Cn = S / 2, circ = 2 * Math.PI * R, off = 0;
+    var svg = '<svg width="' + S + '" height="' + S + '" viewBox="0 0 ' + S + ' ' + S + '">';
+    segs.forEach(function (sg) {
+      var len = sg.value / total * circ;
+      svg += '<circle cx="' + Cn + '" cy="' + Cn + '" r="' + R + '" fill="none" stroke="' + sg.color + '" stroke-width="' + SW + '" stroke-dasharray="' + (len - 1.5).toFixed(2) + ' ' + (circ - len + 1.5).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 ' + Cn + ' ' + Cn + ')"/>';
+      off += len;
+    });
+    svg += '<text x="' + Cn + '" y="' + (Cn + 2) + '" text-anchor="middle" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#18323B">' + total.toLocaleString("en-US") + '</text>';
+    svg += '<text x="' + Cn + '" y="' + (Cn + 20) + '" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#5B7078">' + (cfg.unit || "") + ' · week</text></svg>';
+    var many = segs.length > 5;
+    var many = segs.length > 5;
+    var many = segs.length > 5;
+    var many = segs.length > 5;
+    var many = segs.length > 5;
+    var many = segs.length > 5;
+    var many = segs.length > 5;
+    var many = segs.length > 5;
+    var legend = segs.map(function (sg) {
+      return '<li><span class="donut-swatch" style="background:' + sg.color + '"></span><span class="donut-name">' + sg.name + '</span><span class="num">' + sg.value.toLocaleString("en-US") + ' ' + (cfg.unit || "") + '</span><span class="num text-muted">' + Math.round(sg.value / total * 100) + '%</span></li>';
+    }).join("");
+    node.innerHTML = '<div class="donut">' + svg + '<ul class="donut-legend' + (many ? ' is-compact' : '') + '">' + legend + '</ul></div>';
+  }
+
   function register(sel, cfg, fn) {
     var node = typeof sel === "string" ? document.querySelector(sel) : sel;
     if (node) registry.push({ node: node, cfg: cfg, fn: fn, done: false });
   }
 
+  // Redraw once layout is final (fonts, scrollbar) and on resize so charts always fill their container.
+  window.addEventListener("load", function () { window.Charts.renderAll(true); });
+  window.addEventListener("resize", function () { window.Charts.renderAll(true); });
+
   window.Charts = {
     line: function (sel, cfg) { register(sel, cfg, drawLine); },
     bars: function (sel, cfg) { register(sel, cfg, drawBars); },
     growth: function (sel, cfg) { register(sel, cfg, drawGrowth); },
-    renderAll: function () {
+    donut: function (sel, cfg) { register(sel, cfg, drawDonut); },
+    renderAll: function (force) {
       registry.forEach(function (r) {
-        if (!r.done && r.node.clientWidth > 0) { r.fn(r.node, r.cfg); r.done = true; }
+        if ((force || !r.done) && r.node.clientWidth > 0) { r.fn(r.node, r.cfg); r.done = true; }
       });
     }
   };

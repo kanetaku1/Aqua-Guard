@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>AD-01 Users · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body data-role="ad" data-nav="users">
+<main class="main"><div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Users</h1>
+      <div class="page-meta"><span>10 users · 7 active · 2 invited · 1 deactivated</span></div>
+    </div>
+    <div class="page-actions"><button class="btn btn--primary" data-open="invite"><i data-lucide="user-plus"></i>Invite user</button></div>
+  </div>
+
+  <!-- Filter (AD-U-001) -->
+  <div class="filter-bar">
+    <div class="input-search"><i data-lucide="search"></i><input class="input" placeholder="Search name or email"></div>
+    <select class="select"><option>Role: All</option></select>
+    <select class="select"><option>Status: All</option></select>
+    <select class="select"><option>Farm: All</option></select>
+  </div>
+
+  <!-- User List -->
+  <section class="card">
+    <table class="table">
+      <thead><tr><th>User</th><th>Role</th><th>Farm</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead>
+      <tbody>
+        <tr class="is-link"><td><div class="cell-main">Yusuf Rahman <span class="caption">(you)</span></div><div class="cell-sub">yusuf.rahman@nusantarashrimp.co.id</div></td><td>System Administrator</td><td class="text-muted">—</td><td><span class="status-text st--normal">Active</span></td><td>30 Sep 08:12</td><td class="actions"><a class="btn btn--link" href="#" data-open="user">View</a></td></tr>
+        <tr class="is-link"><td><div class="cell-main">Nadia Kurnia</div><div class="cell-sub">nadia.kurnia@nusantarashrimp.co.id</div></td><td>System Administrator</td><td class="text-muted">—</td><td><span class="status-text st--normal">Active</span></td><td>26 Sep 14:03</td><td class="actions"><a class="btn btn--link" href="#" data-open="user">View</a></td></tr>
+        <tr class="is-link"><td><div class="cell-main">Hendra Kusuma</div><div class="cell-sub">hendra.kusuma@nusantarashrimp.co.id</div></td><td>Farms Manager</td><td>All Farms</td><td><span class="status-text st--normal">Active</span></td><td>29 Sep 09:30</td><td class="actions"><a class="btn btn--link" href="#" data-open="user">View</a></td></tr>
+        <tr class="is-link"><td><div class="cell-main">Rina Hartono</div><div class="cell-sub">rina.hartono@nusantarashrimp.co.id</div></td><td>Farms Manager</td><td>All Farms</td><td><span class="status-text st--progress">Invited</span></td><td class="text-muted">Invited 28 Sep · expires 1 Oct</td><td class="actions"><a class="btn btn--link" href="#" data-open="user">View</a></td></tr>
+        <tr class="is-link is-selected"><td><div class="cell-main">Sari Wijaya</div><div class="cell-sub">sari.wijaya@nusantarashrimp.co.id</div></td><td>Technical Manager</td><td>Farm A</td><td><span class="status-text st--normal">Active</span></td><td>29 Sep 09:20</td><td class="actions"><a class="btn btn--link" href="#" data-open="user">View</a></td></tr>
+        <tr class="is-link"><td><div class="cell-main">Budi Santoso</div><div class="cell-sub">budi.santoso@nusantarashrimp.co.id</div></td><td>Technical Manager</td><td>Farm B</td><td><span class="status-text st--normal">Active</span></td><td>29 Sep 08:55</td><td class="actions"><a class="btn btn--link" href="#" data-open="user">View</a></td></tr>
+        <tr class="is-link"><td><div class="cell-main">Dewi Lestari</div><div class="cell-sub">dewi.lestari@nusantarashrimp.co.id</div></td><td>Technical Manager</td><td>Farm C</td><td><span class="status-text st--normal">Active</span></td><td>29 Sep 07:40</td><td class="actions"><a class="btn btn--link" href="#" data-open="user">View</a></td></tr>
+        <tr class="is-link"><td><div class="cell-main">Agus Pratama</div><div class="cell-sub">agus.pratama@nusantarashrimp.co.id</div></td><td>Technical Manager</td><td>Farm D</td><td><span class="status-text st--normal">Active</span></td><td>29 Sep 06:15</td><td class="actions"><a class="btn btn--link" href="#" data-open="user">View</a></td></tr>
+        <tr class="is-link"><td><div class="cell-main">Fajar Nugroho</div><div class="cell-sub">fajar.nugroho@nusantarashrimp.co.id</div></td><td>Technical Manager</td><td>Farm D</td><td><span class="status-text st--progress">Invited</span></td><td class="text-muted">Invited 29 Sep · expires 2 Oct</td><td class="actions"><a class="btn btn--link" href="#" data-open="user">View</a></td></tr>
+        <tr class="is-link is-muted"><td><div class="cell-main">Eko Wibowo</div><div class="cell-sub">eko.wibowo@nusantarashrimp.co.id</div></td><td>Technical Manager</td><td>Farm B</td><td><span class="status-text st--neutral st--muted">Deactivated</span></td><td>12 Aug 17:22</td><td class="actions"><a class="btn btn--link" href="#" data-open="user">View</a></td></tr>
+      </tbody>
+    </table>
+    <div class="card-footer" style="justify-content:space-between">
+      <span class="caption">Showing 1–10 of 10</span>
+      <nav class="pagination"><span class="is-disabled"><i data-lucide="chevron-left"></i></span><span class="is-active">1</span><span class="is-disabled"><i data-lucide="chevron-right"></i></span></nav>
+    </div>
+  </section>
+
+</div></main>
+
+<!-- User Detail Drawer (?user=1) — AD-U-003, 004, 005 -->
+<div class="overlay" id="user">
+  <aside class="drawer">
+    <div class="drawer-header"><div><div class="caption">User</div><h2 class="dialog-title">Sari Wijaya</h2></div><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="drawer-body">
+      <div class="row"><span class="status-text st--normal">Active</span><span class="caption">sari.wijaya@nusantarashrimp.co.id</span></div>
+      <label class="field"><span class="field-label"><span>Role <span class="req">*</span></span></span><select class="select"><option>Technical Manager</option><option>Farms Manager</option><option>System Administrator</option></select></label>
+      <label class="field"><span class="field-label"><span>Assigned Farm <span class="req">*</span></span></span><select class="select"><option>Farm A · East Java</option></select><span class="helper">A Technical Manager works in exactly one Farm.</span></label>
+      <label class="field"><span class="field-label">Language</span><select class="select"><option>Bahasa Indonesia</option><option>English</option></select></label>
+      <hr class="divider">
+      <dl class="dl dl-2">
+        <div><dt>Invited</dt><dd>2 Jun 2026 by Yusuf Rahman</dd></div>
+        <div><dt>Activated</dt><dd>2 Jun 2026</dd></div>
+        <div><dt>Last sign-in</dt><dd>29 Sep 2026 09:20</dd></div>
+        <div><dt>Failed sign-ins</dt><dd>0</dd></div>
+      </dl>
+      <hr class="divider">
+      <div class="stack" style="gap:8px">
+        <span class="subsection-title" style="margin:0">Account</span>
+        <div class="row"><button class="btn btn--outline btn--sm"><i data-lucide="mail"></i>Send password reset</button><button class="btn btn--outline btn--sm" data-open="deactivate"><i data-lucide="user-x"></i>Deactivate user</button></div>
+        <span class="helper">Deactivated users cannot sign in. Their records and reports are kept.</span>
+      </div>
+    </div>
+    <div class="drawer-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--primary">Save changes</button></div>
+  </aside>
+</div>
+
+<!-- Invite User Drawer (?invite=1) — AD-U-002 -->
+<div class="overlay" id="invite">
+  <aside class="drawer">
+    <div class="drawer-header"><h2 class="dialog-title">Invite user</h2><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="drawer-body">
+      <label class="field"><span class="field-label"><span>Full name <span class="req">*</span></span></span><input class="input" value="Fajar Nugroho"></label>
+      <label class="field"><span class="field-label"><span>Email <span class="req">*</span></span></span><input class="input" value="fajar.nugroho@nusantarashrimp.co.id"></label>
+      <div class="field"><span class="field-label"><span>Role <span class="req">*</span></span></span>
+        <div class="choice-list">
+          <label class="choice"><span class="radio"></span><span><b>Farms Manager</b><br><span class="caption">Views all Farms and reports. Read-only.</span></span></label>
+          <label class="choice is-on"><span class="radio is-on"></span><span><b>Technical Manager</b><br><span class="caption">Manages the Ponds of one Farm.</span></span></label>
+          <label class="choice"><span class="radio"></span><span><b>System Administrator</b><br><span class="caption">Manages users, master data and settings. No farm data.</span></span></label>
+        </div>
+      </div>
+      <label class="field"><span class="field-label"><span>Assigned Farm <span class="req">*</span></span></span><select class="select"><option>Farm D · Lombok</option></select></label>
+      <label class="field"><span class="field-label">Language</span><select class="select"><option>Bahasa Indonesia</option><option>English</option></select></label>
+      <div class="notice"><i data-lucide="mail"></i><span>An invitation email will be sent. The link is valid for 72 hours.</span></div>
+    </div>
+    <div class="drawer-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--primary"><i data-lucide="send"></i>Send invitation</button></div>
+  </aside>
+</div>
+
+<!-- Deactivate Confirmation (?deactivate=1) -->
+<div class="overlay" id="deactivate">
+  <div class="dialog" role="dialog">
+    <div class="dialog-body">
+      <h2 class="dialog-title">Deactivate Sari Wijaya?</h2>
+      <p class="text-muted">Sari will be signed out and can no longer sign in. Reports and records created by Sari are kept.</p>
+      <div class="notice notice--warning"><i data-lucide="triangle-alert"></i><span>Farm A will have no active Technical Manager. Assign another user before deactivating.</span></div>
+    </div>
+    <div class="dialog-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--danger" data-close>Deactivate</button></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="../assets/charts.js"></script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>

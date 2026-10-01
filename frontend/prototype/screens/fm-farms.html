@@ -29,10 +29,10 @@
   <!-- Farm Summary -->
   <section class="card">
     <div class="status-summary">
-      <div class="status-count"><span class="badge badge--critical">Critical</span><div class="status-count-value">1<small>Farm</small></div></div>
-      <div class="status-count"><span class="badge badge--warning">Warning</span><div class="status-count-value">1<small>Farm</small></div></div>
-      <div class="status-count"><span class="badge badge--attention">Attention</span><div class="status-count-value">1<small>Farm</small></div></div>
-      <div class="status-count"><span class="badge badge--normal">Normal</span><div class="status-count-value">1<small>Farm</small></div></div>
+      <div class="status-count"><span class="status-text st--critical">Critical</span><div class="status-count-value">1<small>Farm</small></div></div>
+      <div class="status-count"><span class="status-text st--warning">Warning</span><div class="status-count-value">1<small>Farm</small></div></div>
+      <div class="status-count"><span class="status-text st--attention">Attention</span><div class="status-count-value">1<small>Farm</small></div></div>
+      <div class="status-count"><span class="status-text st--normal">Normal</span><div class="status-count-value">1<small>Farm</small></div></div>
     </div>
   </section>
 
@@ -40,44 +40,12 @@
   <section class="card">
     <div class="card-header"><div><h2 class="card-title">Farm List</h2><div class="card-sub">4 Farms · 32 Ponds</div></div></div>
     <table class="table">
-      <thead><tr><th>Farm</th><th>Status</th><th>Production</th><th>Risk / Issue</th><th>Pond Trend</th><th>Updated</th><th></th></tr></thead>
+      <thead><tr><th>Farm</th><th>Status</th><th>Main reason</th><th>Water quality</th><th>Growth</th><th>Operations</th><th class="num">Issues</th><th></th></tr></thead>
       <tbody>
-        <tr class="is-link">
-          <td><div class="cell-main">Farm D</div><div class="cell-sub">Lombok, West Nusa Tenggara · 8 Ponds</div></td>
-          <td><span class="badge badge--critical">Critical</span></td>
-          <td><span class="status-text st--warning">Warning</span><div class="cell-sub">12.3 t · 4 of 8 Ponds behind target</div></td>
-          <td><div class="cell-main">2 open</div><div class="cell-sub">Water Quality, Mortality</div></td>
-          <td><span class="trend"><i data-lucide="trending-down"></i>Pond 06 · DO decreasing</span></td>
-          <td class="text-muted">09:30</td>
-          <td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td>
-        </tr>
-        <tr class="is-link">
-          <td><div class="cell-main">Farm A</div><div class="cell-sub">East Java, Indonesia · 8 Ponds</div></td>
-          <td><span class="badge badge--warning">Warning</span></td>
-          <td><span class="status-text st--attention">Attention</span><div class="cell-sub">11.6 t · 2 of 8 Ponds behind target</div></td>
-          <td><div class="cell-main">3 open</div><div class="cell-sub">Water Quality</div></td>
-          <td><span class="trend"><i data-lucide="trending-down"></i>Pond 02 · DO decreasing</span><div class="cell-sub">+2 more trends</div></td>
-          <td class="text-muted">09:35</td>
-          <td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td>
-        </tr>
-        <tr class="is-link">
-          <td><div class="cell-main">Farm C</div><div class="cell-sub">Banyuwangi, East Java · 6 Ponds</div></td>
-          <td><span class="badge badge--attention">Attention</span></td>
-          <td><span class="status-text st--normal">Normal</span><div class="cell-sub">9.6 t · 1 of 6 Ponds behind target</div></td>
-          <td><div class="cell-main">1 open</div><div class="cell-sub">Water Quality</div></td>
-          <td><span class="trend"><i data-lucide="trending-up"></i>Pond 03 · Turbidity increasing</span></td>
-          <td class="text-muted">09:28</td>
-          <td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td>
-        </tr>
-        <tr class="is-link">
-          <td><div class="cell-main">Farm B</div><div class="cell-sub">Lampung, Indonesia · 10 Ponds</div></td>
-          <td><span class="status-text st--normal">Normal</span></td>
-          <td><span class="status-text st--normal">Normal</span><div class="cell-sub">22.1 t · all Ponds on target</div></td>
-          <td><div class="text-muted">None</div></td>
-          <td><span class="trend"><i data-lucide="arrow-right"></i>All Ponds stable</span></td>
-          <td class="text-muted">09:33</td>
-          <td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td>
-        </tr>
+<tr class="is-link"><td style="min-width:180px;max-width:200px"><div class="cell-main">Farm D</div><div class="cell-sub" style="white-space:normal">Lombok, West Nusa Tenggara · 8 Ponds</div></td><td><span class="badge badge--critical">Critical</span></td><td class="wrap" style="min-width:180px;max-width:240px">Pond 06 DO critically low for 8 hrs; mortality rising</td><td><span class="status-text st--critical">1 of 8 Ponds</span></td><td><span class="status-text st--warning">4 of 8 behind</span></td><td><span class="status-text st--attention">2 devices offline</span></td><td class="num">2</td><td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td></tr>
+<tr class="is-link"><td style="min-width:180px;max-width:200px"><div class="cell-main">Farm A</div><div class="cell-sub" style="white-space:normal">East Java, Indonesia · 8 Ponds</div></td><td><span class="badge badge--warning">Warning</span></td><td class="wrap" style="min-width:180px;max-width:240px">Pond 02 DO below 4.5 mg/L for 2 days</td><td><span class="status-text st--warning">3 of 8 Ponds</span></td><td><span class="status-text st--attention">2 of 8 behind</span></td><td><span class="status-text st--attention">1 sensor offline</span></td><td class="num">3</td><td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td></tr>
+<tr class="is-link"><td style="min-width:180px;max-width:200px"><div class="cell-main">Farm C</div><div class="cell-sub" style="white-space:normal">Banyuwangi, East Java · 6 Ponds</div></td><td><span class="badge badge--attention">Attention</span></td><td class="wrap" style="min-width:180px;max-width:240px">Pond 03 turbidity rising for 1 day</td><td><span class="status-text st--attention">1 of 6 Ponds</span></td><td><span class="status-text st--normal">1 of 6 behind</span></td><td><span class="status-text st--normal">No issues</span></td><td class="num">1</td><td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td></tr>
+<tr class="is-link"><td style="min-width:180px;max-width:200px"><div class="cell-main">Farm B</div><div class="cell-sub" style="white-space:normal">Lampung, Indonesia · 10 Ponds</div></td><td><span class="status-text st--normal">Normal</span></td><td class="wrap" style="min-width:180px;max-width:240px">All Ponds within range</td><td><span class="status-text st--normal">0 of 10 Ponds</span></td><td><span class="status-text st--normal">All on target</span></td><td><span class="status-text st--normal">No issues</span></td><td class="num">0</td><td class="actions"><a class="btn btn--link" href="fm-farm-detail.html">View</a></td></tr>
       </tbody>
     </table>
   </section>

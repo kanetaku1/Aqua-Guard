@@ -75,7 +75,7 @@
     <section class="card">
       <div class="card-header">
         <div><h2 class="card-title">Historical Data</h2><div class="card-sub">Raw sensor readings</div></div>
-        <select class="select" style="width:200px;height:32px;font-size:14px"><option>29 Sep 2026</option></select>
+        <span style="width:200px;display:block"><span class="date-field"><input class="input" value="29 Sep 2026" readonly><button type="button" class="icon-btn date-btn" aria-label="Open calendar"><i data-lucide="calendar"></i></button></span></span>
       </div>
       <table class="table table-compact">
         <thead><tr><th>Timestamp</th><th class="num">DO mg/L</th><th class="num">pH</th><th class="num">Temp °C</th><th class="num">TDS mg/L</th><th class="num">Turbidity NTU</th><th class="num">Level cm</th></tr></thead>
@@ -95,15 +95,15 @@
   <!-- ============ Alerts (TM-PD-006 … 009) ============ -->
   <section class="card" data-panel-group="tab" data-panel="alerts">
     <div class="card-header">
-      <div><h2 class="card-title">Alerts</h2><div class="card-sub">Pond 02 · 1 active</div></div>
+      <div><h2 class="card-title">Alerts</h2><div class="card-sub">Pond 02 · 1 active · generated from sensor data by alert rules, independent of Reports</div></div>
       <select class="select" style="width:180px;height:32px;font-size:14px"><option>State: All</option></select>
     </div>
     <table class="table">
       <thead><tr><th>ID</th><th>Alert</th><th>Severity</th><th>Occurred</th><th>State</th><th>Handled by</th><th></th></tr></thead>
       <tbody>
-        <tr><td class="text-muted">ALT-1042</td><td class="cell-main">DO below threshold (4.1 mg/L &lt; 4.5)</td><td><span class="badge badge--warning">Warning</span></td><td>29 Sep 07:50</td><td><span class="badge badge--state badge--unack">Unacknowledged</span></td><td class="text-muted">—</td><td class="actions"><a class="btn btn--link btn--sm" href="#" data-open="drawer">Detail</a><button class="btn btn--primary btn--sm" data-open="drawer">Acknowledge</button></td></tr>
-        <tr><td class="text-muted">ALT-1030</td><td class="cell-main">DO below threshold (4.3 mg/L &lt; 4.5)</td><td><span class="badge badge--warning">Warning</span></td><td>27 Sep 05:15</td><td><span class="badge badge--state badge--resolved">Resolved</span></td><td>Sari Wijaya</td><td class="actions"><a class="btn btn--link btn--sm" href="#" data-open="drawer">Detail</a></td></tr>
-        <tr><td class="text-muted">ALT-1011</td><td class="cell-main">Water level below range (118 cm &lt; 120)</td><td><span class="badge badge--attention">Attention</span></td><td>21 Sep 14:20</td><td><span class="badge badge--state badge--resolved">Resolved</span></td><td>Sari Wijaya</td><td class="actions"><a class="btn btn--link btn--sm" href="#" data-open="drawer">Detail</a></td></tr>
+        <tr><td class="text-muted">ALT-1042</td><td class="cell-main">DO below threshold (4.1 mg/L &lt; 4.5)</td><td><span class="badge badge--warning">Warning</span></td><td>29 Sep 07:50</td><td><span class="status-text st--unack">Unacknowledged</span></td><td class="text-muted">—</td><td class="actions"><a class="btn btn--link btn--sm" href="#" data-open="drawer">Detail</a><button class="btn btn--primary btn--sm" data-open="drawer">Acknowledge</button></td></tr>
+        <tr><td class="text-muted">ALT-1030</td><td class="cell-main">DO below threshold (4.3 mg/L &lt; 4.5)</td><td><span class="badge badge--warning">Warning</span></td><td>27 Sep 05:15</td><td><span class="status-text st--resolved">Resolved</span></td><td>Sari Wijaya</td><td class="actions"><a class="btn btn--link btn--sm" href="#" data-open="drawer">Detail</a></td></tr>
+        <tr><td class="text-muted">ALT-1011</td><td class="cell-main">Water level below range (118 cm &lt; 120)</td><td><span class="badge badge--attention">Attention</span></td><td>21 Sep 14:20</td><td><span class="status-text st--resolved">Resolved</span></td><td>Sari Wijaya</td><td class="actions"><a class="btn btn--link btn--sm" href="#" data-open="drawer">Detail</a></td></tr>
       </tbody>
     </table>
   </section>
@@ -127,7 +127,7 @@
     <section class="card">
       <div class="card-header"><h2 class="card-title">Record Feeding</h2></div>
       <div class="card-body form-grid">
-        <label class="field"><span class="field-label"><span>Date <span class="req">*</span></span></span><input class="input" value="29 Sep 2026"></label>
+        <label class="field"><span class="field-label"><span>Date <span class="req">*</span></span></span><span class="date-field" data-calendar-demo><input class="input" value="29 Sep 2026" readonly><button type="button" class="icon-btn date-btn" aria-label="Open calendar"><i data-lucide="calendar"></i></button></span></label>
         <label class="field"><span class="field-label"><span>Round <span class="req">*</span></span></span><select class="select"><option>13:00 (3rd)</option></select></label>
         <label class="field span-2"><span class="field-label"><span>Feed Type <span class="req">*</span></span></span><select class="select"><option>Grower 2 (2.0 mm)</option></select></label>
         <label class="field span-2"><span class="field-label"><span>Amount <span class="req">*</span></span></span><span class="input-group"><input class="input" value="34"><span class="input-unit">kg</span></span><span class="helper">Plan: 38 kg · reduced 10% due to low DO</span></label>
@@ -146,7 +146,7 @@
         <thead><tr><th>Date</th><th class="num">Count</th><th class="num">Total Weight</th><th>Observation</th><th>Recorded by</th><th></th></tr></thead>
         <tbody>
           <tr><td>29 Sep 2026</td><td class="num">22</td><td class="num">0.30 kg</td><td>Morning check</td><td>Sari Wijaya</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
-          <tr><td>28 Sep 2026</td><td class="num">64</td><td class="num">0.82 kg</td><td>Low DO in early morning</td><td>Sari Wijaya</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
+          <tr><td>28 Sep</td><td class="num">64</td><td class="num">0.82 kg</td><td>Low DO in early morning</td><td>Sari Wijaya</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
           <tr><td>27 Sep 2026</td><td class="num">41</td><td class="num">0.52 kg</td><td>Low DO in early morning</td><td>Sari Wijaya</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
           <tr><td>26 Sep 2026</td><td class="num">18</td><td class="num">0.23 kg</td><td class="text-muted">—</td><td>Sari Wijaya</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
           <tr><td>25 Sep 2026</td><td class="num">16</td><td class="num">0.20 kg</td><td class="text-muted">—</td><td>Sari Wijaya</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
@@ -158,7 +158,7 @@
     <section class="card">
       <div class="card-header"><h2 class="card-title">Record Mortality</h2></div>
       <div class="card-body form-grid">
-        <label class="field span-2"><span class="field-label"><span>Date <span class="req">*</span></span></span><input class="input" value="29 Sep 2026"></label>
+        <label class="field span-2"><span class="field-label"><span>Date <span class="req">*</span></span></span><span class="date-field"><input class="input" value="29 Sep 2026" readonly><button type="button" class="icon-btn date-btn" aria-label="Open calendar"><i data-lucide="calendar"></i></button></span></label>
         <label class="field"><span class="field-label"><span>Count <span class="req">*</span></span></span><span class="input-group"><input class="input" placeholder="0"><span class="input-unit">pcs</span></span></label>
         <label class="field"><span class="field-label"><span>Total Weight <span class="req">*</span></span></span><span class="input-group"><input class="input" placeholder="0.00"><span class="input-unit">kg</span></span></label>
         <label class="field span-2"><span class="field-label">Observation</span><select class="select"><option>Select observation</option></select></label>
@@ -173,12 +173,12 @@
     <section class="card">
       <div class="card-header"><div><h2 class="card-title">Sampling History</h2><div class="card-sub">Weekly sampling · next due 5 Oct</div></div></div>
       <table class="table">
-        <thead><tr><th>Date</th><th class="num">DOC</th><th class="num">Sample</th><th class="num">Total Weight</th><th class="num">ABW</th><th class="num">ADG</th><th>Recorded by</th><th></th></tr></thead>
+        <thead><tr><th>Date</th><th class="num">DOC</th><th class="num">Sample</th><th class="num">ABW</th><th class="num">ADG</th><th class="num">TAN</th><th class="num">NO2</th><th class="num">Vibrio ×10³</th><th class="num">Alk.</th><th></th></tr></thead>
         <tbody>
-          <tr><td>28 Sep 2026</td><td class="num">62</td><td class="num">100 pcs</td><td class="num">1,380 g</td><td class="num strong">13.8 g</td><td class="num">0.21 g/d</td><td>Sari Wijaya</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
-          <tr><td>21 Sep 2026</td><td class="num">55</td><td class="num">100 pcs</td><td class="num">1,230 g</td><td class="num strong">12.3 g</td><td class="num">0.23 g/d</td><td>Sari Wijaya</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
-          <tr><td>14 Sep 2026</td><td class="num">48</td><td class="num">100 pcs</td><td class="num">1,070 g</td><td class="num strong">10.7 g</td><td class="num">0.23 g/d</td><td>Sari Wijaya</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
-          <tr><td>7 Sep 2026</td><td class="num">41</td><td class="num">100 pcs</td><td class="num">910 g</td><td class="num strong">9.1 g</td><td class="num">0.24 g/d</td><td>Sari Wijaya</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
+          <tr><td>28 Sep</td><td class="num">62</td><td class="num">100 pcs</td><td class="num strong">13.8 g</td><td class="num">0.21 g/d</td><td class="num ">0.8</td><td class="num ">0.22</td><td class="num val-attention">7.2</td><td class="num">128</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
+          <tr><td>21 Sep</td><td class="num">55</td><td class="num">100 pcs</td><td class="num strong">12.3 g</td><td class="num">0.23 g/d</td><td class="num ">0.6</td><td class="num ">0.18</td><td class="num val-attention">6.2</td><td class="num">130</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
+          <tr><td>14 Sep</td><td class="num">48</td><td class="num">100 pcs</td><td class="num strong">10.7 g</td><td class="num">0.23 g/d</td><td class="num ">0.5</td><td class="num ">0.15</td><td class="num ">4.8</td><td class="num">132</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
+          <tr><td>7 Sep</td><td class="num">41</td><td class="num">100 pcs</td><td class="num strong">9.1 g</td><td class="num">0.24 g/d</td><td class="num ">0.4</td><td class="num ">0.12</td><td class="num ">3.9</td><td class="num">135</td><td class="actions"><button class="btn btn--link btn--sm">Edit</button></td></tr>
         </tbody>
       </table>
       <div class="card-body" style="border-top:1px solid var(--color-border)">
@@ -189,11 +189,16 @@
     <section class="card">
       <div class="card-header"><h2 class="card-title">Record Sampling</h2></div>
       <div class="card-body form-grid">
-        <label class="field"><span class="field-label"><span>Date <span class="req">*</span></span></span><input class="input" placeholder="Select date"></label>
+        <label class="field"><span class="field-label"><span>Date <span class="req">*</span></span></span><span class="date-field"><input class="input" placeholder="Select date" readonly><button type="button" class="icon-btn date-btn" aria-label="Open calendar"><i data-lucide="calendar"></i></button></span></label>
         <label class="field"><span class="field-label">DOC</span><input class="input" value="69" disabled></label>
         <label class="field"><span class="field-label"><span>Sample Count <span class="req">*</span></span></span><span class="input-group"><input class="input" placeholder="100"><span class="input-unit">pcs</span></span></label>
         <label class="field"><span class="field-label"><span>Total Weight <span class="req">*</span></span></span><span class="input-group"><input class="input" placeholder="0"><span class="input-unit">g</span></span></label>
         <div class="field span-2"><span class="field-label">ABW (calculated)</span><div class="input" style="display:flex;align-items:center;background:var(--color-bg-subtle)">— g</div><span class="helper">Total Weight ÷ Sample Count</span></div>
+        <div class="subsection-title span-2" style="margin:8px 0 0">Laboratory <span class="caption">optional · can be added when results arrive</span></div>
+        <label class="field"><span class="field-label">TAN</span><span class="input-group"><input class="input" placeholder="—"><span class="input-unit">mg/L</span></span></label>
+        <label class="field"><span class="field-label">NO2</span><span class="input-group"><input class="input" placeholder="—"><span class="input-unit">mg/L</span></span></label>
+        <label class="field"><span class="field-label">Vibrio</span><span class="input-group"><input class="input" placeholder="—"><span class="input-unit">×10³</span></span></label>
+        <label class="field"><span class="field-label">Alkalinity</span><span class="input-group"><input class="input" placeholder="—"><span class="input-unit">mg/L</span></span></label>
         <label class="field span-2"><span class="field-label">Note</span><textarea class="textarea" placeholder="Size variation, appearance"></textarea></label>
       </div>
       <div class="card-footer"><button class="btn btn--outline">Clear</button><button class="btn btn--primary">Save Record</button></div>
@@ -253,26 +258,39 @@
 
 </div></main>
 
-<!-- Alert Detail Drawer (?drawer=1) -->
+<!-- Alert Detail Drawer (?drawer=1) — respond: acknowledge, review data, record action, resolve -->
 <div class="overlay" id="drawer">
   <aside class="drawer">
-    <div class="drawer-header"><div><div class="caption">ALT-1042 · Pond 02</div><h2 class="dialog-title">DO below threshold</h2></div><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="drawer-header"><div><div class="caption">ALT-1042 · Pond 02 · generated by alert rules from sensor data</div><h2 class="dialog-title">DO below threshold</h2></div><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
     <div class="drawer-body">
-      <div class="row"><span class="badge badge--warning">Warning</span><span class="badge badge--state badge--unack">Unacknowledged</span></div>
+      <ol class="steps"><li class="is-current">Acknowledge</li><li>Review sensor data</li><li>Record action</li><li>Monitor and resolve</li></ol>
+      <div class="row"><span class="badge badge--warning">Warning</span><span class="status-text st--unack">Unacknowledged</span></div>
       <dl class="dl dl-2">
         <div><dt>Parameter</dt><dd>DO</dd></div>
         <div><dt>Value / Threshold</dt><dd>4.1 mg/L / ≥ 4.5</dd></div>
         <div><dt>Occurred</dt><dd>29 Sep 2026 07:50</dd></div>
-        <div><dt>Duration</dt><dd>1 h 45 min</dd></div>
+        <div><dt>Duration</dt><dd>1 h 45 min · ongoing</dd></div>
         <div><dt>Sensor</dt><dd>DO-02 · Online</dd></div>
         <div><dt>Related</dt><dd>ISS-218 (Farm issue)</dd></div>
       </dl>
       <div class="chart" id="do-alert"></div>
+      <a class="btn btn--link" href="?tab=iot" style="align-self:flex-start">Open DO time series<i data-lucide="arrow-right"></i></a>
       <hr class="divider">
-      <label class="field"><span class="field-label">Handling State</span><select class="select"><option>Acknowledged</option><option>In Progress</option><option>Resolved</option></select></label>
-      <label class="field"><span class="field-label">Note</span><textarea class="textarea" placeholder="Action taken or planned"></textarea></label>
+      <div class="stack" style="gap:8px">
+        <div class="subsection-title" style="margin:0">Actions</div>
+        <table class="table table-compact"><tbody>
+          <tr><td class="text-muted">05:40</td><td class="wrap">Increased aeration — aerators 3 and 4 on</td><td><span class="source-tag">Actuator log</span></td></tr>
+        </tbody></table>
+      </div>
+      <div class="form-grid">
+        <label class="field"><span class="field-label">Time</span><input class="input" value="09:35"></label>
+        <label class="field"><span class="field-label">Action</span><select class="select"><option>Select</option><option>Increased aeration</option><option>Water exchange</option><option>Equipment inspection</option><option>Water treatment</option><option>Other</option></select></label>
+        <label class="field span-2"><span class="field-label">Note / result</span><input class="input" placeholder="What was done and what happened"></label>
+      </div>
+      <button class="btn btn--outline btn--sm" style="align-self:flex-start;flex-shrink:0"><i data-lucide="plus"></i>Record action</button>
+      <span class="helper">Recorded actions appear automatically in today's Daily Report (Actions Taken). The alert does not need a report.</span>
     </div>
-    <div class="drawer-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--primary">Acknowledge</button></div>
+    <div class="drawer-footer"><button class="btn btn--outline" data-close>Close</button><button class="btn btn--outline" disabled>Resolve</button><button class="btn btn--primary">Acknowledge</button></div>
   </aside>
 </div>
 

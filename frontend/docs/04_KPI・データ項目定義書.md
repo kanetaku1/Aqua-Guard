@@ -4,7 +4,7 @@
 
 画面に表示するKPI・水質項目について、**算出方法、集計してよい単位、単位・桁数、閾値、状態の判定ルール**を定義する。画面ごとの表示内容は「05_画面・機能要件書」、見せ方は「07_UI・UX設計書」で定義する。
 
-> 閾値・目標成長曲線・判定の境界値は、業務ルールが確定するまでの**サンプル値**である（§8）。
+> 閾値・目標成長曲線・判定の境界値は、System Administratorが設定画面（AD-04 Settings）で変更できる**運用ルール**である。本書の値は初期値（サンプル）であり、業務ルールの確定後に更新する（§8）。
 
 ---
 
@@ -12,11 +12,13 @@
 
 | 発生源 | データ | 流れ |
 | --- | --- | --- |
-| IoTセンサー | DO、pH、水温、TDS、濁度、水位（5分ごと） | センサー → DB → Environmental / Pond Trend・Pond Alert |
-| 現場の記録（Technical Manager） | 放養、給餌、死亡、サンプリング、Actuator操作 | 入力 → DB → 生産KPI |
-| 報告（Technical Manager） | Daily / Weekly Report | DBの値を参照して作成 → 提出 → Farms Managerが閲覧 |
+| IoTセンサー | DO、pH、水温、TDS、濁度、水位（3〜5分ごと） | センサー → Sensor Database → Environmental / Pond Trend・Alert rule（閾値）→ Pond Alert |
+| Alert対応（Technical Manager） | 確認・対応の記録（時刻・対応種別・メモ）・解決 | 入力 → DB → Alertの対応状態・Daily Report の Actions Taken |
+| 現場の記録（Technical Manager） | 放養、給餌、死亡、サンプリング、健康状態の観察、Actuator操作 | 入力 → DB → 生産KPI・Daily Report |
+| 報告（Technical Manager） | Daily / Weekly Report | DBの記録を参照し、観察・Farm共通の項目・所見を加えて作成 → 提出 → Farms Managerが閲覧 |
 
-Reportは既存のデータを**参照**して作成する構造化報告であり、データそのものではない。報告画面では参照した値に「From sensor data」「From records」を表示する。
+- Sensor DataはReportとは独立して保存し、Alertは Sensor Database から直接判定する。**Reportの作成・提出はAlertの前提ではない。**
+- Reportは既存のデータを**参照**して作成する構造化報告であり、データそのものではない。**センサー値はReportに手入力・転記しない。** Daily Reportはその日のAlert・センサーデータをリンクで参照し、Weekly Reportは水質を Sensor Database から週次で自動集計する。報告画面では記録から取り込んだ値に「From records」等の参照元を表示する。
 
 ---
 
@@ -69,6 +71,26 @@ Pondごとに放養日が異なる（DOCがそろわない）ため、足して�
 
 Farm間の値を順位付け・比較する表示はしない（Farm Comparisonは対象外）。
 
+### 4.1 Reportのデータ項目の粒度
+
+Daily / Weekly Report は **Pond単位で記録**し、Farm単位では「足してよい値」だけを合計する。データの性質で、記録の単位とFarmとしての見せ方を決める。
+
+| 性質 | 項目 | 記録の単位 | Farmとしての値 | 表現（07 §11.4） |
+| --- | --- | --- | --- | --- |
+| **積み重なる量**（加算可） | 給餌量、死亡数・死亡重量 | Pond | **合計**（Pond別の内訳付き） | Daily：Pondごとの数値の表（最下行に合計）／ Weekly：**ドーナツグラフ**（全Pond・Othersにまとめない）＋Pond別の数値の表 |
+| **水質の傾向**（加算不可） | DO・pH・水温などのセンサーデータ | Pond（Sensor Databaseから**Weekly Reportでのみ週次で自動集計**。Daily Reportには含めない） | **平均は出さない**。Pondごとに DO最小、pH範囲、水温最大、範囲外の日数、Alert件数、傾向 | **Pond×項目の表**（範囲外を強調）＋TMの任意コメント |
+| **検査の値**（加算不可） | Laboratoryの値（TAN・NO2・Vibrio・Alkalinity） | Pond（週次サンプリング時） | **平均は出さない**。範囲外のPond数 | **Pond×項目の表**（範囲外を強調、未着は Pending） |
+| **Pondの観察・設備** | 健康状態・観察項目、摂餌・トレイの状態、エアレーター・ポンプの稼働 | Pond | 注意以上のPond数、停止中の設備数 | Pondごとの一覧（Normalは控えめ、注意以上を目立たせる） |
+| **Farm共通** | 天候、降雨、環境上の出来事、発電機、Technical Managerの所見 | Farm | そのまま | 1つだけ表示 |
+| **Pondに紐づく出来事** | Alerts / Issues（Alertシステムから自動参照）、Equipment events、Actions Taken（Alert対応・Actuator操作ログから自動＋手入力） | 出来事（対象Pondを持つ） | 件数 | 一覧（Pond列を持つ） |
+
+- 水質の「Farm平均」は、悪いPondを平均で隠してしまうため使わない。
+- 摂餌の状態は Good / Reduced / Poor、健康状態は重大度（Normal / Attention / Warning / Critical）で記録する。
+- **Daily Reportは運用の記録であり、センサー値を含めない。** 朝・夕などの定時の水質値（DO・pH・水温等）は記録しない。水質の履歴は TM-03 Pond Detail › IoT / Water Quality で確認し、Daily Report はその日の Alert とそのセンサーデータへのリンクのみを持つ。
+- **Reportの数値は記録から自動で集める。** 給餌・死亡は Pond Detail で入力した記録の合計、設備はActuatorの状態、Alerts / Issues はその日のAlert、Actions Taken はAlert対応の記録とActuator操作ログ、生産KPIは週次のサンプリング記録、Weekly Report の水質の傾向は Sensor Database から取り込む。Technical Managerが Daily Report で入力するのは、摂餌・トレイの状態、健康状態の観察、Farm共通の項目（天候・降雨・環境上の出来事・発電機）、手入力の対応、所見（Technical Manager Summary）。
+- 週次のサンプリング（体重測定）とLaboratoryの検査は、Pond List の一括入力（Record weekly sampling）、または Pond Detail › Sampling でPondごとに記録する。検査結果は後から届くことがあるため、空欄で保存して後から追記でき、未着の間は Weekly Report に「Pending」と表示する。
+- Weekly Report には、その週に測定済みのPond数と未測定のPondを示す。
+
 ---
 
 ## 5. 目標成長曲線（サンプル）
@@ -77,7 +99,7 @@ Farm間の値を順位付け・比較する表示はしない（Farm Comparison�
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 目標ABW（g） | 5.3 | 7.4 | 9.5 | 11.5 | 13.3 | 15.0 | 16.6 | 18.2 |
 
-曲線の間のDOCは直線で補間する。品種・Farmごとに設定できるようにする（§8）。
+曲線の間のDOCは直線で補間する。On track の幅（初期値 ±5%）とともに、AD-04 Settings › Growth Targets で設定する。
 
 ---
 
@@ -87,36 +109,37 @@ Farm間の値を順位付け・比較する表示はしない（Farm Comparison�
 
 | 項目 | 単位 | 表示桁 | 計測 |
 | --- | --- | --- | --- |
-| DO | mg/L | 小数1桁 | IoT（5分ごと） |
+| DO | mg/L | 小数1桁 | IoT（3〜5分ごと） |
 | pH | — | 小数1桁 | IoT |
 | 水温（Water Temperature） | °C | 小数1桁 | IoT |
 | TDS | mg/L | 整数（桁区切り） | IoT |
 | 濁度（Turbidity） | NTU | 整数 | IoT |
 | 水位（Water Level） | cm | 整数 | IoT |
-| 塩分（Salinity） | ppt | 整数 | Daily Report |
-| 透明度（Secchi Depth） | cm | 整数 | Daily Report |
-| TAN / NO2 | mg/L | 小数1〜2桁 | Laboratory（週次） |
-| Vibrio | CFU/mL | 指数表記（8.5 × 10³） | Laboratory |
-| Alkalinity | mg/L | 整数 | Laboratory |
+| TAN / NO2 | mg/L | 小数1〜2桁 | Laboratory（週次・Pondごと） |
+| Vibrio | CFU/mL | ×10³ 単位の小数1桁（例 8.5 = 8.5 × 10³） | Laboratory（Pondごと） |
+| Alkalinity | mg/L | 整数 | Laboratory（Pondごと） |
 
 日時はWIB（UTC+7）、日付は `DD MMM YYYY`、時刻は `HH:mm`。数値の桁区切りはカンマ。
 
 ### 6.2 閾値と重大度（サンプル）
 
-| 項目 | Normal（管理範囲） | Attention | Warning | Critical |
-| --- | --- | --- | --- | --- |
-| DO | ≥ 5.0 | 4.5 以上 5.0 未満 | 3.5 以上 4.5 未満 | 3.5 未満 |
-| pH | 7.5–8.5 | 7.3–7.5 / 8.5–8.7 | 7.3 未満 / 8.7 超 | 7.0 未満 / 9.0 超 |
-| 水温 | 26–31 | 25.5–26 / 30.5–31 に接近 | 31 超 / 26 未満 | 33 超 / 24 未満 |
-| TDS | 15,000–25,000 | 範囲の端から5%以内 | 範囲外 | — |
-| 濁度 | 25–60 | 60–80 / 20–25 | 80 超 / 20 未満 | — |
-| 水位 | 120–150 cm | 115–120 / 150–155 | 115 未満 / 155 超 | 105 未満 |
-| TAN | ≤ 1.0 | 1.0–2.0 | 2.0 超 | — |
-| NO2 | ≤ 0.5 | 0.5–1.0 | 1.0 超 | — |
-| Vibrio | < 5 × 10³ | 5 × 10³ – 1 × 10⁴ | ≥ 1 × 10⁴ | — |
-| Alkalinity | 100–150 | 80–100 / 150–180 | 範囲外 | — |
+閾値は**境界値**で持つ。各状態が「この値を下回る（Low side）／上回る（High side）と始まる」値を1つずつ定義し、Normal は両側の Attention 境界の間として自動で決まる。使わない側・段階は「—」（Not used）。境界値は Normal から離れる順（Attention → Warning → Critical）でなければならない。
+
+| 項目 | 単位 | Critical < | Warning < | Attention < | Normal（自動） | Attention > | Warning > | Critical > |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DO | mg/L | 3.5 | 4.5 | 5.0 | ≥ 5.0 | — | — | — |
+| pH | — | 7.0 | 7.3 | 7.5 | 7.5–8.5 | 8.5 | 8.7 | 9.0 |
+| 水温 | °C | 24 | 26 | 26.5 | 26.5–30.5 | 30.5 | 31 | 33 |
+| TDS | mg/L | — | 15,000 | 16,000 | 16,000–24,000 | 24,000 | 25,000 | — |
+| 濁度 | NTU | — | 20 | 25 | 25–60 | 60 | 80 | — |
+| 水位 | cm | 105 | 115 | 120 | 120–150 | 150 | 155 | — |
+| TAN | mg/L | — | — | — | ≤ 1.0 | 1.0 | 2.0 | — |
+| NO2 | mg/L | — | — | — | ≤ 0.5 | 0.5 | 1.0 | — |
+| Vibrio | ×10³ CFU/mL | — | — | — | < 5 | 5 | 10 | — |
+| Alkalinity | mg/L | — | 80 | 100 | 100–150 | 150 | 180 | — |
 
 - 画面の「Range」表示は Warning の閾値（Pond Alert が発報される境界）を示す。
+- 閾値は全Farm共通の初期値と、Farmごとの上書きを持つ（AD-04 Settings › Thresholds）。変更は保存以降の判定に適用し、過去のAlertは変更しない。
 - Pond Alert は Warning 以上、または Attention が一定時間継続した場合に発報する（継続時間は§8）。
 
 ---
@@ -127,10 +150,10 @@ Farm間の値を順位付け・比較する表示はしない（Farm Comparison�
 | --- | --- |
 | センサー値 | §6.2 の閾値で判定 |
 | Pond Status | そのPondのセンサー値・未解決Alertのうち最も重い重大度 |
-| Farm Environmental Status | Farm内のPond Statusのうち最も重いもの |
-| Farm Production Status | Behind のPondの割合：25% 未満 = Normal、25〜49% = Attention、50% 以上 = Warning。Survival Rate の急低下がある場合は1段上げる |
-| Farm Operational Status | 設備停止・センサー Offline・Report 未提出の有無：なし = Normal、あり = Attention、安全に関わる設備停止 = Warning 以上 |
-| Farm Overall Status | Environmental / Production / Operational のうち最も重いもの |
+| Farm Environmental Status（画面表記：Water quality） | Farm内のPond Statusのうち最も重いもの。根拠として範囲外のPond数を示す |
+| Farm Production Status（画面表記：Growth） | Behind のPondの割合：25% 未満 = Normal、25〜49% = Attention、50% 以上 = Warning。Survival Rate の急低下がある場合は1段上げる |
+| Farm Operational Status（画面表記：Operations） | 設備停止・センサー Offline・Report 未提出の有無：なし = Normal、あり = Attention、安全に関わる設備停止 = Warning 以上 |
+| Farm Status | Water quality / Growth / Operations のうち最も重いもの。別の「Overall」状態は持たない。最も重い観点の事実を Main reason（1文）として示す |
 | データ品質 | 最終取得から15分以内 = Live、15分超 = Delayed、60分超 = Offline、取得実績なし = No data |
 | Report | Draft → Submitted。提出期限（Daily：当日18:00、Weekly：翌週月曜）を過ぎた未提出は Operational Status に反映 |
 
@@ -145,4 +168,4 @@ Farm間の値を順位付け・比較する表示はしない（Farm Comparison�
 | 水質の閾値 | サンプル値（§6.2）。Farmごとに変えるかを業務側で判断 |
 | Attention継続でAlertを出す時間 | 未定（仮：30分） |
 | Farm Production Status の境界値 | 25% / 50%（仮） |
-| 閾値の設定画面 | 現行スコープ外 |
+| 設定値の変更履歴 | 設定画面に「最終更新者・日時」のみ表示。変更履歴（監査ログ）の閲覧画面はスコープ外 |

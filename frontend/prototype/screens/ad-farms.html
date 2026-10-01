@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>AD-02 Farm List · Smart Shrimp Pond</title>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body data-role="ad" data-nav="farms">
+<main class="main"><div class="page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Farms &amp; Ponds</h1>
+      <div class="page-meta"><span>Master data · 5 Farms (4 active) · 33 Ponds</span></div>
+    </div>
+    <div class="page-actions"><button class="btn btn--primary" data-open="addfarm"><i data-lucide="plus"></i>Add farm</button></div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="input-search"><i data-lucide="search"></i><input class="input" placeholder="Search Farm or location"></div>
+    <select class="select"><option>Status: All</option></select>
+  </div>
+
+  <!-- Farm List (AD-F-001) -->
+  <section class="card">
+    <table class="table">
+      <thead><tr><th>Farm</th><th>Location</th><th class="num">Ponds</th><th>Technical Managers</th><th>Devices online</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr class="is-link"><td class="cell-main">Farm A</td><td>East Java, Indonesia</td><td class="num">9 <span class="caption">(8 in operation)</span></td><td>Sari Wijaya</td><td><span class="status-text st--attention">70 / 71</span></td><td><span class="status-text st--normal">Active</span></td><td class="actions"><a class="btn btn--link" href="ad-farm-detail.html">View</a></td></tr>
+        <tr class="is-link"><td class="cell-main">Farm B</td><td>Lampung, Indonesia</td><td class="num">10</td><td>Budi Santoso</td><td><span class="status-text st--normal">88 / 88</span></td><td><span class="status-text st--normal">Active</span></td><td class="actions"><a class="btn btn--link" href="ad-farm-detail.html">View</a></td></tr>
+        <tr class="is-link"><td class="cell-main">Farm C</td><td>Banyuwangi, East Java</td><td class="num">6</td><td>Dewi Lestari</td><td><span class="status-text st--normal">53 / 53</span></td><td><span class="status-text st--normal">Active</span></td><td class="actions"><a class="btn btn--link" href="ad-farm-detail.html">View</a></td></tr>
+        <tr class="is-link"><td class="cell-main">Farm D</td><td>Lombok, West Nusa Tenggara</td><td class="num">8</td><td>Agus Pratama<div class="cell-sub">+ Fajar Nugroho (invited)</div></td><td><span class="status-text st--attention">69 / 71</span></td><td><span class="status-text st--normal">Active</span></td><td class="actions"><a class="btn btn--link" href="ad-farm-detail.html">View</a></td></tr>
+        <tr class="is-link is-muted"><td class="cell-main">Farm E</td><td>Sumbawa, West Nusa Tenggara</td><td class="num">0</td><td class="text-muted">—</td><td class="text-muted">No devices</td><td><span class="status-text st--neutral st--muted">Inactive</span></td><td class="actions"><a class="btn btn--link" href="ad-farm-detail.html">View</a></td></tr>
+      </tbody>
+    </table>
+    <div class="card-footer" style="justify-content:flex-start"><span class="caption">Inactive Farms are hidden from Farms Manager and Technical Manager screens.</span></div>
+  </section>
+
+</div></main>
+
+<!-- Add Farm Drawer (?addfarm=1) — AD-F-002 -->
+<div class="overlay" id="addfarm">
+  <aside class="drawer">
+    <div class="drawer-header"><h2 class="dialog-title">Add farm</h2><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="drawer-body">
+      <label class="field"><span class="field-label"><span>Farm name <span class="req">*</span></span></span><input class="input" placeholder="e.g. Farm F"></label>
+      <label class="field"><span class="field-label"><span>Location <span class="req">*</span></span></span><input class="input" placeholder="Region, Province"></label>
+      <label class="field"><span class="field-label">Time zone</span><select class="select"><option>WIB (UTC+7)</option><option>WITA (UTC+8)</option><option>WIT (UTC+9)</option></select></label>
+      <div class="notice"><i data-lucide="info"></i><span>A new Farm starts as <b>Inactive</b>. Add Ponds and devices, assign a Technical Manager, then activate it.</span></div>
+    </div>
+    <div class="drawer-footer"><button class="btn btn--outline" data-close>Cancel</button><button class="btn btn--primary">Add farm</button></div>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+<script src="../assets/charts.js"></script>
+<script src="../assets/layout.js"></script>
+</body>
+</html>
