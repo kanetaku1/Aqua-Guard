@@ -6,3 +6,12 @@
 Figmaでワイヤーフレームを作成する
 1. UI Guidline
 2. UI References
+
+LogoとSystem名を決める
+FrontendをReactで作成する
+
+IoT→DB→OurSystem
+1. BackendSchemeを作成する
+　OurSystemとIoTデータベースの関係性を図にする
+2. influxDatabaseからOurSystemへのAPIを作成（dummyデータで検証）
+3. リアルデータで検証
