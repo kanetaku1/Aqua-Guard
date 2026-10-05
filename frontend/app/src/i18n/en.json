@@ -1,0 +1,1000 @@
+{
+  "app": {
+    "name": "AquaGuard"
+  },
+  "role": {
+    "farms_manager": "Farms Manager",
+    "technical_manager": "Technical Manager",
+    "system_administrator": "System Administrator"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "farms": "Farms",
+    "reports": "Reports",
+    "ponds": "Ponds",
+    "dailyReports": "Daily Reports",
+    "weeklyReports": "Weekly Reports",
+    "dailyReport": "Daily Report",
+    "weeklyReport": "Weekly Report",
+    "users": "Users",
+    "farmsPonds": "Farms & Ponds",
+    "settings": "Settings",
+    "thresholds": "Thresholds",
+    "growthTargets": "Growth Targets",
+    "rules": "Rules"
+  },
+  "header": {
+    "synced": "Data synced {{time}} WIB",
+    "language": "Language",
+    "account": "Account menu"
+  },
+  "quality": {
+    "live": "Live",
+    "delayed": "Delayed",
+    "offline": "Offline",
+    "no_data": "No data"
+  },
+  "severity": {
+    "normal": "Normal",
+    "attention": "Attention",
+    "warning": "Warning",
+    "critical": "Critical"
+  },
+  "alertState": {
+    "unacknowledged": "Unacknowledged",
+    "acknowledged": "Acknowledged",
+    "in_progress": "In Progress",
+    "resolved": "Resolved"
+  },
+  "reportState": {
+    "not_started": "Not started",
+    "draft": "Draft",
+    "submitted": "Submitted",
+    "overdue": "Overdue"
+  },
+  "reportType": {
+    "daily": "Daily",
+    "weekly": "Weekly"
+  },
+  "common": {
+    "view": "View",
+    "loading": "Loading…",
+    "loadError": "Could not load this section.",
+    "retry": "Retry",
+    "pond_one": "Pond",
+    "pond_other": "Ponds",
+    "close": "Close",
+    "cancel": "Cancel",
+    "clearFilters": "Clear filters",
+    "pagination": "Pagination",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
+  },
+  "param": {
+    "do": "DO",
+    "ph": "pH",
+    "temperature": "Temp",
+    "tds": "TDS",
+    "turbidity": "Turbidity",
+    "water_level": "Level"
+  },
+  "auth": {
+    "language": "Language",
+    "footer": "Need help? Contact your system administrator · v0.1",
+    "footerWib": "Need help? Contact your system administrator · v0.1 · Times shown in WIB (UTC+7)",
+    "email": "Email",
+    "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "signIn": "Sign in",
+    "forgot": "Forgot password?",
+    "invalid": "Email or password is incorrect.",
+    "attemptsLeft_one": "<b>{{count}} attempt left</b> before your account is locked for 15 minutes.",
+    "attemptsLeft_other": "<b>{{count}} attempts left</b> before your account is locked for 15 minutes.",
+    "locked": "Your account is locked for 15 minutes after 5 failed attempts. Try again later or <a>reset your password</a>.",
+    "deactivated": "This account is deactivated. Contact your system administrator.",
+    "expired": "You were signed out after 12 hours of inactivity. Sign in to continue where you left off.",
+    "unexpected": "Something went wrong. Please try again.",
+    "resetTitle": "Reset your password",
+    "resetSub": "Enter the email you use to sign in. We will send you a link to set a new password.",
+    "sendLink": "Send reset link",
+    "sent": "If an account exists for <b>{{email}}</b>, we have sent a reset link. The link is valid for 1 hour.",
+    "sentHelp": "Didn't receive it? Check your spam folder or send the link again in 60 seconds.",
+    "backToSignIn": "Back to sign in",
+    "welcome": "Welcome, {{name}}",
+    "inviteSub": "You have been invited to AquaGuard. Set a password to activate your account.",
+    "newPasswordTitle": "Set a new password",
+    "newPasswordSub": "Choose a new password for {{email}}.",
+    "role": "Role",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "ruleLetterNumber": "At least one letter and one number",
+    "ruleLength": "At least 10 characters",
+    "setAndSignIn": "Set password and sign in",
+    "resetPassword": "Reset password",
+    "enabledHelp": "The button is enabled when all conditions are met.",
+    "linkExpired": "This link has expired. Invitation links are valid for 72 hours and reset links for 1 hour.",
+    "requestNewLink": "Request a new link",
+    "expiredInviteHelp": "For an expired invitation, ask your system administrator to resend it.",
+    "passwordChanged": "Your password has been reset. Sign in with your new password."
+  },
+  "tmDashboard": {
+    "title": "Dashboard",
+    "meta": "{{farm}} · {{count}} Ponds · DOC {{min}}–{{max}}",
+    "pondStatus": "Pond Status",
+    "pondStatusSub": "Current water quality per Pond · sensor data every 5 min · out-of-range values highlighted",
+    "allPonds": "All Ponds",
+    "pond": "Pond",
+    "status": "Status",
+    "alerts": "Alerts",
+    "alertCount": "{{count}} {{state}}",
+    "normalRange": "Normal range: {{ranges}}",
+    "activeAlerts": "Active Alerts",
+    "activeAlertsSub": "{{open}} unresolved · {{unack}} unacknowledged",
+    "noActiveAlerts": "No active alerts",
+    "acknowledge": "Acknowledge",
+    "operationalStatus": "Operational Status",
+    "aerators": "Aerators running",
+    "pumps": "Pumps running",
+    "sensors": "Sensors online",
+    "feeding": "Feeding today",
+    "rounds": "{{done}} / {{planned}} rounds",
+    "nextSampling": "Next sampling",
+    "generator": "Generator",
+    "generatorState": {
+      "standby": "Standby",
+      "running": "Running",
+      "fault": "Fault"
+    },
+    "reportStatus": "Report Status",
+    "dailyReport": "Daily Report · {{date}}",
+    "weeklyReport": "Weekly Report · {{period}}",
+    "due": "Due {{due}}",
+    "lastSaved": "last saved {{time}}",
+    "create": "Create",
+    "continue": "Continue",
+    "lastSubmitted": "Last submitted",
+    "none": "—"
+  },
+  "placeholder": {
+    "notBuilt": "This screen is not built yet.",
+    "seePrototype": "See the prototype for the agreed design:"
+  },
+  "date": {
+    "open": "Open calendar",
+    "calendar": "Choose a date",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "today": "Today"
+  },
+  "growth": {
+    "behind": "Behind",
+    "on_track": "On track",
+    "ahead": "Ahead"
+  },
+  "tmPonds": {
+    "title": "Ponds",
+    "meta": "{{farm}} · {{count}} Ponds",
+    "nextSampling": "Next weekly sampling {{date}}",
+    "recordSampling": "Record weekly sampling",
+    "search": "Search Pond",
+    "statusAll": "Status: All",
+    "alertAll": "Alert: All",
+    "alertNone": "No open alerts",
+    "list": "Pond List",
+    "listSub": "Growth (latest sampling {{date}}) and today's records · open a Pond to record or investigate",
+    "listSubNoSampling": "Growth and today's records · open a Pond to record or investigate",
+    "pond": "Pond",
+    "areaDoc": "{{area}} ha · DOC {{doc}}",
+    "notStocked": "{{area}} ha · not stocked",
+    "status": "Status",
+    "alerts": "Alerts",
+    "abw": "ABW",
+    "vsTarget": "vs Target",
+    "feedToday": "Feed today",
+    "mortalityToday": "Mortality today",
+    "aeratorsOn": "Aerators on",
+    "noMatch": "No Ponds match the filters",
+    "sampling": {
+      "caption": "{{farm}} · {{count}} Ponds",
+      "date": "Sampling date",
+      "progress": "Progress",
+      "progressValue": "{{entered}} of {{total}} Ponds entered",
+      "growth": "Growth",
+      "laboratory": "Laboratory",
+      "optional": "(optional)",
+      "doc": "DOC",
+      "sampleCount": "Sample count",
+      "totalWeight": "Total weight",
+      "abw": "ABW",
+      "vsTarget": "vs Target",
+      "tan": "TAN mg/L",
+      "no2": "NO2 mg/L",
+      "vibrio": "Vibrio ×10³",
+      "alkalinity": "Alk. mg/L",
+      "notSampled": "Not sampled",
+      "notice": "ABW = total weight ÷ sample count. Laboratory results (TAN, NO2, Vibrio, Alkalinity) can be left empty and added when the lab results arrive — they show as “Pending” in the Weekly Report. Ponds left empty are saved as “Not sampled”.",
+      "fixErrors": "Check the highlighted fields: enter both sample count and total weight, using numbers only.",
+      "saveError": "Could not save the sampling. Please try again.",
+      "save": "Save sampling",
+      "saved_one": "Weekly sampling saved · {{date}} · {{count}} Pond",
+      "saved_other": "Weekly sampling saved · {{date}} · {{count}} Ponds",
+      "fieldLabel": "{{field}} for {{pond}}"
+    }
+  },
+  "paramName": {
+    "do": "DO",
+    "ph": "pH",
+    "temperature": "Temperature",
+    "tds": "TDS",
+    "turbidity": "Turbidity",
+    "water_level": "Water level"
+  },
+  "pond": {
+    "notFound": "This Pond was not found in your Farm.",
+    "backToPonds": "Back to Ponds",
+    "stocked": "Stocked {{date}} · DOC {{doc}}",
+    "notStocked": "Not stocked",
+    "stockedPl": "{{pl}} PL stocked",
+    "lastUpdated": "Last updated {{time}}",
+    "tabs": {
+      "iot": "IoT / Water Quality",
+      "alerts": "Alerts",
+      "feeding": "Feeding",
+      "mortality": "Mortality",
+      "sampling": "Sampling",
+      "actuator": "Actuator"
+    }
+  },
+  "iot": {
+    "showSeries": "Show the {{param}} time series",
+    "range": "Range {{range}}",
+    "online": "Online",
+    "offline": "Offline",
+    "seriesTitle": "Sensor Time Series · {{param}}",
+    "seriesSub": {
+      "1h": "5-min readings · hourly shown",
+      "6h": "5-min readings · 6-hourly shown",
+      "1d": "5-min readings · daily shown"
+    },
+    "parameter": "Parameter",
+    "period": "Period",
+    "outsideThreshold": "Outside threshold ({{range}})",
+    "belowThreshold": "Below threshold ({{value}})",
+    "aboveThreshold": "Above threshold ({{value}})",
+    "anomalies": "Anomalies",
+    "noAnomalies": "No anomalies",
+    "anomaly": {
+      "below_threshold": "{{param}} below threshold",
+      "above_threshold": "{{param}} above threshold",
+      "increasing": "{{param}} increasing",
+      "decreasing": "{{param}} decreasing"
+    },
+    "since": "Since {{time}}",
+    "min": "Min {{value}}",
+    "max": "Max {{value}}",
+    "per24h": "{{value}} / 24h",
+    "vsDayAvg": "{{value}} vs {{date}} avg.",
+    "withinRange": "within range",
+    "history": "Historical Data",
+    "historySub": "Raw sensor readings",
+    "timestamp": "Timestamp",
+    "noReadings": "No readings on this day",
+    "showing": "Showing {{shown}} of {{total}} readings"
+  },
+  "pondAlerts": {
+    "title": "Alerts",
+    "sub": "{{pond}} · {{count}} active · generated from sensor data by alert rules, independent of Reports",
+    "state": "State",
+    "stateAll": "State: All",
+    "id": "ID",
+    "alert": "Alert",
+    "severity": "Severity",
+    "occurred": "Occurred",
+    "handledBy": "Handled by",
+    "detail": "Detail",
+    "acknowledge": "Acknowledge",
+    "none": "No alerts"
+  },
+  "alertDrawer": {
+    "caption": "{{id}} · {{pond}} · generated by alert rules from sensor data",
+    "resolve": "Resolve",
+    "acknowledge": "Acknowledge",
+    "steps": {
+      "acknowledge": "Acknowledge",
+      "review": "Review sensor data",
+      "record": "Record action",
+      "resolve": "Monitor and resolve"
+    },
+    "failed": "Could not update the alert. Please try again.",
+    "loadFailed": "Could not load this alert.",
+    "parameter": "Parameter",
+    "sensorStatus": "Sensor status",
+    "valueThreshold": "Value / Threshold",
+    "occurred": "Occurred",
+    "duration": "Duration",
+    "resolved": "resolved",
+    "ongoing": "ongoing",
+    "sensor": "Sensor",
+    "related": "Related",
+    "farmIssue": "{{id}} (Farm issue)",
+    "openSeries": "Open {{param}} time series",
+    "actions": "Actions",
+    "noActions": "No actions recorded yet",
+    "source": {
+      "alert_handling": "Alert handling",
+      "actuator_log": "Actuator log"
+    },
+    "time": "Time",
+    "action": "Action",
+    "select": "Select",
+    "note": "Note / result",
+    "notePlaceholder": "What was done and what happened",
+    "recordAction": "Record action",
+    "helper": "Recorded actions appear automatically in today's Daily Report (Actions Taken). The alert does not need a report.",
+    "fixForm": "Enter the time as HH:mm and choose an action.",
+    "recordFailed": "Could not record the action. Please try again."
+  },
+  "actionType": {
+    "increased_aeration": "Increased aeration",
+    "water_exchange": "Water exchange",
+    "equipment_inspection": "Equipment inspection",
+    "water_treatment": "Water treatment",
+    "other": "Other"
+  },
+  "records": {
+    "recordedBy": "Recorded by",
+    "edit": "Edit",
+    "date": "Date",
+    "select": "Select",
+    "note": "Note",
+    "optional": "Optional",
+    "saveFailed": "Could not save the record. Please try again.",
+    "clear": "Clear",
+    "save": "Save Record"
+  },
+  "feeding": {
+    "saved": "Feeding record saved",
+    "history": "Feeding History",
+    "soFar": "{{date}} so far {{kg}} kg",
+    "total": "{{date}} total {{kg}} kg",
+    "dateTime": "Date / Time",
+    "feedType": "Feed Type",
+    "amount": "Amount",
+    "tray": "Tray / Appetite",
+    "editTitle": "Edit Feeding",
+    "recordTitle": "Record Feeding",
+    "round": "Round",
+    "amountError": "Enter the amount in kg (more than 0).",
+    "plan": "Plan: {{kg}} kg",
+    "selectStatus": "Select status",
+    "duplicate": "This round is already recorded for that date. Edit it in the history instead."
+  },
+  "trayCheck": {
+    "empty_within_2h": "Empty in 2 hrs",
+    "leftover_under_5": "Leftover < 5%",
+    "leftover_10": "Leftover 10%",
+    "leftover_over_20": "Leftover > 20%"
+  },
+  "mortality": {
+    "saved": "Mortality record saved",
+    "history": "Mortality History",
+    "last7": "Last 7 days total {{count}} pcs · {{kg}} kg",
+    "count": "Count",
+    "weight": "Total Weight",
+    "observation": "Observation",
+    "editTitle": "Edit Mortality",
+    "recordTitle": "Record Mortality",
+    "error": "Enter the count (whole number) and the total weight in kg.",
+    "selectObservation": "Select observation",
+    "notePlaceholder": "Symptoms, location, time found"
+  },
+  "observation": {
+    "routine_check": "Routine check",
+    "low_do": "Low DO",
+    "disease_signs": "Disease signs",
+    "molting": "Molting",
+    "other": "Other"
+  },
+  "sampling": {
+    "saved": "Sampling record saved",
+    "history": "Sampling History",
+    "sub": "Weekly sampling · next due {{date}}",
+    "subNoNext": "Weekly sampling",
+    "sample": "Sample",
+    "pending": "Pending",
+    "chartTitle": "ABW · {{pond}}",
+    "actual": "Actual",
+    "target": "Target",
+    "editTitle": "Edit Sampling",
+    "recordTitle": "Record Sampling",
+    "sampleCount": "Sample Count",
+    "totalWeight": "Total Weight",
+    "abwCalculated": "ABW (calculated)",
+    "growthError": "Enter the sample count (whole number) and the total weight in g.",
+    "abwHelp": "Total Weight ÷ Sample Count",
+    "laboratory": "Laboratory",
+    "labHelp": "optional · can be added when results arrive",
+    "lab": {
+      "tan": "TAN",
+      "no2": "NO2",
+      "vibrio": "Vibrio",
+      "alkalinity": "Alkalinity"
+    },
+    "notePlaceholder": "Size variation, appearance"
+  },
+  "actuator": {
+    "done": {
+      "turn_on": "{{name}} turned on",
+      "turn_off": "{{name}} turned off",
+      "set_manual": "{{name}} switched to Manual",
+      "set_auto": "{{name}} returned to Auto"
+    },
+    "safetyNotice": "<b>Safety Layer active.</b> Manual control overrides automatic (PID) control until returned to Auto. Operations that would violate safety limits (e.g. all aerators off while DO < 4.5 mg/L) are blocked.",
+    "status": "Status",
+    "auto": {
+      "title": "Automatic Control",
+      "caption": "PID · DO target",
+      "running": "Running",
+      "paused": "Paused",
+      "stopped": "Stopped",
+      "target": "Target",
+      "overrides": "Overrides",
+      "active": "{{count}} active",
+      "scope": "Controls {{scope}} in Auto mode"
+    },
+    "history": "Control History",
+    "time": "Time",
+    "actuator": "Actuator",
+    "operation": "Operation",
+    "mode": "Mode",
+    "operatedBy": "Operated by",
+    "result": "Result",
+    "op": {
+      "turn_on": "Turn On",
+      "turn_off": "Turn Off",
+      "auto_on": "Turn On",
+      "auto_off": "Turn Off",
+      "set_manual": "Switch to Manual",
+      "set_auto": "Return to Auto"
+    },
+    "modeLabel": {
+      "auto": "Auto",
+      "manual": "Manual",
+      "manual_override": "Manual (override)"
+    },
+    "system": "System (PID)",
+    "resultLabel": {
+      "succeeded": "Executed",
+      "failed": "Failed",
+      "blocked": "Blocked by Safety Layer"
+    },
+    "confirm": {
+      "turn_on": {
+        "title": "Turn on {{name}}?",
+        "button": "Turn On",
+        "fromAuto": "{{name}} in {{pond}} will switch to <b>Manual</b> and turn on. Automatic control of this {{type}} is paused until you return it to Auto.",
+        "fromManual": "{{name}} in {{pond}} will turn on. It stays in <b>Manual</b> until you return it to Auto."
+      },
+      "turn_off": {
+        "title": "Turn off {{name}}?",
+        "button": "Turn Off",
+        "fromAuto": "{{name}} in {{pond}} will switch to <b>Manual</b> and turn off. Automatic control of this {{type}} is paused until you return it to Auto.",
+        "fromManual": "{{name}} in {{pond}} will turn off. It stays in <b>Manual</b> until you return it to Auto."
+      },
+      "set_manual": {
+        "title": "Switch {{name}} to Manual?",
+        "button": "Switch to Manual",
+        "fromAuto": "{{name}} in {{pond}} will switch to <b>Manual</b> and keep its current state. Automatic control of this {{type}} is paused until you return it to Auto.",
+        "fromManual": "{{name}} in {{pond}} is already in <b>Manual</b>."
+      }
+    },
+    "type": {
+      "aerator": "aerator",
+      "pump": "pump"
+    },
+    "blocked": "Blocked by Safety Layer: {{reason}}",
+    "failed": "Could not send the command. Please try again.",
+    "state": "State",
+    "stateLabel": {
+      "on": "On",
+      "off": "Off",
+      "fault": "Fault"
+    },
+    "override": "override",
+    "since": "Since",
+    "runtimeToday": "Runtime today",
+    "lastRun": "Last run",
+    "button": {
+      "turn_on": "Turn On",
+      "turn_off": "Turn Off",
+      "set_manual": "Switch to Manual",
+      "set_auto": "Return to Auto"
+    },
+    "offline": "Offline — the controller cannot reach this device."
+  },
+  "appetite": {
+    "good": "Good",
+    "reduced": "Reduced",
+    "poor": "Poor"
+  },
+  "tray": {
+    "clean": "Clean",
+    "leftover": "Leftover",
+    "much_leftover": "Much leftover"
+  },
+  "healthObservation": {
+    "reduced_appetite": "Reduced appetite",
+    "abnormal_swimming": "Abnormal swimming",
+    "gill_discoloration": "Gill discoloration",
+    "shell_condition": "Shell condition",
+    "other": "Other visible abnormality"
+  },
+  "weather": {
+    "sunny": "Sunny",
+    "cloudy": "Cloudy",
+    "rain": "Rain",
+    "heavy_rain": "Heavy rain"
+  },
+  "daily": {
+    "title": "Daily Report · {{date}}",
+    "meta": "{{farm}} · {{count}} Ponds",
+    "submittedAt": "Submitted {{time}}",
+    "savedDue": "Last saved {{saved}} · due {{due}}",
+    "tabs": {
+      "create": "Create / Edit",
+      "history": "History"
+    },
+    "notStarted": "The Daily Report for {{date}} has not been started",
+    "notStartedHelp": "Feeding, mortality, alerts and actions are collected automatically from today's records.",
+    "create": "Create Daily Report",
+    "history": {
+      "title": "Daily Report History",
+      "attention": "Ponds needing attention",
+      "feed": "Total Feed",
+      "submitted": "Submitted",
+      "status": "Status"
+    },
+    "readOnly": "Submitted {{time}} — this report is shared with the Farms Manager and can no longer be edited.",
+    "completion": "Report completion",
+    "completionSub": "Feeding, mortality, equipment, alerts and actions are collected automatically from records · sensor data stays in Pond Detail and is not re-entered here",
+    "ready": "{{pct}}% ready",
+    "toFill_zero": "Nothing to fill",
+    "toFill_one": "{{count}} item to fill",
+    "toFill_other": "{{count}} items to fill",
+    "check": {
+      "records": "Feeding · Mortality",
+      "recordsDetail": "Records · {{fed}} of {{total}} Ponds · {{rounds}} of {{planned}} rounds so far",
+      "auto": "Equipment · Alerts · Actions",
+      "autoDetail": "Automatic · {{events}} · {{alerts}}",
+      "events_one": "{{count}} equipment event",
+      "events_other": "{{count}} equipment events",
+      "alerts_one": "{{count}} alert",
+      "alerts_other": "{{count}} alerts",
+      "health": "Health",
+      "healthDetail_one": "Optional · {{count}} Pond observed",
+      "healthDetail_other": "Optional · {{count}} Ponds observed",
+      "farm": "Farm input",
+      "farmNeeded": "{{items}} needed",
+      "farmDone": "Weather and Summary entered"
+    },
+    "missing": {
+      "weather": "Weather",
+      "summary": "Summary"
+    },
+    "and": " and ",
+    "ponds": {
+      "title": "Feeding · Mortality · Health",
+      "sub": "Today so far, per Pond · Edit a Pond to record appetite, tray condition and health observations",
+      "source": "From Pond records",
+      "pond": "Pond",
+      "feeding": "Feeding",
+      "mortality": "Mortality",
+      "amount": "Amount",
+      "rounds": "Rounds",
+      "tray": "Tray",
+      "weight": "Weight",
+      "condition": "Condition",
+      "observation": "Observation",
+      "reduced": "{{count}} reduced",
+      "leftover": "{{count}} leftover",
+      "noted": "{{count}} noted"
+    },
+    "appetite": "Appetite",
+    "healthCondition": "Health condition",
+    "observations": "Observations",
+    "env": {
+      "title": "Environment / Weather",
+      "once": "Once for the whole Farm",
+      "weather": "Weather",
+      "rainfall": "Rainfall",
+      "events": "Environmental events",
+      "eventsPlaceholder": "e.g. Heavy rain 14:00–15:30, strong wind"
+    },
+    "equipment": {
+      "title": "Equipment Status",
+      "sub": "Aerators {{aerators}} · Pumps {{pumps}} · Generator {{generator}} (tested {{tested}})",
+      "source": "Actuators",
+      "none": "No equipment events",
+      "equipment": "Equipment",
+      "failure": "Failure",
+      "action": "Action",
+      "status": "Status",
+      "in_progress": "In Progress",
+      "resolved": "Resolved",
+      "add": "Add equipment event",
+      "edit": "Edit equipment event",
+      "equipmentPlaceholder": "e.g. Aerator 4",
+      "occurred": "Occurred (time)",
+      "error": "Enter the equipment, the failure and the time (HH:mm)."
+    },
+    "alerts": {
+      "title": "Major Alerts / Issues",
+      "sub": "Generated by the system from sensor data · included automatically — uncheck to leave one out · values are not re-entered",
+      "source": "From alerts",
+      "none": "No alerts on this day",
+      "handling": "Handling",
+      "include": "Include {{id}} in the report",
+      "viewAlert": "View Alert",
+      "viewData": "View Data"
+    },
+    "actions": {
+      "title": "Actions Taken",
+      "sub": "Actions recorded while handling alerts and actuator operations are added automatically",
+      "none": "No actions yet",
+      "action": "Action",
+      "outcome": "Result / Outcome",
+      "source": "Source",
+      "sources": {
+        "alert_handling": "Alert handling",
+        "actuator_log": "Actuator log",
+        "manual": "Manual"
+      },
+      "add": "Add action",
+      "edit": "Edit action",
+      "error": "Enter the time (HH:mm) and what was done."
+    },
+    "summary": {
+      "title": "Technical Manager Summary",
+      "sub": "What happened today, what you observed and what you did",
+      "placeholder": "e.g. Heavy rain in the afternoon. Pond 02 raised a DO warning and aeration was increased. No abnormal mortality."
+    },
+    "bar": {
+      "missing": "{{pct}}% ready · {{items}} missing",
+      "ready": "{{pct}}% ready",
+      "saving": "Saving…",
+      "unsaved": "Unsaved changes",
+      "notSaved": "Not saved yet",
+      "saveFailed": "Could not save the draft."
+    },
+    "saveDraft": "Save Draft",
+    "submit": "Submit",
+    "confirm": {
+      "title": "Submit Daily Report for {{date}}?",
+      "body": "The report will be shared with the Farms Manager and can no longer be edited.",
+      "missing": "{{items}} required before submitting.",
+      "after": "Alerts and actions recorded after submission appear in tomorrow's report.",
+      "failed": "Could not submit the report. Please try again."
+    },
+    "submitted": "Daily Report submitted",
+    "submittedDetail": "{{date}} · shared with the Farms Manager",
+    "drawerCaption": "Daily Report · {{date}}",
+    "records": "Records",
+    "pond": {
+      "save": "Save {{pond}}",
+      "feedSoFar": "Feed so far",
+      "feedValue": "{{kg}} kg · {{done}} / {{planned}} rounds",
+      "mortality": "Mortality",
+      "mortalityValue": "{{pcs}} pcs · {{kg}} kg",
+      "tray": "Feeding tray (anco)",
+      "mortalityNote": "Abnormal mortality observation",
+      "mortalityNotePlaceholder": "Only if mortality looked unusual",
+      "correctRecords": "Correct feeding or mortality records in {{pond}}",
+      "waterNotice": "Water quality is recorded by the sensors and is not entered here.",
+      "viewWater": "View {{pond}} water quality data"
+    },
+    "remove": "Remove",
+    "apply": "Apply",
+    "time": "Time",
+    "pondField": "Pond",
+    "farmWide": "Farm-wide"
+  },
+  "valueType": {
+    "actual": "Actual",
+    "estimated": "Estimated",
+    "forecast": "Forecast"
+  },
+  "weekly": {
+    "title": "Weekly Report · {{period}}",
+    "meta": "{{farm}} · {{count}} Ponds · DOC {{min}}–{{max}}",
+    "savedDue": "Last saved {{saved}} · due {{due}}",
+    "notStarted": "This week's report has not been started.",
+    "fromRecords": "From records",
+    "vsPrevious": "{{value}} vs previous week",
+    "submitted": "Weekly Report submitted",
+    "drawerCaption": "Weekly Report · {{period}}",
+    "summary": {
+      "title": "Summary",
+      "condition": "Farm Condition",
+      "behind": "Ponds behind target",
+      "of": "{{n}} of {{total}}",
+      "feed": "Total Feed",
+      "mortality": "Mortality",
+      "alerts": "Alerts during the week",
+      "alertsValue": "{{count}} · {{ongoing}} ongoing"
+    },
+    "production": {
+      "title": "Production Status",
+      "source": "From sampling {{date}}",
+      "coverage": "Weekly sampling {{date}}: {{sampled}} of {{total}} Ponds sampled · laboratory {{lab}} of {{total}} received.",
+      "record": "Record or correct sampling →"
+    },
+    "kpi": {
+      "biomass": "Biomass",
+      "biomassBasis": "Sum of {{count}} Ponds",
+      "sr": "Survival Rate",
+      "srBasis": "Weighted by stocked PL",
+      "fcr": "FCR",
+      "fcrBasis": "Total feed ÷ biomass gain",
+      "growth": "Growth vs Target",
+      "onTrack": "on track",
+      "behind_one": "{{count}} Pond behind ({{ponds}})",
+      "behind_other": "{{count}} Ponds behind ({{ponds}})",
+      "noneBehind": "No Pond behind target",
+      "growthBasis": "Sampling {{date}} · {{sampled}} of {{total}} Ponds"
+    },
+    "growthChart": {
+      "title": "Growth vs Target",
+      "sub": "Each Pond's ABW on {{date}} against the target curve"
+    },
+    "donuts": {
+      "title": "Feeding and mortality by Pond",
+      "sub": "Share of the week's Farm total · all Ponds",
+      "feeding": "Feeding",
+      "mortality": "Mortality",
+      "caption": "{{unit}} · week"
+    },
+    "ponds": {
+      "title": "Ponds this week",
+      "sub": "One row per Pond · pick a topic · no Farm averages · calculated from sampling, sensors and records",
+      "growth": "Growth",
+      "wq": "Water quality trends",
+      "feed": "Feeding & mortality",
+      "lab": "Laboratory",
+      "uniformity": "Size uniformity",
+      "doMin": "DO min",
+      "phRange": "pH range",
+      "tempMax": "Temp max",
+      "daysOut": "Days out of range",
+      "trend": "Trend",
+      "stable": "Stable",
+      "comment": "Comment (optional)",
+      "commentPlaceholder": "Only if something needs explaining, e.g. DO dropped after heavy rain on Wednesday",
+      "wqNote": "Aggregated automatically from sensor data (every 3–5 min) · detailed time series are in Pond Detail",
+      "week": "Week",
+      "reducedDays": "Days reduced appetite",
+      "vsPrev": "vs prev. week",
+      "per10k": "per 10,000 stocked",
+      "peak": "Peak day",
+      "farmTotal": "{{farm}} total",
+      "pondsCount_one": "{{count}} Pond",
+      "pondsCount_other": "{{count}} Ponds",
+      "expected": "results expected {{date}}",
+      "labReference": "Reference: TAN ≤ 1.0 · NO2 ≤ 0.5 · Vibrio < 5 · Alkalinity 100–150"
+    },
+    "alerts": {
+      "sub": "Aggregated automatically from the alert system · add cause, action and outcome where useful",
+      "notes": "Cause / Action / Outcome",
+      "addNote": "Add note",
+      "cause": "Cause",
+      "action": "Action",
+      "outcome": "Outcome",
+      "openPond": "Open the alerts of {{pond}}"
+    },
+    "actions": {
+      "title": "Major Actions"
+    },
+    "summaryText": {
+      "title": "Weekly Technical Summary",
+      "placeholder": "Growth, water quality trends, issues and next week's plan"
+    },
+    "bar": {
+      "saved": "Saved {{time}}",
+      "due": "due {{due}}",
+      "summaryMissing": "Summary missing"
+    },
+    "confirm": {
+      "title": "Submit Weekly Report for {{period}}?",
+      "labPending": "{{ponds}} laboratory results are still pending.",
+      "missing": "Weekly Technical Summary is required before submitting."
+    },
+    "history": {
+      "title": "Weekly Report History",
+      "period": "Reporting Period",
+      "behind": "Behind target"
+    },
+    "ro": {
+      "condition": "Farm Condition (end of week)",
+      "allResolved": "{{count}} · all resolved",
+      "productionCaption": "Weekly sampling {{date}} · compared with previous week",
+      "comment": "Technical Manager comment",
+      "alertsSub": "Aggregated automatically from the alert system"
+    }
+  },
+  "issueType": {
+    "water_quality": "Water Quality",
+    "mortality": "Mortality",
+    "equipment": "Equipment",
+    "sensor": "Sensor"
+  },
+  "issueParam": {
+    "mortality": "Mortality",
+    "sensor_offline": "Sensor"
+  },
+  "trendLabel": {
+    "increasing": "increasing",
+    "decreasing": "decreasing",
+    "stable": "stable"
+  },
+  "fm": {
+    "farmSub_one": "{{count}} Pond",
+    "farmSub_other": "{{count}} Ponds",
+    "farmSubLocation_one": "{{location}} · {{count}} Pond",
+    "farmSubLocation_other": "{{location}} · {{count}} Ponds",
+    "farm_one": "Farm",
+    "farm_other": "Farms",
+    "issueTitle": "{{type}} · {{param}} {{trend}}",
+    "dashboard": {
+      "title": "Dashboard",
+      "meta": "{{farms}} Farms · {{ponds}} Ponds"
+    },
+    "farmStatus": {
+      "title": "Farm Status",
+      "sub": "A Farm's status is the most severe of Water quality, Growth and Operations",
+      "all": "All Farms"
+    },
+    "issues": {
+      "title": "Risk / Issue",
+      "sub_one": "Environmental / Pond trends from sensor alerts · live, no report needed · {{count}} open, sorted by severity",
+      "sub_other": "Environmental / Pond trends from sensor alerts · live, no report needed · {{count}} open, sorted by severity",
+      "none": "No open issues",
+      "viewFarm": "View Farm"
+    },
+    "production": {
+      "title": "Production Status",
+      "caption": "Company total · latest sampling {{date}} · per-Farm growth in the Farm Status table",
+      "biomass": "Total Biomass",
+      "biomassBasis": "Sum of {{count}} Ponds · sampling {{date}}",
+      "sr": "Avg. Survival Rate",
+      "srBasis": "Sum of {{count}} Ponds · sampling {{date}}",
+      "behind": "Growth vs Target",
+      "ponds": "Ponds",
+      "behindBasis": "ABW −5% or more below target for the DOC",
+      "vsLastWeek": "{{value}} vs last week"
+    },
+    "col": {
+      "farm": "Farm",
+      "status": "Status",
+      "reason": "Main reason",
+      "water": "Water quality",
+      "waterSub": "Ponds out of range",
+      "growth": "Growth",
+      "growthSub": "Ponds vs target",
+      "operations": "Operations",
+      "issues": "Issues"
+    },
+    "farms": {
+      "title": "Farms",
+      "meta": "Farms managed by {{company}}",
+      "search": "Search Farm name or location",
+      "location": "Location",
+      "locationAll": "Location: All",
+      "issuesAll": "Risk / Issue: All",
+      "issuesOpen": "With open issues",
+      "issuesNone": "No open issues",
+      "list": "Farm List",
+      "noMatch": "No Farms match the filters"
+    },
+    "aspect": {
+      "waterQuality": "Water quality",
+      "growth": "Growth",
+      "operations": "Operations"
+    },
+    "tile": {
+      "waterQuality": "of {{total}} Ponds out of range",
+      "growth": "of {{total}} Ponds behind target",
+      "operations_one": "issue",
+      "operations_other": "issues"
+    },
+    "issueState": {
+      "ongoing": "Ongoing",
+      "resolved": "Resolved"
+    },
+    "detail": {
+      "notFound": "This Farm was not found.",
+      "back": "Back to Farms",
+      "tm": "Technical Manager: {{names}}",
+      "ponds": "{{count}} Ponds · DOC {{min}}–{{max}}",
+      "latestReport": "Latest report: {{label}} · {{date}}",
+      "because": "{{farm}} is <b>{{status}}</b> because {{aspect}} is {{status}} (the most severe of the three aspects)",
+      "allNormal": "{{farm}} is Normal in Water quality, Growth and Operations",
+      "trend": "Status trend",
+      "trendSub": "Farm status · last {{count}} days",
+      "issuesSub": "Environmental / Pond trends from sensor alerts · live, updated every 5 min · no report needed · {{count}} open, sorted by severity",
+      "issue": "Issue",
+      "ongoing": "Ongoing · {{duration}}",
+      "resolved": "Resolved · {{duration}}",
+      "since": "since {{time}}",
+      "productionCaption": "Latest sampling {{date}} · compared with last week",
+      "behindRule": "Behind = −5% or more",
+      "pps": "Pond Production Summary",
+      "ppsSub": "Ponds are stocked on different dates — compare ABW with the target for the same DOC",
+      "estimated": "SR and Biomass estimated",
+      "stocked": "Stocked",
+      "target": "Target",
+      "distribution": "{{onTrack}} on track · {{behind}} behind",
+      "chartSub": "Target ABW by DOC with each Pond's latest ABW",
+      "targetAbw": "Target ABW",
+      "band": "±5% on track"
+    },
+    "drawer": {
+      "type": "Issue Type",
+      "pond": "Affected Pond",
+      "occurrence": "Occurrence",
+      "ongoing": "{{duration}} (ongoing)",
+      "resolved": "{{duration}} (resolved)",
+      "handledBy": "{{name}} (Technical Manager)",
+      "summary": "Summary",
+      "actions": "Actions by the Technical Manager",
+      "reports": "Report context (optional)",
+      "reportNote": "— Technical Manager's observations and summary",
+      "readOnly": "Pond Alert handling is performed by the Technical Manager. This view is read-only."
+    },
+    "reports": {
+      "title": "Reports",
+      "meta": "Daily / Weekly Reports submitted by Technical Managers · read-only",
+      "search": "Search reports",
+      "farmAll": "Farm: All",
+      "range": "Period",
+      "ranges": {
+        "24h": "24h",
+        "7d": "7d",
+        "30d": "30d",
+        "4w": "4 weeks",
+        "3m": "3 months",
+        "1y": "1 year"
+      },
+      "statusSubmitted": "Status: Submitted",
+      "majorIssues": "Major Issues",
+      "none": "No reports match the filters",
+      "showing": "Showing {{from}}–{{to}} of {{total}}",
+      "notFound": "This report was not found or has not been submitted yet.",
+      "back": "Back to Reports"
+    },
+    "daily": {
+      "title": "Daily Report · {{farm}}",
+      "previous": "Previous",
+      "next": "Next",
+      "alertsDay": "Alerts during the day",
+      "alertsValue": "{{count}} · {{resolved}} resolved",
+      "glance": "Ponds at a glance",
+      "glanceSub": "Feeding, mortality and health recorded on {{date}} · Ponds with alerts or observations are outlined",
+      "feed": "Feed",
+      "health": "Health",
+      "alertResolved": "{{param}} alert {{time}} · resolved {{resolved}}",
+      "alertOngoing": "{{param}} alert from {{time}} · ongoing",
+      "offlineFrom": "{{title}} from {{time}}",
+      "details": "Pond details",
+      "detailsSub": "Feeding · mortality · health · equipment — {{count}} Ponds",
+      "show": "Show",
+      "aerators": "Aerators",
+      "equipmentSub": "Aerators {{on}} / {{total}}",
+      "alertsSub": "Alerts generated by the system during {{date}} · current alerts are always on Dashboard and Farm Detail",
+      "viewInFarm": "View in Farm Detail"
+    },
+    "weekly": {
+      "title": "Weekly Report · {{farm}}",
+      "period": "{{period}} · DOC {{min}}–{{max}}"
+    }
+  }
+}
