@@ -498,7 +498,7 @@ b, strong, .strong { font-weight: var(--fw-bold); }
 .pond-tile-values dt { font-size: var(--fs-helper); color: var(--color-slate); }
 .pond-tile-values dd { margin: 0; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
 .pond-tile-values dd small { font-weight: var(--fw-regular); color: var(--color-slate); }
-.pond-tile-note { font-size: var(--fs-helper); color: var(--color-slate); min-height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pond-tile-note { font-size: var(--fs-helper); color: var(--color-slate); min-height: 17px; }
 details.card-details > summary { list-style: none; cursor: pointer; }
 details.card-details > summary::-webkit-details-marker { display: none; }
 details.card-details:not([open]) > summary { border-bottom: 0; }

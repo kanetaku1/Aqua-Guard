@@ -13,7 +13,9 @@ Before designing, building, or modifying any UI in `frontend/`, read the design 
 | 07 | `docs/07_UI・UX設計書.md` | UI/UX rules: color balance, size scale, Badge vs Indicator, interaction, states |
 | 08 | `docs/08_デザインシステム定義書.md` | Design System v2 — exact tokens and component classes |
 
-API contract with the backend: `../docs/api/openapi.yaml` (OpenAPI 3.1, drafted by frontend). KPIs and statuses are computed by the backend; live data is refetched every 5 minutes (`x-refresh-interval-seconds: 300`).
+API contract with the backend: `../docs/api/openapi.yaml` (OpenAPI 3.1, shared with the backend team — do not edit or commit it from the frontend). Fields the screens need beyond it live in `app/api/openapi.frontend.yaml`, listed in `app/api/OPENAPI_CHANGES.md` for agreement with the backend. KPIs and statuses are computed by the backend; live data is refetched every 5 minutes (`x-refresh-interval-seconds: 300`).
+
+React app: `app/` (Vite + React + TypeScript; see `app/README.md`). It imports `prototype/assets/tokens.css` and `app.css` directly — the Figma wireframes in `img/wireframe/` are the latest design and win over the prototype. After changing `openapi.frontend.yaml`, run `npm run gen:api` and `python tools/spec_diff.py`; run `npm test`, `npm run lint` and `npm run build` before finishing.
 
 Rules:
 

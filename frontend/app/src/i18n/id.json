@@ -1,0 +1,1383 @@
+{
+  "app": {
+    "name": "AquaGuard"
+  },
+  "role": {
+    "farms_manager": "Farms Manager",
+    "technical_manager": "Technical Manager",
+    "system_administrator": "System Administrator"
+  },
+  "nav": {
+    "dashboard": "Dasbor",
+    "farms": "Tambak",
+    "reports": "Laporan",
+    "ponds": "Kolam",
+    "dailyReports": "Laporan Harian",
+    "weeklyReports": "Laporan Mingguan",
+    "dailyReport": "Laporan Harian",
+    "weeklyReport": "Laporan Mingguan",
+    "users": "Pengguna",
+    "farmsPonds": "Tambak & Kolam",
+    "settings": "Pengaturan",
+    "thresholds": "Ambang Batas",
+    "growthTargets": "Target Pertumbuhan",
+    "rules": "Aturan"
+  },
+  "header": {
+    "synced": "Data disinkronkan {{time}} WIB",
+    "language": "Bahasa",
+    "account": "Menu akun"
+  },
+  "quality": {
+    "live": "Live",
+    "delayed": "Tertunda",
+    "offline": "Offline",
+    "no_data": "Tidak ada data"
+  },
+  "severity": {
+    "normal": "Normal",
+    "attention": "Perhatian",
+    "warning": "Waspada",
+    "critical": "Kritis"
+  },
+  "alertState": {
+    "unacknowledged": "Belum dikonfirmasi",
+    "acknowledged": "Dikonfirmasi",
+    "in_progress": "Sedang ditangani",
+    "resolved": "Selesai"
+  },
+  "reportState": {
+    "not_started": "Belum dimulai",
+    "draft": "Draf",
+    "submitted": "Terkirim",
+    "overdue": "Terlambat"
+  },
+  "reportType": {
+    "daily": "Harian",
+    "weekly": "Mingguan"
+  },
+  "common": {
+    "view": "Lihat",
+    "loading": "Memuat…",
+    "loadError": "Bagian ini gagal dimuat.",
+    "retry": "Coba lagi",
+    "pond_one": "Kolam",
+    "pond_other": "Kolam",
+    "close": "Tutup",
+    "cancel": "Batal",
+    "clearFilters": "Hapus filter",
+    "pagination": "Halaman",
+    "previousPage": "Halaman sebelumnya",
+    "nextPage": "Halaman berikutnya"
+  },
+  "param": {
+    "do": "DO",
+    "ph": "pH",
+    "temperature": "Suhu",
+    "tds": "TDS",
+    "turbidity": "Kekeruhan",
+    "water_level": "Tinggi air"
+  },
+  "auth": {
+    "language": "Bahasa",
+    "footer": "Butuh bantuan? Hubungi System Administrator Anda · v0.1",
+    "footerWib": "Butuh bantuan? Hubungi System Administrator Anda · v0.1 · Waktu ditampilkan dalam WIB (UTC+7)",
+    "email": "Email",
+    "password": "Kata sandi",
+    "showPassword": "Tampilkan kata sandi",
+    "hidePassword": "Sembunyikan kata sandi",
+    "signIn": "Masuk",
+    "forgot": "Lupa kata sandi?",
+    "invalid": "Email atau kata sandi salah.",
+    "attemptsLeft_one": "<b>Sisa {{count}} percobaan</b> sebelum akun Anda dikunci selama 15 menit.",
+    "attemptsLeft_other": "<b>Sisa {{count}} percobaan</b> sebelum akun Anda dikunci selama 15 menit.",
+    "locked": "Akun Anda dikunci selama 15 menit setelah 5 kali gagal masuk. Coba lagi nanti atau <a>atur ulang kata sandi</a>.",
+    "deactivated": "Akun ini dinonaktifkan. Hubungi System Administrator Anda.",
+    "expired": "Anda otomatis keluar setelah 12 jam tidak aktif. Masuk lagi untuk melanjutkan pekerjaan terakhir.",
+    "unexpected": "Terjadi kesalahan. Silakan coba lagi.",
+    "resetTitle": "Atur ulang kata sandi",
+    "resetSub": "Masukkan email yang Anda pakai untuk masuk. Kami akan mengirim tautan untuk membuat kata sandi baru.",
+    "sendLink": "Kirim tautan atur ulang",
+    "sent": "Jika ada akun untuk <b>{{email}}</b>, kami sudah mengirim tautan atur ulang. Tautan berlaku selama 1 jam.",
+    "sentHelp": "Belum menerima? Periksa folder spam atau kirim ulang tautan dalam 60 detik.",
+    "backToSignIn": "Kembali ke halaman masuk",
+    "welcome": "Selamat datang, {{name}}",
+    "inviteSub": "Anda diundang ke AquaGuard. Buat kata sandi untuk mengaktifkan akun Anda.",
+    "newPasswordTitle": "Buat kata sandi baru",
+    "newPasswordSub": "Pilih kata sandi baru untuk {{email}}.",
+    "role": "Peran",
+    "newPassword": "Kata sandi baru",
+    "confirmPassword": "Konfirmasi kata sandi",
+    "ruleLetterNumber": "Minimal satu huruf dan satu angka",
+    "ruleLength": "Minimal 10 karakter",
+    "setAndSignIn": "Simpan kata sandi dan masuk",
+    "resetPassword": "Atur ulang kata sandi",
+    "enabledHelp": "Tombol aktif setelah semua syarat terpenuhi.",
+    "linkExpired": "Tautan ini sudah kedaluwarsa. Tautan undangan berlaku 72 jam dan tautan atur ulang berlaku 1 jam.",
+    "requestNewLink": "Minta tautan baru",
+    "expiredInviteHelp": "Untuk undangan yang kedaluwarsa, minta System Administrator Anda mengirim ulang.",
+    "passwordChanged": "Kata sandi Anda sudah diatur ulang. Masuk dengan kata sandi baru."
+  },
+  "tmDashboard": {
+    "title": "Dasbor",
+    "meta": "{{farm}} · {{count}} Kolam · DOC {{min}}–{{max}}",
+    "pondStatus": "Status Kolam",
+    "pondStatusSub": "Kualitas air terkini per Kolam · data sensor tiap 5 menit · nilai di luar batas ditandai",
+    "allPonds": "Semua Kolam",
+    "pond": "Kolam",
+    "status": "Status",
+    "alerts": "Peringatan",
+    "alertCount": "{{count}} {{state}}",
+    "normalRange": "Rentang normal: {{ranges}}",
+    "activeAlerts": "Peringatan Aktif",
+    "activeAlertsSub": "{{open}} belum selesai · {{unack}} belum dikonfirmasi",
+    "noActiveAlerts": "Tidak ada peringatan aktif",
+    "acknowledge": "Konfirmasi",
+    "operationalStatus": "Status Operasional",
+    "aerators": "Kincir menyala",
+    "pumps": "Pompa menyala",
+    "sensors": "Sensor online",
+    "feeding": "Pakan hari ini",
+    "rounds": "{{done}} / {{planned}} putaran",
+    "nextSampling": "Sampling berikutnya",
+    "generator": "Genset",
+    "generatorState": {
+      "standby": "Siaga",
+      "running": "Menyala",
+      "fault": "Gangguan"
+    },
+    "reportStatus": "Status Laporan",
+    "dailyReport": "Laporan Harian · {{date}}",
+    "weeklyReport": "Laporan Mingguan · {{period}}",
+    "due": "Tenggat {{due}}",
+    "lastSaved": "terakhir disimpan {{time}}",
+    "create": "Buat",
+    "continue": "Lanjutkan",
+    "lastSubmitted": "Terakhir dikirim",
+    "none": "—"
+  },
+  "placeholder": {
+    "notBuilt": "Layar ini belum dibuat.",
+    "seePrototype": "Lihat prototipe untuk desain yang disepakati:"
+  },
+  "date": {
+    "open": "Buka kalender",
+    "calendar": "Pilih tanggal",
+    "previousMonth": "Bulan sebelumnya",
+    "nextMonth": "Bulan berikutnya",
+    "today": "Hari ini",
+    "weekdays": "Sn,Sl,Rb,Km,Jm,Sb,Mg"
+  },
+  "growth": {
+    "behind": "Tertinggal",
+    "on_track": "Sesuai target",
+    "ahead": "Di atas target"
+  },
+  "tmPonds": {
+    "title": "Kolam",
+    "meta": "{{farm}} · {{count}} Kolam",
+    "nextSampling": "Sampling mingguan berikutnya {{date}}",
+    "recordSampling": "Catat sampling mingguan",
+    "search": "Cari Kolam",
+    "statusAll": "Status: Semua",
+    "alertAll": "Peringatan: Semua",
+    "alertNone": "Tidak ada peringatan terbuka",
+    "list": "Daftar Kolam",
+    "listSub": "Pertumbuhan (sampling terakhir {{date}}) dan catatan hari ini · buka Kolam untuk mencatat atau memeriksa",
+    "listSubNoSampling": "Pertumbuhan dan catatan hari ini · buka Kolam untuk mencatat atau memeriksa",
+    "pond": "Kolam",
+    "areaDoc": "{{area}} ha · DOC {{doc}}",
+    "notStocked": "{{area}} ha · belum ditebar",
+    "status": "Status",
+    "alerts": "Peringatan",
+    "abw": "ABW",
+    "vsTarget": "vs Target",
+    "feedToday": "Pakan hari ini",
+    "mortalityToday": "Kematian hari ini",
+    "aeratorsOn": "Kincir menyala",
+    "noMatch": "Tidak ada Kolam yang cocok dengan filter",
+    "sampling": {
+      "caption": "{{farm}} · {{count}} Kolam",
+      "date": "Tanggal sampling",
+      "progress": "Progres",
+      "progressValue": "{{entered}} dari {{total}} Kolam terisi",
+      "growth": "Pertumbuhan",
+      "laboratory": "Laboratorium",
+      "optional": "(opsional)",
+      "doc": "DOC",
+      "sampleCount": "Jumlah sampel",
+      "totalWeight": "Berat total",
+      "abw": "ABW",
+      "vsTarget": "vs Target",
+      "tan": "TAN mg/L",
+      "no2": "NO2 mg/L",
+      "vibrio": "Vibrio ×10³",
+      "alkalinity": "Alk. mg/L",
+      "notSampled": "Tidak disampling",
+      "notice": "ABW = berat total ÷ jumlah sampel. Hasil laboratorium (TAN, NO2, Vibrio, Alkalinitas) boleh dikosongkan dan diisi saat hasil lab keluar — di Laporan Mingguan tampil sebagai “Menunggu”. Kolam yang dikosongkan disimpan sebagai “Tidak disampling”.",
+      "fixErrors": "Periksa kolom yang ditandai: isi jumlah sampel dan berat total, hanya dengan angka.",
+      "saveError": "Sampling gagal disimpan. Silakan coba lagi.",
+      "save": "Simpan sampling",
+      "saved_one": "Sampling mingguan disimpan · {{date}} · {{count}} Kolam",
+      "saved_other": "Sampling mingguan disimpan · {{date}} · {{count}} Kolam",
+      "fieldLabel": "{{field}} untuk {{pond}}"
+    }
+  },
+  "paramName": {
+    "do": "DO",
+    "ph": "pH",
+    "temperature": "Suhu",
+    "tds": "TDS",
+    "turbidity": "Kekeruhan",
+    "water_level": "Tinggi air"
+  },
+  "pond": {
+    "notFound": "Kolam ini tidak ditemukan di Tambak Anda.",
+    "backToPonds": "Kembali ke Kolam",
+    "stocked": "Ditebar {{date}} · DOC {{doc}}",
+    "notStocked": "Belum ditebar",
+    "stockedPl": "{{pl}} PL ditebar",
+    "lastUpdated": "Terakhir diperbarui {{time}}",
+    "tabs": {
+      "iot": "IoT / Kualitas Air",
+      "alerts": "Peringatan",
+      "feeding": "Pakan",
+      "mortality": "Kematian",
+      "sampling": "Sampling",
+      "actuator": "Aktuator"
+    }
+  },
+  "iot": {
+    "showSeries": "Tampilkan grafik waktu {{param}}",
+    "range": "Rentang {{range}}",
+    "online": "Online",
+    "offline": "Offline",
+    "seriesTitle": "Grafik Waktu Sensor · {{param}}",
+    "seriesSub": {
+      "1h": "Pembacaan tiap 5 menit · ditampilkan per jam",
+      "6h": "Pembacaan tiap 5 menit · ditampilkan per 6 jam",
+      "1d": "Pembacaan tiap 5 menit · ditampilkan per hari"
+    },
+    "parameter": "Parameter",
+    "period": "Periode",
+    "outsideThreshold": "Di luar ambang batas ({{range}})",
+    "belowThreshold": "Di bawah ambang batas ({{value}})",
+    "aboveThreshold": "Di atas ambang batas ({{value}})",
+    "anomalies": "Anomali",
+    "noAnomalies": "Tidak ada anomali",
+    "anomaly": {
+      "below_threshold": "{{param}} di bawah ambang batas",
+      "above_threshold": "{{param}} di atas ambang batas",
+      "increasing": "{{param}} naik",
+      "decreasing": "{{param}} turun"
+    },
+    "since": "Sejak {{time}}",
+    "min": "Min {{value}}",
+    "max": "Maks {{value}}",
+    "per24h": "{{value}} / 24 jam",
+    "vsDayAvg": "{{value}} vs rata-rata {{date}}",
+    "withinRange": "dalam rentang",
+    "history": "Data Historis",
+    "historySub": "Data mentah sensor",
+    "timestamp": "Waktu",
+    "noReadings": "Tidak ada data pada hari ini",
+    "showing": "Menampilkan {{shown}} dari {{total}} data"
+  },
+  "pondAlerts": {
+    "title": "Peringatan",
+    "sub": "{{pond}} · {{count}} aktif · dibuat dari data sensor oleh aturan peringatan, terpisah dari Laporan",
+    "state": "Status",
+    "stateAll": "Status: Semua",
+    "id": "ID",
+    "alert": "Peringatan",
+    "severity": "Tingkat",
+    "occurred": "Terjadi",
+    "handledBy": "Ditangani oleh",
+    "detail": "Detail",
+    "acknowledge": "Konfirmasi",
+    "none": "Tidak ada peringatan"
+  },
+  "alertDrawer": {
+    "caption": "{{id}} · {{pond}} · dibuat oleh aturan peringatan dari data sensor",
+    "resolve": "Selesaikan",
+    "acknowledge": "Konfirmasi",
+    "steps": {
+      "acknowledge": "Konfirmasi",
+      "review": "Periksa data sensor",
+      "record": "Catat tindakan",
+      "resolve": "Pantau dan selesaikan"
+    },
+    "failed": "Peringatan gagal diperbarui. Silakan coba lagi.",
+    "loadFailed": "Peringatan ini gagal dimuat.",
+    "parameter": "Parameter",
+    "sensorStatus": "Status sensor",
+    "valueThreshold": "Nilai / Ambang batas",
+    "occurred": "Terjadi",
+    "duration": "Durasi",
+    "resolved": "selesai",
+    "ongoing": "berlangsung",
+    "sensor": "Sensor",
+    "related": "Terkait",
+    "farmIssue": "{{id}} (Isu Tambak)",
+    "openSeries": "Buka grafik waktu {{param}}",
+    "actions": "Tindakan",
+    "noActions": "Belum ada tindakan yang dicatat",
+    "source": {
+      "alert_handling": "Penanganan peringatan",
+      "actuator_log": "Log aktuator"
+    },
+    "time": "Waktu",
+    "action": "Tindakan",
+    "select": "Pilih",
+    "note": "Catatan / hasil",
+    "notePlaceholder": "Apa yang dilakukan dan apa hasilnya",
+    "recordAction": "Catat tindakan",
+    "helper": "Tindakan yang dicatat otomatis masuk ke Laporan Harian hari ini (Tindakan yang Dilakukan). Peringatan tidak perlu dilaporkan.",
+    "fixForm": "Isi waktu dengan format HH:mm dan pilih tindakan.",
+    "recordFailed": "Tindakan gagal dicatat. Silakan coba lagi."
+  },
+  "actionType": {
+    "increased_aeration": "Penambahan aerasi",
+    "water_exchange": "Ganti air",
+    "equipment_inspection": "Pemeriksaan peralatan",
+    "water_treatment": "Perlakuan air",
+    "other": "Lainnya"
+  },
+  "records": {
+    "recordedBy": "Dicatat oleh",
+    "edit": "Ubah",
+    "date": "Tanggal",
+    "select": "Pilih",
+    "note": "Catatan",
+    "optional": "Opsional",
+    "saveFailed": "Catatan gagal disimpan. Silakan coba lagi.",
+    "clear": "Kosongkan",
+    "save": "Simpan Catatan"
+  },
+  "feeding": {
+    "saved": "Catatan pakan disimpan",
+    "history": "Riwayat Pakan",
+    "soFar": "{{date}} sejauh ini {{kg}} kg",
+    "total": "{{date}} total {{kg}} kg",
+    "dateTime": "Tanggal / Waktu",
+    "feedType": "Jenis Pakan",
+    "amount": "Jumlah",
+    "tray": "Anco / Nafsu makan",
+    "editTitle": "Ubah Pakan",
+    "recordTitle": "Catat Pakan",
+    "round": "Putaran",
+    "amountError": "Isi jumlah dalam kg (lebih dari 0).",
+    "plan": "Rencana: {{kg}} kg",
+    "selectStatus": "Pilih status",
+    "duplicate": "Putaran ini sudah dicatat untuk tanggal tersebut. Ubah di riwayat saja."
+  },
+  "trayCheck": {
+    "empty_within_2h": "Habis dalam 2 jam",
+    "leftover_under_5": "Sisa < 5%",
+    "leftover_10": "Sisa 10%",
+    "leftover_over_20": "Sisa > 20%"
+  },
+  "mortality": {
+    "saved": "Catatan kematian disimpan",
+    "history": "Riwayat Kematian",
+    "last7": "Total 7 hari terakhir {{count}} pcs · {{kg}} kg",
+    "count": "Jumlah",
+    "weight": "Berat Total",
+    "observation": "Pengamatan",
+    "editTitle": "Ubah Kematian",
+    "recordTitle": "Catat Kematian",
+    "error": "Isi jumlah (bilangan bulat) dan berat total dalam kg.",
+    "selectObservation": "Pilih pengamatan",
+    "notePlaceholder": "Gejala, lokasi, waktu ditemukan"
+  },
+  "observation": {
+    "routine_check": "Cek rutin",
+    "low_do": "DO rendah",
+    "disease_signs": "Tanda penyakit",
+    "molting": "Molting",
+    "other": "Lainnya"
+  },
+  "sampling": {
+    "saved": "Catatan sampling disimpan",
+    "history": "Riwayat Sampling",
+    "sub": "Sampling mingguan · berikutnya {{date}}",
+    "subNoNext": "Sampling mingguan",
+    "sample": "Sampel",
+    "pending": "Menunggu",
+    "chartTitle": "ABW · {{pond}}",
+    "actual": "Aktual",
+    "target": "Target",
+    "editTitle": "Ubah Sampling",
+    "recordTitle": "Catat Sampling",
+    "sampleCount": "Jumlah Sampel",
+    "totalWeight": "Berat Total",
+    "abwCalculated": "ABW (dihitung)",
+    "growthError": "Isi jumlah sampel (bilangan bulat) dan berat total dalam g.",
+    "abwHelp": "Berat Total ÷ Jumlah Sampel",
+    "laboratory": "Laboratorium",
+    "labHelp": "opsional · bisa diisi saat hasil keluar",
+    "lab": {
+      "tan": "TAN",
+      "no2": "NO2",
+      "vibrio": "Vibrio",
+      "alkalinity": "Alkalinitas"
+    },
+    "notePlaceholder": "Variasi ukuran, kondisi fisik"
+  },
+  "actuator": {
+    "done": {
+      "turn_on": "{{name}} dinyalakan",
+      "turn_off": "{{name}} dimatikan",
+      "set_manual": "{{name}} dialihkan ke Manual",
+      "set_auto": "{{name}} dikembalikan ke Otomatis"
+    },
+    "safetyNotice": "<b>Safety Layer aktif.</b> Kontrol manual menggantikan kontrol otomatis (PID) sampai dikembalikan ke Otomatis. Operasi yang melanggar batas keamanan (mis. semua kincir mati saat DO < 4.5 mg/L) diblokir.",
+    "status": "Status",
+    "auto": {
+      "title": "Kontrol Otomatis",
+      "caption": "PID · target DO",
+      "running": "Berjalan",
+      "paused": "Dijeda",
+      "stopped": "Berhenti",
+      "target": "Target",
+      "overrides": "Override",
+      "active": "{{count}} aktif",
+      "scope": "Mengontrol {{scope}} dalam mode Otomatis"
+    },
+    "history": "Riwayat Kontrol",
+    "time": "Waktu",
+    "actuator": "Aktuator",
+    "operation": "Operasi",
+    "mode": "Mode",
+    "operatedBy": "Dioperasikan oleh",
+    "result": "Hasil",
+    "op": {
+      "turn_on": "Nyalakan",
+      "turn_off": "Matikan",
+      "auto_on": "Nyalakan",
+      "auto_off": "Matikan",
+      "set_manual": "Alihkan ke Manual",
+      "set_auto": "Kembali ke Otomatis"
+    },
+    "modeLabel": {
+      "auto": "Otomatis",
+      "manual": "Manual",
+      "manual_override": "Manual (override)"
+    },
+    "system": "Sistem (PID)",
+    "resultLabel": {
+      "succeeded": "Berhasil",
+      "failed": "Gagal",
+      "blocked": "Diblokir oleh Safety Layer"
+    },
+    "confirm": {
+      "turn_on": {
+        "title": "Nyalakan {{name}}?",
+        "button": "Nyalakan",
+        "fromAuto": "{{name}} di {{pond}} akan beralih ke <b>Manual</b> dan menyala. Kontrol otomatis {{type}} ini dijeda sampai Anda mengembalikannya ke Otomatis.",
+        "fromManual": "{{name}} di {{pond}} akan menyala. Tetap dalam mode <b>Manual</b> sampai Anda mengembalikannya ke Otomatis."
+      },
+      "turn_off": {
+        "title": "Matikan {{name}}?",
+        "button": "Matikan",
+        "fromAuto": "{{name}} di {{pond}} akan beralih ke <b>Manual</b> dan mati. Kontrol otomatis {{type}} ini dijeda sampai Anda mengembalikannya ke Otomatis.",
+        "fromManual": "{{name}} di {{pond}} akan mati. Tetap dalam mode <b>Manual</b> sampai Anda mengembalikannya ke Otomatis."
+      },
+      "set_manual": {
+        "title": "Alihkan {{name}} ke Manual?",
+        "button": "Alihkan ke Manual",
+        "fromAuto": "{{name}} di {{pond}} akan beralih ke <b>Manual</b> dengan kondisi saat ini. Kontrol otomatis {{type}} ini dijeda sampai Anda mengembalikannya ke Otomatis.",
+        "fromManual": "{{name}} di {{pond}} sudah dalam mode <b>Manual</b>."
+      }
+    },
+    "type": {
+      "aerator": "kincir",
+      "pump": "pompa"
+    },
+    "blocked": "Diblokir oleh Safety Layer: {{reason}}",
+    "failed": "Perintah tidak dapat dikirim. Silakan coba lagi.",
+    "state": "Kondisi",
+    "stateLabel": {
+      "on": "Menyala",
+      "off": "Mati",
+      "fault": "Gangguan"
+    },
+    "override": "override",
+    "since": "Sejak",
+    "runtimeToday": "Waktu jalan hari ini",
+    "lastRun": "Terakhir berjalan",
+    "button": {
+      "turn_on": "Nyalakan",
+      "turn_off": "Matikan",
+      "set_manual": "Alihkan ke Manual",
+      "set_auto": "Kembali ke Otomatis"
+    },
+    "offline": "Offline — kontroler tidak dapat menjangkau perangkat ini."
+  },
+  "appetite": {
+    "good": "Baik",
+    "reduced": "Menurun",
+    "poor": "Buruk"
+  },
+  "tray": {
+    "clean": "Bersih",
+    "leftover": "Ada sisa",
+    "much_leftover": "Banyak sisa"
+  },
+  "healthObservation": {
+    "reduced_appetite": "Nafsu makan menurun",
+    "abnormal_swimming": "Berenang tidak normal",
+    "gill_discoloration": "Perubahan warna insang",
+    "shell_condition": "Kondisi kulit (karapas)",
+    "other": "Kelainan lain yang terlihat"
+  },
+  "weather": {
+    "sunny": "Cerah",
+    "cloudy": "Berawan",
+    "rain": "Hujan",
+    "heavy_rain": "Hujan lebat"
+  },
+  "daily": {
+    "title": "Laporan Harian · {{date}}",
+    "meta": "{{farm}} · {{count}} Kolam",
+    "submittedAt": "Terkirim {{time}}",
+    "savedDue": "Terakhir disimpan {{saved}} · tenggat {{due}}",
+    "tabs": {
+      "create": "Buat / Ubah",
+      "history": "Riwayat"
+    },
+    "notStarted": "Laporan Harian untuk {{date}} belum dimulai",
+    "notStartedHelp": "Pakan, kematian, peringatan, dan tindakan dikumpulkan otomatis dari catatan hari ini.",
+    "create": "Buat Laporan Harian",
+    "history": {
+      "title": "Riwayat Laporan Harian",
+      "attention": "Kolam yang perlu perhatian",
+      "feed": "Total Pakan",
+      "submitted": "Terkirim",
+      "status": "Status"
+    },
+    "readOnly": "Terkirim {{time}} — laporan ini sudah dibagikan ke Farms Manager dan tidak dapat diubah lagi.",
+    "completion": "Kelengkapan laporan",
+    "completionSub": "Pakan, kematian, peralatan, peringatan, dan tindakan dikumpulkan otomatis dari catatan · data sensor tetap di Detail Kolam dan tidak diinput ulang di sini",
+    "ready": "{{pct}}% siap",
+    "toFill_zero": "Tidak ada yang perlu diisi",
+    "toFill_one": "{{count}} item perlu diisi",
+    "toFill_other": "{{count}} item perlu diisi",
+    "check": {
+      "records": "Pakan · Kematian",
+      "recordsDetail": "Catatan · {{fed}} dari {{total}} Kolam · {{rounds}} dari {{planned}} putaran sejauh ini",
+      "auto": "Peralatan · Peringatan · Tindakan",
+      "autoDetail": "Otomatis · {{events}} · {{alerts}}",
+      "events_one": "{{count}} kejadian peralatan",
+      "events_other": "{{count}} kejadian peralatan",
+      "alerts_one": "{{count}} peringatan",
+      "alerts_other": "{{count}} peringatan",
+      "health": "Kesehatan",
+      "healthDetail_one": "Opsional · {{count}} Kolam diamati",
+      "healthDetail_other": "Opsional · {{count}} Kolam diamati",
+      "farm": "Input Tambak",
+      "farmNeeded": "{{items}} wajib diisi",
+      "farmDone": "Cuaca dan Ringkasan sudah diisi"
+    },
+    "missing": {
+      "weather": "Cuaca",
+      "summary": "Ringkasan"
+    },
+    "and": " dan ",
+    "ponds": {
+      "title": "Pakan · Kematian · Kesehatan",
+      "sub": "Hari ini sejauh ini, per Kolam · Ubah Kolam untuk mencatat nafsu makan, kondisi anco, dan pengamatan kesehatan",
+      "source": "Dari catatan Kolam",
+      "pond": "Kolam",
+      "feeding": "Pakan",
+      "mortality": "Kematian",
+      "amount": "Jumlah",
+      "rounds": "Putaran",
+      "tray": "Anco",
+      "weight": "Berat",
+      "condition": "Kondisi",
+      "observation": "Pengamatan",
+      "reduced": "{{count}} menurun",
+      "leftover": "{{count}} ada sisa",
+      "noted": "{{count}} dicatat"
+    },
+    "appetite": "Nafsu makan",
+    "healthCondition": "Kondisi kesehatan",
+    "observations": "Pengamatan",
+    "env": {
+      "title": "Lingkungan / Cuaca",
+      "once": "Sekali untuk seluruh Tambak",
+      "weather": "Cuaca",
+      "rainfall": "Curah hujan",
+      "events": "Kejadian lingkungan",
+      "eventsPlaceholder": "mis. Hujan lebat 14:00–15:30, angin kencang"
+    },
+    "equipment": {
+      "title": "Status Peralatan",
+      "sub": "Kincir {{aerators}} · Pompa {{pumps}} · Genset {{generator}} (diuji {{tested}})",
+      "source": "Aktuator",
+      "none": "Tidak ada kejadian peralatan",
+      "equipment": "Peralatan",
+      "failure": "Kerusakan",
+      "action": "Tindakan",
+      "status": "Status",
+      "in_progress": "Sedang ditangani",
+      "resolved": "Selesai",
+      "add": "Tambah kejadian peralatan",
+      "edit": "Ubah kejadian peralatan",
+      "equipmentPlaceholder": "mis. Kincir 4",
+      "occurred": "Terjadi (waktu)",
+      "error": "Isi peralatan, kerusakan, dan waktu (HH:mm)."
+    },
+    "alerts": {
+      "title": "Peringatan / Isu Utama",
+      "sub": "Dibuat oleh sistem dari data sensor · disertakan otomatis — hapus centang untuk mengecualikan · nilai tidak diinput ulang",
+      "source": "Dari peringatan",
+      "none": "Tidak ada peringatan pada hari ini",
+      "handling": "Penanganan",
+      "include": "Sertakan {{id}} dalam laporan",
+      "viewAlert": "Lihat Peringatan",
+      "viewData": "Lihat Data"
+    },
+    "actions": {
+      "title": "Tindakan yang Dilakukan",
+      "sub": "Tindakan yang dicatat saat menangani peringatan dan operasi aktuator ditambahkan otomatis",
+      "none": "Belum ada tindakan",
+      "action": "Tindakan",
+      "outcome": "Hasil",
+      "source": "Sumber",
+      "sources": {
+        "alert_handling": "Penanganan peringatan",
+        "actuator_log": "Log aktuator",
+        "manual": "Manual"
+      },
+      "add": "Tambah tindakan",
+      "edit": "Ubah tindakan",
+      "error": "Isi waktu (HH:mm) dan apa yang dilakukan."
+    },
+    "summary": {
+      "title": "Ringkasan Technical Manager",
+      "sub": "Apa yang terjadi hari ini, apa yang Anda amati, dan apa yang Anda lakukan",
+      "placeholder": "mis. Hujan lebat pada sore hari. Kolam 02 memunculkan peringatan DO dan aerasi ditambah. Tidak ada kematian yang tidak normal."
+    },
+    "bar": {
+      "missing": "{{pct}}% siap · {{items}} belum diisi",
+      "ready": "{{pct}}% siap",
+      "saving": "Menyimpan…",
+      "unsaved": "Ada perubahan belum disimpan",
+      "notSaved": "Belum disimpan",
+      "saveFailed": "Draf tidak dapat disimpan."
+    },
+    "saveDraft": "Simpan Draf",
+    "submit": "Kirim",
+    "confirm": {
+      "title": "Kirim Laporan Harian untuk {{date}}?",
+      "body": "Laporan akan dibagikan ke Farms Manager dan tidak dapat diubah lagi.",
+      "missing": "{{items}} wajib diisi sebelum mengirim.",
+      "after": "Peringatan dan tindakan yang dicatat setelah pengiriman akan muncul di laporan besok.",
+      "failed": "Laporan tidak dapat dikirim. Silakan coba lagi."
+    },
+    "submitted": "Laporan Harian terkirim",
+    "submittedDetail": "{{date}} · dibagikan ke Farms Manager",
+    "drawerCaption": "Laporan Harian · {{date}}",
+    "records": "Catatan",
+    "pond": {
+      "save": "Simpan {{pond}}",
+      "feedSoFar": "Pakan sejauh ini",
+      "feedValue": "{{kg}} kg · {{done}} / {{planned}} putaran",
+      "mortality": "Kematian",
+      "mortalityValue": "{{pcs}} pcs · {{kg}} kg",
+      "tray": "Anco",
+      "mortalityNote": "Pengamatan kematian tidak normal",
+      "mortalityNotePlaceholder": "Hanya jika kematian terlihat tidak biasa",
+      "correctRecords": "Koreksi catatan pakan atau kematian di {{pond}}",
+      "waterNotice": "Kualitas air dicatat oleh sensor dan tidak diinput di sini.",
+      "viewWater": "Lihat data kualitas air {{pond}}"
+    },
+    "remove": "Hapus",
+    "apply": "Terapkan",
+    "time": "Waktu",
+    "pondField": "Kolam",
+    "farmWide": "Seluruh Tambak"
+  },
+  "valueType": {
+    "actual": "Aktual",
+    "estimated": "Perkiraan",
+    "forecast": "Prakiraan"
+  },
+  "weekly": {
+    "title": "Laporan Mingguan · {{period}}",
+    "meta": "{{farm}} · {{count}} Kolam · DOC {{min}}–{{max}}",
+    "savedDue": "Terakhir disimpan {{saved}} · tenggat {{due}}",
+    "notStarted": "Laporan minggu ini belum dimulai.",
+    "fromRecords": "Dari catatan",
+    "vsPrevious": "{{value}} vs minggu lalu",
+    "submitted": "Laporan Mingguan terkirim",
+    "drawerCaption": "Laporan Mingguan · {{period}}",
+    "summary": {
+      "title": "Ringkasan",
+      "condition": "Kondisi Tambak",
+      "behind": "Kolam tertinggal dari target",
+      "of": "{{n}} dari {{total}}",
+      "feed": "Total Pakan",
+      "mortality": "Kematian",
+      "alerts": "Peringatan selama minggu ini",
+      "alertsValue": "{{count}} · {{ongoing}} masih berlangsung"
+    },
+    "production": {
+      "title": "Status Produksi",
+      "source": "Dari sampling {{date}}",
+      "coverage": "Sampling mingguan {{date}}: {{sampled}} dari {{total}} Kolam disampling · laboratorium {{lab}} dari {{total}} diterima.",
+      "record": "Catat atau koreksi sampling →"
+    },
+    "kpi": {
+      "biomass": "Biomassa",
+      "biomassBasis": "Jumlah dari {{count}} Kolam",
+      "sr": "Survival Rate",
+      "srBasis": "Dibobot dengan PL yang ditebar",
+      "fcr": "FCR",
+      "fcrBasis": "Total pakan ÷ pertambahan biomassa",
+      "growth": "Pertumbuhan vs Target",
+      "onTrack": "sesuai target",
+      "behind_one": "{{count}} Kolam tertinggal ({{ponds}})",
+      "behind_other": "{{count}} Kolam tertinggal ({{ponds}})",
+      "noneBehind": "Tidak ada Kolam yang tertinggal dari target",
+      "growthBasis": "Sampling {{date}} · {{sampled}} dari {{total}} Kolam"
+    },
+    "growthChart": {
+      "title": "Pertumbuhan vs Target",
+      "sub": "ABW tiap Kolam pada {{date}} dibandingkan kurva target"
+    },
+    "donuts": {
+      "title": "Pakan dan kematian per Kolam",
+      "sub": "Porsi dari total Tambak minggu ini · semua Kolam",
+      "feeding": "Pakan",
+      "mortality": "Kematian",
+      "caption": "{{unit}} · minggu"
+    },
+    "ponds": {
+      "title": "Kolam minggu ini",
+      "sub": "Satu baris per Kolam · pilih topik · tanpa rata-rata Tambak · dihitung dari sampling, sensor, dan catatan",
+      "growth": "Pertumbuhan",
+      "wq": "Tren kualitas air",
+      "feed": "Pakan & kematian",
+      "lab": "Laboratorium",
+      "uniformity": "Keseragaman ukuran",
+      "doMin": "DO min",
+      "phRange": "Rentang pH",
+      "tempMax": "Suhu maks",
+      "daysOut": "Hari di luar rentang",
+      "trend": "Tren",
+      "stable": "Stabil",
+      "comment": "Komentar (opsional)",
+      "commentPlaceholder": "Hanya jika ada yang perlu dijelaskan, mis. DO turun setelah hujan lebat pada hari Rabu",
+      "wqNote": "Dihitung otomatis dari data sensor (setiap 3–5 menit) · data deret waktu lengkap ada di Detail Kolam",
+      "week": "Minggu",
+      "reducedDays": "Hari nafsu makan menurun",
+      "vsPrev": "vs minggu lalu",
+      "per10k": "per 10,000 ditebar",
+      "peak": "Hari puncak",
+      "farmTotal": "Total {{farm}}",
+      "pondsCount_one": "{{count}} Kolam",
+      "pondsCount_other": "{{count}} Kolam",
+      "expected": "hasil diperkirakan {{date}}",
+      "labReference": "Acuan: TAN ≤ 1.0 · NO2 ≤ 0.5 · Vibrio < 5 · Alkalinitas 100–150"
+    },
+    "alerts": {
+      "sub": "Dihitung otomatis dari sistem peringatan · tambahkan penyebab, tindakan, dan hasil bila perlu",
+      "notes": "Penyebab / Tindakan / Hasil",
+      "addNote": "Tambah catatan",
+      "cause": "Penyebab",
+      "action": "Tindakan",
+      "outcome": "Hasil",
+      "openPond": "Buka peringatan {{pond}}"
+    },
+    "actions": {
+      "title": "Tindakan Utama"
+    },
+    "summaryText": {
+      "title": "Ringkasan Teknis Mingguan",
+      "placeholder": "Pertumbuhan, tren kualitas air, isu, dan rencana minggu depan"
+    },
+    "bar": {
+      "saved": "Disimpan {{time}}",
+      "due": "tenggat {{due}}",
+      "summaryMissing": "Ringkasan belum diisi"
+    },
+    "confirm": {
+      "title": "Kirim Laporan Mingguan untuk {{period}}?",
+      "labPending": "Hasil laboratorium {{ponds}} masih ditunggu.",
+      "missing": "Ringkasan Teknis Mingguan wajib diisi sebelum mengirim."
+    },
+    "history": {
+      "title": "Riwayat Laporan Mingguan",
+      "period": "Periode Laporan",
+      "behind": "Tertinggal dari target"
+    },
+    "ro": {
+      "condition": "Kondisi Tambak (akhir minggu)",
+      "allResolved": "{{count}} · semua selesai",
+      "productionCaption": "Sampling mingguan {{date}} · dibandingkan minggu lalu",
+      "comment": "Komentar Technical Manager",
+      "alertsSub": "Dihitung otomatis dari sistem peringatan"
+    }
+  },
+  "issueType": {
+    "water_quality": "Kualitas Air",
+    "mortality": "Kematian",
+    "equipment": "Peralatan",
+    "sensor": "Sensor"
+  },
+  "issueParam": {
+    "mortality": "Kematian",
+    "sensor_offline": "Sensor"
+  },
+  "trendLabel": {
+    "increasing": "meningkat",
+    "decreasing": "menurun",
+    "stable": "stabil"
+  },
+  "fm": {
+    "farmSub_one": "{{count}} Kolam",
+    "farmSub_other": "{{count}} Kolam",
+    "farmSubLocation_one": "{{location}} · {{count}} Kolam",
+    "farmSubLocation_other": "{{location}} · {{count}} Kolam",
+    "farm_one": "Tambak",
+    "farm_other": "Tambak",
+    "issueTitle": "{{type}} · {{param}} {{trend}}",
+    "dashboard": {
+      "title": "Dasbor",
+      "meta": "{{farms}} Tambak · {{ponds}} Kolam"
+    },
+    "farmStatus": {
+      "title": "Status Tambak",
+      "sub": "Status Tambak adalah yang paling parah dari Kualitas air, Pertumbuhan dan Operasional",
+      "all": "Semua Tambak"
+    },
+    "issues": {
+      "title": "Risiko / Isu",
+      "sub_one": "Tren lingkungan / Kolam dari peringatan sensor · live, tanpa perlu laporan · {{count}} terbuka, diurutkan menurut tingkat keparahan",
+      "sub_other": "Tren lingkungan / Kolam dari peringatan sensor · live, tanpa perlu laporan · {{count}} terbuka, diurutkan menurut tingkat keparahan",
+      "none": "Tidak ada isu terbuka",
+      "viewFarm": "Lihat Tambak"
+    },
+    "production": {
+      "title": "Status Produksi",
+      "caption": "Total perusahaan · sampling terakhir {{date}} · pertumbuhan per Tambak ada di tabel Status Tambak",
+      "biomass": "Total Biomassa",
+      "biomassBasis": "Jumlah dari {{count}} Kolam · sampling {{date}}",
+      "sr": "Survival Rate",
+      "srBasis": "Dibobot menurut PL yang ditebar · sampling {{date}}",
+      "behind": "Kolam tertinggal dari target",
+      "ponds": "Kolam",
+      "behindBasis": "ABW −5% atau lebih di bawah target untuk DOC tersebut",
+      "vsLastWeek": "{{value}} vs minggu lalu"
+    },
+    "col": {
+      "farm": "Tambak",
+      "status": "Status",
+      "reason": "Alasan utama",
+      "water": "Kualitas air",
+      "waterSub": "Kolam di luar rentang",
+      "growth": "Pertumbuhan",
+      "growthSub": "Kolam vs target",
+      "operations": "Operasional",
+      "issues": "Isu"
+    },
+    "farms": {
+      "title": "Tambak",
+      "meta": "Tambak yang dikelola oleh {{company}}",
+      "search": "Cari nama atau lokasi Tambak",
+      "location": "Lokasi",
+      "locationAll": "Lokasi: Semua",
+      "issuesAll": "Risiko / Isu: Semua",
+      "issuesOpen": "Dengan isu terbuka",
+      "issuesNone": "Tidak ada isu terbuka",
+      "list": "Daftar Tambak",
+      "noMatch": "Tidak ada Tambak yang cocok dengan filter"
+    },
+    "aspect": {
+      "waterQuality": "Kualitas air",
+      "growth": "Pertumbuhan",
+      "operations": "Operasional"
+    },
+    "tile": {
+      "waterQuality": "dari {{total}} Kolam di luar rentang",
+      "growth": "dari {{total}} Kolam tertinggal dari target",
+      "operations_one": "isu",
+      "operations_other": "isu"
+    },
+    "issueState": {
+      "ongoing": "Berlangsung",
+      "resolved": "Selesai"
+    },
+    "detail": {
+      "notFound": "Tambak ini tidak ditemukan.",
+      "back": "Kembali ke Tambak",
+      "tm": "Technical Manager: {{names}}",
+      "ponds": "{{count}} Kolam · DOC {{min}}–{{max}}",
+      "latestReport": "Laporan terakhir: {{label}} · {{date}}",
+      "because": "{{farm}} berstatus <b>{{status}}</b> karena {{aspect}} berstatus {{status}} (yang paling parah dari tiga aspek)",
+      "allNormal": "{{farm}} Normal dalam Kualitas air, Pertumbuhan dan Operasional",
+      "trend": "Tren status",
+      "trendSub": "Status Tambak · {{count}} hari terakhir",
+      "issuesSub": "Tren lingkungan / Kolam dari peringatan sensor · live, diperbarui setiap 5 menit · tanpa perlu laporan · {{count}} terbuka, diurutkan menurut tingkat keparahan",
+      "issue": "Isu",
+      "ongoing": "Berlangsung · {{duration}}",
+      "resolved": "Selesai · {{duration}}",
+      "since": "sejak {{time}}",
+      "productionCaption": "Sampling terakhir {{date}} · dibandingkan dengan minggu lalu",
+      "behindRule": "Tertinggal = −5% atau lebih",
+      "pps": "Ringkasan Produksi Kolam",
+      "ppsSub": "Kolam ditebar pada tanggal berbeda — bandingkan ABW dengan target untuk DOC yang sama",
+      "estimated": "SR dan Biomassa adalah perkiraan",
+      "stocked": "Ditebar",
+      "target": "Target",
+      "distribution": "{{onTrack}} sesuai target · {{behind}} tertinggal",
+      "chartSub": "Target ABW per DOC dengan ABW terakhir tiap Kolam",
+      "targetAbw": "Target ABW",
+      "band": "±5% sesuai target"
+    },
+    "drawer": {
+      "type": "Jenis Isu",
+      "pond": "Kolam terdampak",
+      "occurrence": "Kejadian",
+      "ongoing": "{{duration}} (berlangsung)",
+      "resolved": "{{duration}} (selesai)",
+      "handledBy": "{{name}} (Technical Manager)",
+      "summary": "Ringkasan",
+      "actions": "Tindakan oleh Technical Manager",
+      "reports": "Konteks laporan (opsional)",
+      "reportNote": "— Pengamatan dan ringkasan Technical Manager",
+      "readOnly": "Penanganan Peringatan Kolam dilakukan oleh Technical Manager. Tampilan ini hanya-baca."
+    },
+    "reports": {
+      "title": "Laporan",
+      "meta": "Laporan Harian / Mingguan yang dikirim oleh Technical Manager · hanya-baca",
+      "search": "Cari laporan",
+      "farmAll": "Tambak: Semua",
+      "range": "Periode",
+      "ranges": {
+        "24h": "24 jam",
+        "7d": "7 hari",
+        "30d": "30 hari",
+        "4w": "4 minggu",
+        "3m": "3 bulan",
+        "1y": "1 tahun"
+      },
+      "statusSubmitted": "Status: Terkirim",
+      "majorIssues": "Isu utama",
+      "none": "Tidak ada laporan yang cocok dengan filter",
+      "showing": "Menampilkan {{from}}–{{to}} dari {{total}}",
+      "notFound": "Laporan ini tidak ditemukan atau belum dikirim.",
+      "back": "Kembali ke Laporan"
+    },
+    "daily": {
+      "title": "Laporan Harian · {{farm}}",
+      "previous": "Sebelumnya",
+      "next": "Berikutnya",
+      "alertsDay": "Peringatan selama hari ini",
+      "alertsValue": "{{count}} · {{resolved}} selesai",
+      "glance": "Sekilas Kolam",
+      "glanceSub": "Pakan, kematian dan kesehatan yang dicatat pada {{date}} · Kolam dengan peringatan atau pengamatan diberi garis tepi",
+      "feed": "Pakan",
+      "health": "Kesehatan",
+      "alertResolved": "Peringatan {{param}} {{time}} · selesai {{resolved}}",
+      "alertOngoing": "Peringatan {{param}} sejak {{time}} · berlangsung",
+      "offlineFrom": "{{title}} sejak {{time}}",
+      "details": "Detail Kolam",
+      "detailsSub": "Pakan · kematian · kesehatan · peralatan — {{count}} Kolam",
+      "show": "Tampilkan",
+      "aerators": "Kincir",
+      "equipmentSub": "Kincir {{on}} / {{total}}",
+      "alertsSub": "Peringatan yang dibuat sistem selama {{date}} · peringatan saat ini selalu ada di Dasbor dan Detail Tambak",
+      "viewInFarm": "Lihat di Detail Tambak"
+    },
+    "weekly": {
+      "title": "Laporan Mingguan · {{farm}}",
+      "period": "{{period}} · DOC {{min}}–{{max}}"
+    }
+  },
+  "userStatus": {
+    "active": "Aktif",
+    "invited": "Diundang",
+    "deactivated": "Nonaktif"
+  },
+  "language": {
+    "en": "English",
+    "id": "Bahasa Indonesia"
+  },
+  "adUsers": {
+    "title": "Pengguna",
+    "meta": "{{total}} pengguna · {{active}} aktif · {{invited}} diundang · {{deactivated}} nonaktif",
+    "invite": "Undang pengguna",
+    "search": "Cari nama atau email",
+    "roleAll": "Peran: Semua",
+    "statusAll": "Status: Semua",
+    "farmAll": "Tambak: Semua",
+    "col": {
+      "user": "Pengguna",
+      "role": "Peran",
+      "farm": "Tambak",
+      "status": "Status",
+      "lastSignIn": "Terakhir masuk"
+    },
+    "you": "(Anda)",
+    "allFarms": "Semua Tambak",
+    "invitedExpires": "Diundang {{invited}} · berakhir {{expires}}",
+    "viewUser": "Lihat {{name}}",
+    "none": "Tidak ada pengguna yang cocok dengan filter",
+    "showing": "Menampilkan {{from}}–{{to}} dari {{total}}",
+    "user": "Pengguna",
+    "saveChanges": "Simpan perubahan",
+    "field": {
+      "name": "Nama lengkap",
+      "email": "Email",
+      "role": "Peran",
+      "farm": "Tambak yang ditugaskan",
+      "language": "Bahasa",
+      "farmChoose": "Pilih Tambak",
+      "farmHelp": "Technical Manager bekerja di tepat satu Tambak.",
+      "farmRequired": "Pilih Tambak tempat Technical Manager ini bekerja.",
+      "nameRequired": "Masukkan nama lengkap.",
+      "emailInvalid": "Masukkan alamat email yang valid.",
+      "roleRequired": "Pilih Peran."
+    },
+    "roleHelp": {
+      "farms_manager": "Melihat semua Tambak dan laporan. Hanya-baca.",
+      "technical_manager": "Mengelola Kolam di satu Tambak.",
+      "system_administrator": "Mengelola pengguna, data master dan pengaturan. Tanpa data tambak."
+    },
+    "lockedSelf": "Anda tidak dapat mengubah Peran Anda sendiri.",
+    "lockedLastAdmin": "System Administrator aktif terakhir harus tetap memegang Peran ini.",
+    "cannotDeactivateSelf": "Anda tidak dapat menonaktifkan akun Anda sendiri.",
+    "info": {
+      "invited": "Diundang",
+      "invitedBy": "{{date}} oleh {{name}}",
+      "activated": "Diaktifkan",
+      "expires": "Undangan berakhir",
+      "lastSignIn": "Terakhir masuk",
+      "failedSignIns": "Gagal masuk"
+    },
+    "account": "Akun",
+    "resend": "Kirim ulang undangan",
+    "sendReset": "Kirim reset kata sandi",
+    "deactivate": "Nonaktifkan pengguna",
+    "reactivate": "Aktifkan kembali pengguna",
+    "deactivateHelp": "Pengguna nonaktif tidak dapat masuk. Catatan dan laporan mereka tetap disimpan.",
+    "reactivateHelp": "Pengguna yang diaktifkan kembali dapat masuk lagi dengan Peran dan Tambak sebelumnya.",
+    "confirm": {
+      "title": "Nonaktifkan {{name}}?",
+      "body": "{{name}} akan dikeluarkan dan tidak dapat masuk lagi. Laporan dan catatan yang dibuat oleh {{name}} tetap disimpan.",
+      "deactivate": "Nonaktifkan"
+    },
+    "soleTm": {
+      "deactivate": "{{farm}} tidak akan memiliki Technical Manager aktif. Tugaskan pengguna lain sebelum menonaktifkan.",
+      "change": "{{farm}} tidak akan memiliki Technical Manager aktif setelah perubahan ini."
+    },
+    "inviteNotice": "Email undangan akan dikirim. Tautan berlaku selama 72 jam.",
+    "sendInvitation": "Kirim undangan",
+    "invited": "Undangan dikirim ke {{email}}",
+    "resent": "Undangan dikirim ulang ke {{email}}",
+    "resetSent": "Email reset kata sandi dikirim ke {{email}}",
+    "saved": "Perubahan pada {{name}} disimpan",
+    "deactivated": "{{name}} dinonaktifkan",
+    "reactivated": "{{name}} diaktifkan kembali",
+    "failed": "Permintaan tidak dapat diselesaikan. Coba lagi."
+  },
+  "timeZone": {
+    "Jakarta": "WIB (UTC+7)",
+    "Makassar": "WITA (UTC+8)",
+    "Jayapura": "WIT (UTC+9)"
+  },
+  "adFarms": {
+    "title": "Tambak & Kolam",
+    "meta": "Data master · {{farms}} Tambak ({{active}} aktif) · {{ponds}} Kolam",
+    "add": "Tambah tambak",
+    "search": "Cari Tambak atau lokasi",
+    "statusAll": "Status: Semua",
+    "status": {
+      "active": "Aktif",
+      "inactive": "Nonaktif"
+    },
+    "col": {
+      "farm": "Tambak",
+      "location": "Lokasi",
+      "ponds": "Kolam",
+      "tms": "Technical Manager",
+      "devices": "Perangkat online",
+      "status": "Status"
+    },
+    "inOperation": "({{count}} beroperasi)",
+    "invited": "(diundang)",
+    "noDevices": "Tidak ada perangkat",
+    "none": "Tidak ada Tambak yang sesuai filter",
+    "viewFarm": "Lihat {{name}}",
+    "inactiveNote": "Tambak nonaktif tidak ditampilkan di layar Farms Manager dan Technical Manager.",
+    "field": {
+      "name": "Nama tambak",
+      "namePlaceholder": "mis. Tambak F",
+      "nameRequired": "Masukkan nama Tambak.",
+      "location": "Lokasi",
+      "locationPlaceholder": "Wilayah, Provinsi",
+      "locationRequired": "Masukkan lokasi.",
+      "timeZone": "Zona waktu"
+    },
+    "startsInactive": "Tambak baru dimulai sebagai <b>Nonaktif</b>. Tambahkan Kolam dan perangkat, tetapkan Technical Manager, lalu aktifkan."
+  },
+  "deviceType": {
+    "sensor": "Sensor",
+    "aerator": "Kincir",
+    "pump": "Pompa air"
+  },
+  "connection": {
+    "online": "Online",
+    "offline": "Offline"
+  },
+  "adFarm": {
+    "notFound": "Tambak ini tidak ditemukan.",
+    "back": "Kembali ke Tambak & Kolam",
+    "tm": "Technical Manager: {{names}}",
+    "noTm": "Tidak ada Technical Manager",
+    "updatedBy": "Diperbarui {{date}} oleh {{name}}",
+    "updated": "Diperbarui {{date}}",
+    "tabs": {
+      "info": "Info Tambak",
+      "ponds": "Kolam",
+      "devices": "Perangkat"
+    },
+    "edit": "Ubah",
+    "saved": "{{name}} disimpan",
+    "info": {
+      "title": "Informasi tambak",
+      "status": "Status",
+      "activeHelp": "Aktif — tampil untuk Farms Manager dan Technical Manager",
+      "inactiveHelp": "Nonaktif — tidak tampil untuk Farms Manager dan Technical Manager"
+    },
+    "setup": {
+      "notice": "Belum disiapkan: {{items}}. Tambak tetap dapat diaktifkan.",
+      "ponds": "tidak ada Kolam yang beroperasi",
+      "devices": "tidak ada perangkat",
+      "tm": "tidak ada Technical Manager aktif"
+    },
+    "deactivate": {
+      "title": "Ubah {{name}} menjadi Nonaktif?",
+      "body": "{{name}} tidak akan ditampilkan di layar Farms Manager dan Technical Manager. Kolam, perangkat, catatan, dan laporannya tetap disimpan.",
+      "confirm": "Jadikan Nonaktif"
+    },
+    "users": {
+      "title": "Pengguna yang ditugaskan",
+      "link": "Pengguna",
+      "none": "Belum ada Technical Manager yang ditugaskan ke Tambak ini.",
+      "note": "Farms Manager melihat semua Tambak aktif. Tugaskan Technical Manager di Pengguna."
+    },
+    "pondStatus": {
+      "in_operation": "Beroperasi",
+      "fallow": "Istirahat"
+    },
+    "pondStatusHelp": {
+      "in_operation": "Ditampilkan di layar pemantauan dan produksi.",
+      "fallow": "Sedang istirahat atau persiapan. Tidak ditampilkan di layar pemantauan."
+    },
+    "ponds": {
+      "sub": "{{count}} Kolam · {{area}} · {{inOperation}} beroperasi",
+      "add": "Tambah kolam",
+      "none": "Belum ada Kolam",
+      "noneHelp": "Tambahkan Kolam di Tambak ini, lalu tetapkan perangkatnya.",
+      "col": {
+        "pond": "Kolam",
+        "area": "Luas",
+        "status": "Status",
+        "sensors": "Sensor",
+        "actuators": "Aktuator"
+      },
+      "editPond": "Ubah {{name}}",
+      "editTitle": "Ubah {{name}}",
+      "total": "{{inOperation}} beroperasi · {{fallow}} istirahat",
+      "note": "Kolam yang istirahat tidak ditampilkan di layar pemantauan. Penebaran, pemberian pakan, dan sampling dicatat oleh Technical Manager.",
+      "save": "Simpan kolam",
+      "saved": "{{name}} disimpan",
+      "added": "{{name}} ditambahkan",
+      "fallowNotice": "{{count}} perangkatnya tetap terpasang di kolam ini. Pindahkan di Perangkat jika perangkat dipindahkan.",
+      "field": {
+        "name": "Nama kolam",
+        "namePlaceholder": "mis. Kolam 10",
+        "nameRequired": "Masukkan nama Kolam.",
+        "area": "Luas",
+        "areaRequired": "Masukkan luas di atas 0 ha."
+      }
+    },
+    "devices": {
+      "offlineTitle_one": "{{count}} perangkat offline:",
+      "offlineTitle_other": "{{count}} perangkat offline:",
+      "offlineItem": "{{id}} ({{what}}, {{pond}}) sejak {{since}}",
+      "sub": "{{total}} perangkat · {{sensors}} sensor · {{actuators}} aktuator",
+      "add": "Tambah perangkat",
+      "pondAll": "Kolam: Semua",
+      "pondIs": "Kolam: {{name}}",
+      "typeAll": "Jenis: Semua",
+      "typeIs": "Jenis: {{type}}",
+      "connectionAll": "Koneksi: Semua",
+      "connectionIs": "Koneksi: {{connection}}",
+      "col": {
+        "id": "ID Perangkat",
+        "type": "Jenis",
+        "function": "Parameter / Fungsi",
+        "pond": "Kolam",
+        "connection": "Koneksi",
+        "lastSeen": "Terakhir aktif"
+      },
+      "sensor": "Sensor",
+      "actuator": "Aktuator",
+      "waiting": "Menunggu pembacaan pertama",
+      "none": "Belum ada perangkat",
+      "noneMatch": "Tidak ada perangkat yang sesuai filter",
+      "editDevice": "Ubah {{id}}",
+      "editCaption": "Perangkat",
+      "showingPond": "Menampilkan {{count}} perangkat di {{pond}}",
+      "note": "Nilai perangkat tidak ditampilkan di sini — pemantauan ada di layar Technical Manager.",
+      "saved": "{{id}} disimpan",
+      "added": "{{id}} ditambahkan",
+      "firstReading": "Perangkat tampil sebagai Online setelah mengirim pembacaan pertamanya.",
+      "field": {
+        "idHelp": "ID yang tercetak pada perangkat atau gateway.",
+        "idFixed": "ID Perangkat tidak dapat diubah. Daftarkan pengganti sebagai perangkat baru.",
+        "idRequired": "Masukkan ID Perangkat.",
+        "measures": "Parameter yang diukur",
+        "measuresRequired": "Pilih parameter yang diukur sensor.",
+        "spec": "Spesifikasi",
+        "choose": "Pilih",
+        "pondRequired": "Pilih Kolam."
+      }
+    }
+  },
+  "labParam": {
+    "tan": "TAN",
+    "no2": "NO2",
+    "vibrio": "Vibrio",
+    "alkalinity": "Alkalinitas"
+  },
+  "adSettings": {
+    "title": "Pengaturan",
+    "meta": "Aturan untuk menilai kualitas air, pertumbuhan, dan laporan. Perubahan berlaku sejak disimpan.",
+    "updated": "Terakhir diperbarui {{date}} oleh {{name}}",
+    "unsaved_one": "{{count}} perubahan belum disimpan",
+    "unsaved_other": "{{count}} perubahan belum disimpan",
+    "noChanges": "Tidak ada perubahan yang belum disimpan",
+    "discard": "Buang perubahan",
+    "appliesFrom": "Berlaku sejak",
+    "now": "Sekarang ({{date}})",
+    "past": "Peringatan dan Laporan sebelumnya",
+    "notChanged": "Tidak berubah",
+    "thresholds": {
+      "applyTo": "Berlaku untuk",
+      "default": "Default — semua Tambak",
+      "farmDefault": "{{farm}} (memakai default)",
+      "farmOverrides_one": "{{farm}} ({{count}} pengaturan khusus)",
+      "farmOverrides_other": "{{farm}} ({{count}} pengaturan khusus)",
+      "notice": "Masukkan hanya <b>batas</b> tempat setiap status dimulai. Normal dihitung di antara kedua batas Perhatian. Nilai harus makin jauh dari Normal: Perhatian → Waspada → Kritis. Biarkan satu sisi “Tidak ada” jika parameter tidak punya batas di sisi itu.",
+      "sensors": "Kualitas air (sensor)",
+      "sensorsSub": "Peringatan Kolam muncul mulai Waspada, atau jika Perhatian berlangsung {{minutes}} min (Aturan)",
+      "lab": "Laboratorium (sampling mingguan)",
+      "labSub": "Disorot di Laporan Mingguan · tidak memunculkan Peringatan",
+      "parameter": "Parameter",
+      "lowSide": "Sisi bawah — status jika nilai di bawah",
+      "highSide": "Sisi atas — status jika nilai di atas",
+      "low": "bawah",
+      "high": "atas",
+      "side": "{{name}} sisi {{side}}",
+      "notUsed": "Tidak ada",
+      "noUnit": "tanpa satuan",
+      "sides": {
+        "low": "Hanya bawah",
+        "high": "Hanya atas",
+        "both": "Bawah dan atas"
+      },
+      "usesDefault": "Memakai default",
+      "resetDefault": "Pakai default",
+      "notNumber": "{{name}} harus berupa angka.",
+      "must_below": "{{name}} ({{value}}) harus di bawah {{other}} ({{otherValue}}).",
+      "must_above": "{{name}} ({{value}}) harus di atas {{other}} ({{otherValue}}).",
+      "overlap": "Sisi atas ({{value}}) harus di atas sisi bawah ({{low}}).",
+      "errors_one": "{{sides}} · {{count}} kesalahan perlu diperbaiki",
+      "errors_other": "{{sides}} · {{count}} kesalahan perlu diperbaiki",
+      "confirmTitle": "Simpan ambang batas?",
+      "confirmDefault": "Ambang batas baru berlaku untuk semua Tambak yang memakai default ({{farms}}).",
+      "confirmKeeps": "{{farm}} tetap memakai pengaturan khusus {{parameters}}.",
+      "confirmFarm": "Ambang batas ini hanya berlaku untuk {{farm}}. Parameter yang tetap default mengikuti default.",
+      "saved": "Ambang batas disimpan"
+    },
+    "growth": {
+      "curve": "Kurva target pertumbuhan",
+      "curveSub": "Target ABW per DOC · nilai di antara titik diinterpolasi",
+      "target": "Target ABW",
+      "band": "Rentang sesuai target",
+      "points": "Titik kurva",
+      "addPoint": "Tambah titik",
+      "doc": "DOC",
+      "abw": "Target ABW (g)",
+      "docOf": "DOC titik {{n}}",
+      "abwOf": "Target ABW titik {{n}}",
+      "remove": "Hapus DOC {{doc}}",
+      "docInvalid": "Masukkan jumlah hari berupa bilangan bulat.",
+      "docOrder": "DOC harus setelah {{doc}}.",
+      "abwInvalid": "Masukkan berat di atas 0 g.",
+      "abwOrder": "Harus di atas {{abw}} g.",
+      "bandTitle": "Rentang sesuai target",
+      "tolerance": "Toleransi",
+      "toleranceHelp": "Tertinggal = ABW di bawah target sebesar % ini atau lebih. Di atas target = di atasnya sebesar % ini atau lebih.",
+      "bandInvalid": "Masukkan 1–50%.",
+      "confirmTitle": "Simpan target pertumbuhan?",
+      "confirmBody": "Kurva dan rentang baru dipakai untuk Pertumbuhan vs Target di semua Tambak.",
+      "saved": "Target pertumbuhan disimpan"
+    },
+    "rules": {
+      "deadlines": "Tenggat laporan",
+      "deadlinesSub": "Laporan yang terlambat menaikkan Status Operasional Tambak",
+      "dailyDue": "Tenggat Laporan Harian",
+      "sameDay": "hari yang sama",
+      "weeklyDue": "Tenggat Laporan Mingguan (minggu berikutnya)",
+      "weeklyTime": "Jam tenggat Laporan Mingguan",
+      "weekday": {
+        "1": "Senin",
+        "2": "Selasa",
+        "3": "Rabu",
+        "4": "Kamis",
+        "5": "Jumat",
+        "6": "Sabtu",
+        "7": "Minggu"
+      },
+      "freshness": "Kebaruan data",
+      "freshnessSub": "Ditampilkan sebagai Live / Tertunda / Offline",
+      "delayedAfter": "Tertunda setelah",
+      "offlineAfterLabel": "Offline setelah",
+      "alerts": "Peringatan",
+      "attentionLasts": "Munculkan Peringatan jika Perhatian berlangsung",
+      "attentionHelp": "Waspada dan Kritis selalu langsung memunculkan Peringatan.",
+      "production": "Status Produksi Tambak",
+      "productionSub": "Persentase Kolam yang tertinggal dari target pertumbuhan",
+      "attentionFrom": "Perhatian mulai",
+      "warningFrom": "Waspada mulai",
+      "time": "Masukkan waktu dalam format HH:mm.",
+      "wholeNumber": "Masukkan bilangan bulat di atas 0.",
+      "percent": "Masukkan 1–100%.",
+      "offlineAfter": "Harus lebih lama dari “Tertunda setelah” ({{minutes}} min).",
+      "warningAfter": "Harus di atas “Perhatian mulai” ({{pct}}%).",
+      "confirmTitle": "Simpan aturan?",
+      "confirmBody": "Aturan baru dipakai untuk semua Tambak.",
+      "saved": "Aturan disimpan"
+    }
+  },
+  "time": {
+    "today": "hari ini",
+    "tomorrow": "besok",
+    "min": "{{count}} menit",
+    "h": "{{count}} jam",
+    "hMin": "{{h}} jam {{m}} menit",
+    "hr_one": "{{count}} jam",
+    "hr_other": "{{count}} jam",
+    "day_one": "{{count}} hari",
+    "day_other": "{{count}} hari",
+    "hours": "{{value}} jam"
+  }
+}
