@@ -100,7 +100,7 @@ describe('TM-04 Daily Report', () => {
     const history = await card('Daily Report History')
     const r28 = within((await history.findByText('28 Sep 2026')).closest('tr')!)
     expect(r28.getByText('Submitted')).toBeInTheDocument()
-    expect(r28.getByText('2')).toBeInTheDocument()
+    expect(r28.getByText('3')).toBeInTheDocument() // Ponds needing attention: 02, 05 and 08 (sensor offline, 04 §7)
     expect(r28.getByText('1,240 kg')).toBeInTheDocument()
     expect(r28.getByText('186 pcs')).toBeInTheDocument()
     expect(r28.getByText('28 Sep 18:20')).toBeInTheDocument()

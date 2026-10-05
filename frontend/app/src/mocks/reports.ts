@@ -152,10 +152,10 @@ function totalsOf(ponds: S['DailyPondRow'][]): DailyReport['totals'] {
   }
 }
 
-/** Ponds needing attention: health noted or an included water-quality alert (sensor offline is equipment). */
+/** Ponds needing attention (04 §7): health noted or an included alert, sensor offline included. */
 function attentionCount(r: DailyReport): number {
   const ids = new Set(r.ponds.filter((p) => p.health !== 'normal').map((p) => p.pond.id))
-  r.alerts.filter((a) => !a.excluded && a.parameter !== 'sensor_offline').forEach((a) => ids.add(a.pond.id))
+  r.alerts.filter((a) => !a.excluded).forEach((a) => ids.add(a.pond.id))
   return ids.size
 }
 
@@ -194,7 +194,9 @@ function build(rec: StoredReport): DailyReport {
 function neighbours(rec: StoredReport) {
   const same = [...reports.values()].filter((r) => r.farmId === rec.farmId).sort((a, b) => a.date.localeCompare(b.date))
   const i = same.findIndex((r) => r.id === rec.id)
-  return { previousReportId: same[i - 1]?.id ?? null, nextReportId: same[i + 1]?.id ?? null }
+  const prev = same[i - 1]
+  const next = same[i + 1]
+  return { previousReportId: prev?.id ?? null, nextReportId: next?.id ?? null, previousReportDate: prev?.date ?? null, nextReportDate: next?.date ?? null }
 }
 
 // ── Seed ──
@@ -236,6 +238,8 @@ function snapshot(
     totals: totalsOf(ponds),
     previousReportId: null,
     nextReportId: null,
+    previousReportDate: null,
+    nextReportDate: null,
     ...extra,
   }
   r.pondsNeedingAttention = attentionCount(r)
@@ -465,6 +469,6 @@ export function dailyStatusToday(date: string): S['ReportStatusItem'] {
 export function lastSubmittedDaily(): S['ReportListItem'] | null {
   const r = listReports().find((x) => x.farm.id === 'farm-a' && x.status === 'submitted')
   if (!r) return null
-  const { ponds: _p, totals: _t, environment: _e, equipmentEvents: _q, alerts: _a, actions: _c, summary: _s, previousReportId: _r, nextReportId: _n, ...item } = r
+  const { ponds: _p, totals: _t, environment: _e, equipmentEvents: _q, alerts: _a, actions: _c, summary: _s, previousReportId: _r, nextReportId: _n, previousReportDate: _rd, nextReportDate: _nd, ...item } = r
   return item
 }

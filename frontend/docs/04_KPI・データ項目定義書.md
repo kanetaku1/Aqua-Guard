@@ -142,6 +142,7 @@ Daily / Weekly Report は **Pond単位で記録**し、Farm単位では「足し
 - 画面の「Range」表示は Warning の閾値（Pond Alert が発報される境界）を示す。
 - 閾値は全Farm共通の初期値と、Farmごとの上書きを持つ（AD-04 Settings › Thresholds）。変更は保存以降の判定に適用し、過去のAlertは変更しない。
 - Pond Alert は Warning 以上、または Attention が一定時間継続した場合に発報する（継続時間は§8）。
+- センサーのデータ品質が Offline（§7：最終取得から60分超）になったら、そのセンサーの Pond Alert（Attention、種別 Sensor offline、例「Turbidity sensor offline」）を発報する。Offline の間はそのPondの水質を監視できないため、値の逸脱と同じく Technical Manager に知らせ、確認・対応・解決の流れに乗せる。
 
 ---
 
@@ -156,6 +157,7 @@ Daily / Weekly Report は **Pond単位で記録**し、Farm単位では「足し
 | Farm Operational Status（画面表記：Operations） | 設備停止・センサー Offline・Report 未提出の有無：なし = Normal、あり = Attention、安全に関わる設備停止 = Warning 以上 |
 | Farm Status | Water quality / Growth / Operations のうち最も重いもの。別の「Overall」状態は持たない。最も重い観点の事実を Main reason（1文）として示す |
 | データ品質 | 最終取得から15分以内 = Live、15分超 = Delayed、60分超 = Offline、取得実績なし = No data |
+| Ponds needing attention（Daily Report の要約） | その日に、健康状態に注意以上の観察があるPond、または Report に含めた Alert（センサー Offline を含む）があるPond の数。根拠として Pond 番号を示す（例「3 of 8 (02, 05, 08)」） |
 | Report | Draft → Submitted。提出期限（Daily：当日18:00、Weekly：翌週月曜）を過ぎた未提出は Operational Status に反映 |
 
 ---

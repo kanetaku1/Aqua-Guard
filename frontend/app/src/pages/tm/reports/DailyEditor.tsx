@@ -54,16 +54,16 @@ export function DailyEditor({ report, onToast }: { report: DailyReport; onToast:
   useEffect(() => {
     draftRef.current = draft
   }, [draft])
-  const saveDraft = useCallback(
-    (onSaved?: () => void) =>
-      save.mutate(toInput(draftRef.current), {
-        onSuccess: () => {
-          setDirty(false)
-          onSaved?.()
-        },
-      }),
-    [save],
-  )
+  const saveDraft = useCallback((onSaved?: () => void) => {
+    const sent = draftRef.current
+    save.mutate(toInput(sent), {
+      onSuccess: () => {
+        // Typing during the request keeps the draft unsaved (it goes out with the next autosave)
+        if (draftRef.current === sent) setDirty(false)
+        onSaved?.()
+      },
+    })
+  }, [save])
   useEffect(() => {
     if (!dirty || readOnly) return
     const timer = setTimeout(() => saveDraft(), AUTOSAVE_MS)

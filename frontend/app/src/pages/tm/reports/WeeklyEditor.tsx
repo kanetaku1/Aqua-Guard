@@ -68,7 +68,11 @@ export function WeeklyEditor({ report, readOnly: forceReadOnly, onToast }: { rep
   useEffect(() => {
     draftRef.current = draft
   }, [draft])
-  const saveDraft = useCallback((onSaved?: () => void) => save.mutate(toInput(draftRef.current), { onSuccess: () => (setDirty(false), onSaved?.()) }), [save])
+  const saveDraft = useCallback((onSaved?: () => void) => {
+    const sent = draftRef.current
+    // Typing during the request keeps the draft unsaved (it goes out with the next autosave)
+    save.mutate(toInput(sent), { onSuccess: () => (draftRef.current === sent && setDirty(false), onSaved?.()) })
+  }, [save])
   useEffect(() => {
     if (!dirty || readOnly) return
     const timer = setTimeout(() => saveDraft(), AUTOSAVE_MS)

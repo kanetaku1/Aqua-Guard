@@ -2047,6 +2047,13 @@ export interface components {
             /** @description 同じ Farm の前の Report（呼び出し元が開けるものだけ。FM は提出済みのみ。nextReportId も同様） */
             previousReportId: string | null;
             nextReportId: string | null;
+            /**
+             * Format: date
+             * @description previousReportId の日付。前後ボタンに日付を表示する（未提出の日があっても正しい日付を出すため）
+             */
+            previousReportDate: string | null;
+            /** Format: date */
+            nextReportDate: string | null;
             ponds: components["schemas"]["DailyPondRow"][];
             /** @description Farm の合計（加算可能な値のみ。平均は出さない） */
             totals: {

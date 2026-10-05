@@ -865,9 +865,9 @@
       "caption": "Company total · latest sampling {{date}} · per-Farm growth in the Farm Status table",
       "biomass": "Total Biomass",
       "biomassBasis": "Sum of {{count}} Ponds · sampling {{date}}",
-      "sr": "Avg. Survival Rate",
-      "srBasis": "Sum of {{count}} Ponds · sampling {{date}}",
-      "behind": "Growth vs Target",
+      "sr": "Survival Rate",
+      "srBasis": "Weighted by stocked PL · sampling {{date}}",
+      "behind": "Ponds behind target",
       "ponds": "Ponds",
       "behindBasis": "ABW −5% or more below target for the DOC",
       "vsLastWeek": "{{value}} vs last week"

@@ -52,9 +52,9 @@ function DailyBody({ r }: { r: DailyReport }) {
   const [params] = useSearchParams()
   const date = r.date!
   const included = r.alerts.filter((a) => !a.excluded)
-  // Water-quality alerts make a Pond need attention; a sensor going offline is an equipment matter (wireframe: Pond 08 stays Normal)
-  const sensorAlerts = included.filter((a) => isSensorParameter(a.parameter))
-  const attention = r.ponds.filter((p) => p.health !== 'normal' || sensorAlerts.some((a) => a.pond.id === p.pond.id))
+  // Ponds needing attention (04 §7): health noted, or an included alert — a sensor going offline counts too,
+  // since the Pond's water quality cannot be monitored meanwhile
+  const attention = r.ponds.filter((p) => p.health !== 'normal' || included.some((a) => a.pond.id === p.pond.id))
   const resolved = included.filter((a) => a.resolvedAt).length
   const aerators = r.ponds.reduce((acc, p) => ({ on: acc.on + p.aerators.on, total: acc.total + p.aerators.total }), { on: 0, total: 0 })
 
@@ -102,9 +102,10 @@ function DailyBody({ r }: { r: DailyReport }) {
         }
         actions={
           <>
-            {/* Labelled with the day (wireframe): Daily Reports are one per day, so the neighbours are the adjacent days */}
-            <NavButton id={r.previousReportId} icon={ChevronLeft} label={dayLabel(r.date ?? '', -1)} name={t('fm.daily.previous')} before />
-            <NavButton id={r.nextReportId} icon={ChevronRight} label={dayLabel(r.date ?? '', 1)} name={t('fm.daily.next')} />
+            {/* Labelled with the neighbour's own date (wireframe) — a day without a submitted report is skipped, not mislabelled.
+                At an end the disabled button shows the adjacent day. */}
+            <NavButton id={r.previousReportId} icon={ChevronLeft} label={neighbourLabel(r.previousReportDate, r.date, -1)} name={t('fm.daily.previous')} before />
+            <NavButton id={r.nextReportId} icon={ChevronRight} label={neighbourLabel(r.nextReportDate, r.date, 1)} name={t('fm.daily.next')} />
           </>
         }
       />
@@ -147,7 +148,7 @@ function DailyBody({ r }: { r: DailyReport }) {
         <div className="card-body">
           <div className="pond-tiles">
             {r.ponds.map((p) => {
-              const sev = worst([p.health, ...sensorAlerts.filter((a) => a.pond.id === p.pond.id).map((a) => a.severity)])
+              const sev = worst([p.health, ...included.filter((a) => a.pond.id === p.pond.id).map((a) => a.severity)])
               return (
                 <div key={p.pond.id} className={cx('pond-tile', sev !== 'normal' && `is-${sev}`)}>
                   <div className="row-between">
@@ -427,7 +428,8 @@ function DailyBody({ r }: { r: DailyReport }) {
   )
 }
 
-const dayLabel = (date: string, offset: number) => (date ? formatCalendarDate(format(addDays(parseISO(date), offset), 'yyyy-MM-dd')) : '')
+const neighbourLabel = (neighbour: string | null, date: string | undefined, offset: number) =>
+  neighbour ? formatCalendarDate(neighbour) : date ? formatCalendarDate(format(addDays(parseISO(date), offset), 'yyyy-MM-dd')) : ''
 
 /** ← previous day / next day → of the same Farm (disabled at the ends). `name` is the accessible name. */
 function NavButton({ id, icon, label, name, before }: { id: string | null; icon: typeof ChevronLeft; label: string; name: string; before?: boolean }) {

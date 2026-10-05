@@ -2718,13 +2718,15 @@ components:
           description: |
             Draft の間、記録から集める値（ponds の feed* / mortality*、alerts、actuator_log / alert_handling の actions、
             equipmentEvents の actuator 分）は取得のたびに最新の記録から作り直す。Submitted は提出時点の内容で固定。
-          required: [farmStatus, ponds, totals, environment, equipmentEvents, alerts, actions, summary, previousReportId, nextReportId]
+          required: [farmStatus, ponds, totals, environment, equipmentEvents, alerts, actions, summary, previousReportId, nextReportId, previousReportDate, nextReportDate]
           properties:
             farmStatus:
               description: その日の Farm の状態（FM-05 の Farm Condition。Draft の間は現在の状態）
               allOf: [{ $ref: '#/components/schemas/Severity' }]
             previousReportId: { type: [string, 'null'], description: 同じ Farm の前の Report（呼び出し元が開けるものだけ。FM は提出済みのみ。nextReportId も同様） }
             nextReportId: { type: [string, 'null'] }
+            previousReportDate: { type: [string, 'null'], format: date, description: 'previousReportId の日付。前後ボタンに日付を表示する（未提出の日があっても正しい日付を出すため）' }
+            nextReportDate: { type: [string, 'null'], format: date }
             ponds:
               type: array
               items: { $ref: '#/components/schemas/DailyPondRow' }

@@ -46,7 +46,7 @@ describe('FM-05 Daily Report Detail', () => {
   it('shows the day as operations only, with Ponds at a glance', async () => {
     asFm('/fm/reports/daily/daily-farm-a-2026-09-28')
     expect(await screen.findByRole('heading', { level: 1, name: /Daily Report · Farm A/ })).toBeInTheDocument()
-    expect(screen.getByText('2 of 8 (02, 05)')).toBeInTheDocument()
+    expect(screen.getByText('3 of 8 (02, 05, 08)')).toBeInTheDocument() // sensor offline counts (04 §7)
     expect(screen.getByText('1,240 kg', { selector: 'dd' })).toBeInTheDocument()
     expect(screen.getByText('186 pcs · 2.40 kg')).toBeInTheDocument()
     expect(screen.getByText('3 · 2 resolved')).toBeInTheDocument()

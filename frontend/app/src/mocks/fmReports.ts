@@ -106,6 +106,8 @@ export function genericDaily(farmId: string, date: string, time: string, alertCo
       : 'A calm day. All Ponds within range, feeding as planned and no abnormal mortality.',
     previousReportId: null,
     nextReportId: null,
+    previousReportDate: null,
+    nextReportDate: null,
   }
   report.pondsNeedingAttention = new Set([...ponds.filter((p) => p.health !== 'normal').map((p) => p.pond.id), ...alerts.map((a) => a.pond.id)]).size
   report.feedKg = report.totals.feedKg

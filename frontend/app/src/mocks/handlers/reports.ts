@@ -56,7 +56,15 @@ export const reportHandlers = [
     }
     // Previous / next only point to reports the caller can open (FM: submitted only)
     const visible = (id: string | null) => (id && (user.role !== 'farms_manager' || getReport(id)?.status === 'submitted') ? id : null)
-    return HttpResponse.json({ ...report, previousReportId: visible(report.previousReportId), nextReportId: visible(report.nextReportId) })
+    const previousReportId = visible(report.previousReportId)
+    const nextReportId = visible(report.nextReportId)
+    return HttpResponse.json({
+      ...report,
+      previousReportId,
+      nextReportId,
+      previousReportDate: previousReportId ? (getReport(previousReportId)?.date ?? null) : null,
+      nextReportDate: nextReportId ? (getReport(nextReportId)?.date ?? null) : null,
+    })
   }),
 
   http.patch(api('/reports/daily/:reportId'), async ({ params, request }) => {

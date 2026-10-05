@@ -24,12 +24,18 @@ export function Drawer({
   const titleId = useId()
   const panel = useRef<HTMLElement>(null)
 
+  // Focus the panel once when it opens. Parents often pass a new onClose on every render (e.g. after an
+  // autosave), so it is read through a ref — re-running this effect would pull focus out of the field being typed in.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
   useEffect(() => {
     panel.current?.focus()
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCloseRef.current()
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [])
 
   return (
     <div className="overlay is-open" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>

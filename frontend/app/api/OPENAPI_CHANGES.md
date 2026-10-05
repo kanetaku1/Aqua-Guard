@@ -161,13 +161,15 @@ Regenerate this list: `python tools/spec_diff.py` (from `frontend/app`).
 - `DailyReport`
   - + `farmStatus`: {allOf: [{$ref: '#/components/schemas/Severity'}], description: その日の Farm の状態（FM-05 の Farm Condition。Draft の間は現在の状態）}
   - ~ `previousReportId`: {type: [string, 'null']} → {description: 同じ Farm の前の Report（呼び出し元が開けるものだけ。FM は提出済みのみ。nextReportId も同様）, type: [string, 'null']}
+  - + `previousReportDate`: {description: previousReportId の日付。前後ボタンに日付を表示する（未提出の日があっても正しい日付を出すため）, format: date, type: [string, 'null']}
+  - + `nextReportDate`: {format: date, type: [string, 'null']}
   - ~ `totals`: {description: Farm の合計（加算可能な値のみ）, properties: {feedKg: {type: number}, healthAttentionPonds: {type: integer}, leftoverTrayPonds: {type: i... → {description: Farm の合計（加算可能な値のみ。平均は出さない）, properties: {feedKg: {type: number}, healthNotedPonds: {description: Health が Normal 以外の Pond 数...
   - ~ `environment`: {properties: {events: {type: [string, 'null']}, generator: {example: 'Standby (tested 07:00)', type: [string, 'null']}, rainfallMm: {type... → {properties: {events: {type: [string, 'null']}, rainfallMm: {type: [number, 'null']}, weather: {description: 提出に必須, oneOf: [{$ref: '#/com...
   - ~ `equipmentEvents`: {items: {properties: {action: {type: string}, equipment: {type: string}, failure: {type: string}, occurredAt: {format: date-time, type: s... → {items: {$ref: '#/components/schemas/EquipmentEvent'}, type: array}
   - ~ `alerts`: {description: 'その日の Alert（source: alert_system）。TM が除外したものは excluded: true', items: {allOf: [{$ref: '#/components/schemas/Alert'}, {prope... → {description: 'その日に発生した、またはその日に継続していた Alert（source: alert_system）。TM が除外したものは excluded: true', items: {allOf: [{$ref: '#/components/schem...
   - ~ `actions`: {items: {$ref: '#/components/schemas/ReportAction'}, type: array} → {description: 時刻順, items: {$ref: '#/components/schemas/ReportAction'}, type: array}
   - − `completeness` (removed)
-  - required: +['environment', 'equipmentEvents', 'farmStatus', 'nextReportId', 'previousReportId', 'summary'] −['completeness']
+  - required: +['environment', 'equipmentEvents', 'farmStatus', 'nextReportDate', 'nextReportId', 'previousReportDate', 'previousReportId', 'summary'] −['completeness']
 - `ReportAction`
   - required: +['at', 'outcome', 'pond'] −[]
 - `DailyReportInput`
