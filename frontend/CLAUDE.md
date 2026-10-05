@@ -13,6 +13,8 @@ Before designing, building, or modifying any UI in `frontend/`, read the design 
 | 07 | `docs/07_UI・UX設計書.md` | UI/UX rules: color balance, size scale, Badge vs Indicator, interaction, states |
 | 08 | `docs/08_デザインシステム定義書.md` | Design System v2 — exact tokens and component classes |
 
+API contract with the backend: `../docs/api/openapi.yaml` (OpenAPI 3.1, drafted by frontend). KPIs and statuses are computed by the backend; live data is refetched every 5 minutes (`x-refresh-interval-seconds: 300`).
+
 Rules:
 
 - Lower numbers win on conflict (business / RBAC first). `docs/en/` is maintained separately — do not reference it.
