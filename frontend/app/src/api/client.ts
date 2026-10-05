@@ -1,4 +1,5 @@
 import createClient from 'openapi-fetch'
+import i18n from '@/i18n'
 import type { paths } from './schema'
 import type { Problem } from './types'
 
@@ -11,6 +12,14 @@ export const api = createClient<paths>({
   credentials: 'include',
   fetch: (request) => globalThis.fetch(request),
   querySerializer: { array: { style: 'form', explode: false } },
+})
+
+// The UI language, so the backend can return its own sentences (alert titles, summary facts) in it (GLOSSARY-id.md)
+api.use({
+  onRequest({ request }) {
+    request.headers.set('Accept-Language', i18n.language === 'id' ? 'id' : 'en')
+    return request
+  },
 })
 
 /** Error thrown for non-2xx responses; carries the RFC 9457 problem body. */

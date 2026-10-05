@@ -1,6 +1,12 @@
 import { TZDate } from '@date-fns/tz'
-import { format, isSameDay, parseISO } from 'date-fns'
+import { format as formatFns, isSameDay, parseISO } from 'date-fns'
+import { id as idLocale } from 'date-fns/locale'
+import i18n from '@/i18n'
 import { now } from './clock'
+
+/** date-fns `format` in the UI language: month names are Indonesian on `id` ("Agt", "Okt"). Numbers stay in the English format. */
+export const format = (date: Date, pattern: string) => formatFns(date, pattern, i18n.language === 'id' ? { locale: idLocale } : undefined)
+const t = (key: string, options?: Record<string, unknown>) => i18n.t(key, options)
 
 /** All times are shown in WIB (UTC+7), dates as "29 Sep 2026" (04 §6.1). */
 export const WIB = 'Asia/Jakarta'
@@ -21,17 +27,17 @@ export const formatDateTime = (iso: string) => format(inWib(iso), 'd MMM yyyy HH
 
 /** Same WIB day as now → "07:50", otherwise "28 Sep 22:10". */
 export function formatRecentTime(iso: string, reference: Date = now()): string {
-  const t = inWib(iso)
-  return isSameDay(t, inWib(reference)) ? format(t, 'HH:mm') : format(t, 'd MMM HH:mm')
+  const d = inWib(iso)
+  return isSameDay(d, inWib(reference)) ? format(d, 'HH:mm') : format(d, 'd MMM HH:mm')
 }
 
 /** Deadline: "today 18:00", "tomorrow 18:00" or "30 Sep 18:00". A 23:59 deadline drops the time ("today"). */
 export function formatDue(iso: string, reference: Date = now()): string {
-  const t = inWib(iso)
+  const d = inWib(iso)
   const ref = inWib(reference)
   const tomorrow = new TZDate(ref.getTime() + 86_400_000, WIB)
-  const day = isSameDay(t, ref) ? 'today' : isSameDay(t, tomorrow) ? 'tomorrow' : format(t, 'd MMM')
-  const time = format(t, 'HH:mm')
+  const day = isSameDay(d, ref) ? t('time.today') : isSameDay(d, tomorrow) ? t('time.tomorrow') : format(d, 'd MMM')
+  const time = format(d, 'HH:mm')
   return time === '23:59' ? day : `${day} ${time}`
 }
 
@@ -65,24 +71,22 @@ export const formatDayTime = (iso: string) => format(inWib(iso), 'd MMM HH:mm')
 /** Elapsed time: "45 min", "1 h 45 min", "6 h 05 min", "26 h" (minutes dropped from 10 h, hours up to 48 h), "2 days". */
 export function formatDuration(fromIso: string, toIso: string | Date = now()): string {
   const minutes = Math.max(0, Math.round((new Date(toIso).getTime() - new Date(fromIso).getTime()) / 60_000))
-  if (minutes < 60) return `${minutes} min`
+  if (minutes < 60) return t('time.min', { count: minutes })
   if (minutes < 48 * 60) {
     const h = Math.floor(minutes / 60)
     const m = minutes % 60
-    return m && h < 10 ? `${h} h ${String(m).padStart(2, '0')} min` : `${h} h`
+    return m && h < 10 ? t('time.hMin', { h, m: String(m).padStart(2, '0') }) : t('time.h', { count: h })
   }
-  const days = Math.floor(minutes / (24 * 60))
-  return days === 1 ? '1 day' : `${days} days`
+  return t('time.day', { count: Math.floor(minutes / (24 * 60)) })
 }
 
 /** How long an Issue has lasted, in whole units (FM wireframe): "45 min", "1 hr", "8 hrs", "3 days". */
 export function formatElapsed(fromIso: string, toIso: string | Date = now()): string {
   const minutes = Math.max(0, Math.round((new Date(toIso).getTime() - new Date(fromIso).getTime()) / 60_000))
-  if (minutes < 60) return `${minutes} min`
+  if (minutes < 60) return t('time.min', { count: minutes })
   const hours = Math.round(minutes / 60) // 3 h 55 min → "4 hrs"
-  if (hours < 24) return hours === 1 ? '1 hr' : `${hours} hrs`
-  const days = Math.floor(minutes / (24 * 60))
-  return days <= 1 ? '1 day' : `${days} days`
+  if (hours < 24) return t('time.hr', { count: hours })
+  return t('time.day', { count: Math.max(1, Math.floor(minutes / (24 * 60))) })
 }
 
 /** WIB calendar day → [start, end) as UTC ISO strings. */

@@ -7,6 +7,10 @@ Once a change is accepted it moves to `docs/api/openapi.yaml` and is removed fro
 
 Regenerate this list: `python tools/spec_diff.py` (from `frontend/app`).
 
+## Notes
+
+- 表示言語：クライアントは `Accept-Language: en | id` を送る。サーバーが組み立てる文（Alert の title、FarmSummary の mainReason・fact、Issue / Action の文、Actuator の scope など）をこの言語で返してほしい（id の用語は frontend/app/src/i18n/GLOSSARY-id.md）。
+
 ## Paths
 
 ### Added

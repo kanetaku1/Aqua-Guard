@@ -28,6 +28,7 @@ info:
     - **一覧**：`page`（1始まり）・`pageSize` で取得し、`{ items, page, pageSize, total }` を返す。
 
     ## 未確定（バックエンドと要相談）
+    - 表示言語：クライアントは `Accept-Language: en | id` を送る。サーバーが組み立てる文（Alert の title、FarmSummary の mainReason・fact、Issue / Action の文、Actuator の scope など）をこの言語で返してほしい（id の用語は frontend/app/src/i18n/GLOSSARY-id.md）。
     - 認証方式：httpOnly Cookie のセッションを仮置き（無操作12時間でログアウト）。
     - Actuator の Safety Layer の判定ルールと、拒否理由のコード一覧。
     - Report 提出期限（Daily 当日18:00 / Weekly 翌週月曜、仮）。

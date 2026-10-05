@@ -23,6 +23,14 @@ def short(v):
     return s if len(s) <= 140 else s[:137] + '...'
 
 
+# Notes added to the spec description (e.g. Accept-Language)
+base_info = set((base.get('info', {}).get('description') or '').splitlines())
+added_notes = [l.strip() for l in (front.get('info', {}).get('description') or '').splitlines() if l not in base_info and l.strip()]
+if added_notes:
+    out.append('## Notes\n')
+    out += [l if l.startswith('-') else f'- {l}' for l in added_notes]
+    out.append('')
+
 # Paths
 bp, fp = base['paths'], front['paths']
 added_paths = [f'{m.upper()} {p}' for p in fp for m in fp[p] if m in ('get', 'post', 'put', 'patch', 'delete') and (p not in bp or m not in bp[p])]

@@ -165,7 +165,8 @@
     "calendar": "Choose a date",
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
-    "today": "Today"
+    "today": "Today",
+    "weekdays": "Mo,Tu,We,Th,Fr,Sa,Su"
   },
   "growth": {
     "behind": "Behind",
@@ -1366,5 +1367,17 @@
       "confirmBody": "The new rules are used for all Farms.",
       "saved": "Rules saved"
     }
+  },
+  "time": {
+    "today": "today",
+    "tomorrow": "tomorrow",
+    "min": "{{count}} min",
+    "h": "{{count}} h",
+    "hMin": "{{h}} h {{m}} min",
+    "hr_one": "{{count}} hr",
+    "hr_other": "{{count}} hrs",
+    "day_one": "{{count}} day",
+    "day_other": "{{count}} days",
+    "hours": "{{value}} h"
   }
 }

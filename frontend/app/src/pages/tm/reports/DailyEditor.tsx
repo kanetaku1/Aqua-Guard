@@ -410,7 +410,8 @@ export function DailyEditor({ report, onToast }: { report: DailyReport; onToast:
                       />
                     </td>
                     <td className="cell-main">{a.pond.name}</td>
-                    <td className="wrap">
+                    {/* Wide enough for the longer Indonesian names ("DO di bawah ambang batas") */}
+                    <td className="wrap" style={{ minWidth: 200 }}>
                       <div>{alertName(a, t)}</div>
                       <div className="cell-sub">{a.id}</div>
                     </td>

@@ -228,7 +228,7 @@ function ActuatorTile({ actuator: a, busy, onCommand }: { actuator: Actuator; bu
           ) : a.state === 'on' ? (
             <>
               <dt>{t('actuator.runtimeToday')}</dt>
-              <dd>{a.runtimeTodayH === null ? '—' : `${formatNumber(a.runtimeTodayH, 1)} h`}</dd>
+              <dd>{a.runtimeTodayH === null ? '—' : t('time.hours', { value: formatNumber(a.runtimeTodayH, 1) })}</dd>
             </>
           ) : (
             <>

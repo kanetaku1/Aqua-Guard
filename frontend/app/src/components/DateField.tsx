@@ -1,12 +1,11 @@
-import { addDays, addMonths, format, isAfter, isSameDay, isSameMonth, parseISO, startOfMonth } from 'date-fns'
+import { addDays, addMonths, isAfter, isSameDay, isSameMonth, parseISO, startOfMonth } from 'date-fns'
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { todayInWib } from '@/lib/format'
+import { format, todayInWib } from '@/lib/format'
 import { cx } from '@/lib/cx'
 import { Icon } from './Icon'
 
-const DOW = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 
 /**
  * Date Field with calendar popover (08 §09, 07: dates are always picked from a calendar).
@@ -84,7 +83,7 @@ export function DateField({
             </button>
           </div>
           <div className="datepicker-grid">
-            {DOW.map((d) => (
+            {t('date.weekdays').split(',').map((d) => (
               <span key={d} className="dp-dow">
                 {d}
               </span>
