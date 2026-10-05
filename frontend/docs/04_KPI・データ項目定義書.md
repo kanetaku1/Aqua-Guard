@@ -17,6 +17,7 @@
 | 現場の記録（Technical Manager） | 放養、給餌、死亡、サンプリング、健康状態の観察、Actuator操作 | 入力 → DB → 生産KPI・Daily Report |
 | 報告（Technical Manager） | Daily / Weekly Report | DBの記録を参照し、観察・Farm共通の項目・所見を加えて作成 → 提出 → Farms Managerが閲覧 |
 
+- Sensor Database は InfluxDB とする。本システムは **5分ごと** に InfluxDB を参照し、現在値・Alert判定・集計に反映する（画面のライブ表示も5分ごとに更新）。センサーの計測間隔（3〜5分）とは別の値である。
 - Sensor DataはReportとは独立して保存し、Alertは Sensor Database から直接判定する。**Reportの作成・提出はAlertの前提ではない。**
 - Reportは既存のデータを**参照**して作成する構造化報告であり、データそのものではない。**センサー値はReportに手入力・転記しない。** Daily Reportはその日のAlert・センサーデータをリンクで参照し、Weekly Reportは水質を Sensor Database から週次で自動集計する。報告画面では記録から取り込んだ値に「From records」等の参照元を表示する。
 

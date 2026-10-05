@@ -90,7 +90,7 @@ def main():
                         f'<section class="screen"{attrs}>\n{body}\n</section>')
         print("rendered", label)
     html = ("<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n"
-            f"<meta name=\"viewport\" content=\"width={WIDTH}\">\n<title>All Screens · Smart Shrimp Pond</title>\n"
+            f"<meta name=\"viewport\" content=\"width={WIDTH}\">\n<title>All Screens · AquaGuard</title>\n"
             "<link rel=\"stylesheet\" href=\"assets/tokens.css\">\n<link rel=\"stylesheet\" href=\"assets/app.css\">\n"
             f"<style>{STYLE}</style>\n</head>\n<body>\n" + "\n\n".join(sections) + "\n</body>\n</html>\n")
     (ROOT / "all-screens.html").write_text(html, encoding="utf-8")

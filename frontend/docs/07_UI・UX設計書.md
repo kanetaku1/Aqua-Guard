@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 | --- | --- |
 | 版 | v2.5（2026-10-01：センサー・Alert・Reportの分離）／ v2.4（2026-10-01：状態色の色相分離、Badge / Indicator の判定ルールを反映） |
-| 対象 | Smart Shrimp Pond Management System — Web UI（Farms Manager / Technical Manager） |
+| 対象 | AquaGuard — Web UI（Farms Manager / Technical Manager） |
 | 関連文書 | 01〜06（業務・権限・用語・KPI・画面の正）、08_デザインシステム定義書（Design System v2：見た目の確定値）、Figma「UI Style Guidelines」（v2の元になった原典） |
 | 実装 | `frontend/prototype/`（`assets/tokens.css` / `assets/app.css` / `design-system.html`） |
 
@@ -538,3 +538,4 @@ Figma側は以下に合わせて更新する。
 | 閾値の設定画面 | 現行スコープ外。変更の権限・承認の流れが決まってから設計する |
 | 通知チャネル（Email / SMS / Push） | 未定。Web画面ではヘッダーではなくダッシュボードのActive Alertsに集約する |
 | 1024px以下のレイアウト | 本書の方針のみ。プロトタイプは1440で作成 |
+| ロゴ | システム名は AquaGuard で確定。ロゴは検討中のため、ダミーのマーク（盾＋波）で代用する（プロトタイプは `assets/layout.js` の `LOGO` のみ差し替えればよい） |

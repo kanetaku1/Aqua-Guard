@@ -1,10 +1,10 @@
-# ShrimpOS — Agentic SDLC 基本設計
+# AquaGuard — Agentic SDLC 基本設計
 
 ---
 
 # 1. 概要
 
-ShrimpOSのAgentic SDLCでは、開発工程を5つの専門Agentに分担させる。
+AquaGuardのAgentic SDLCでは、開発工程を5つの専門Agentに分担させる。
 
 ```text
 Human
@@ -212,9 +212,9 @@ Design Agentは、
 
 ## 6.1 役割
 
-ShrimpOSの**IoTデータ・データ基盤・MLを専門的に設計・管理するAgent**。
+AquaGuardの**IoTデータ・データ基盤・MLを専門的に設計・管理するAgent**。
 
-ShrimpOSでは、
+AquaGuardでは、
 
 ```text
 Sensor
@@ -890,7 +890,7 @@ Approve / Reject
 
 # 16. 最終的なAgentic SDLC
 
-ShrimpOSの現段階では、以下を基本構成として採用する。
+AquaGuardの現段階では、以下を基本構成として採用する。
 
 ```text
                  HUMAN

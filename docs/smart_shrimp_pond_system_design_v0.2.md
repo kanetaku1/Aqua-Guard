@@ -1,4 +1,4 @@
-# Smart Shrimp Pond Management System
+# AquaGuard
 
 ## システム設計書・提案書
 
@@ -18,7 +18,7 @@
 
 ## 1.1 提案システム
 
-**Smart Shrimp Pond Management System**
+**AquaGuard**
 
 養殖池に設置したIoTセンサーから水質・水環境データを取得し、天候・大気環境などの外部環境データ、および餌・給餌などの養殖管理データと統合する。
 
@@ -718,7 +718,7 @@ Farms ManagerがEstate / Farmを横断して、経営・生産上の要対応事
 
 ```text
 ┌──────────────────────────────┐
-│       SHRIMP POND             │
+│       AQUAGUARD              │
 ├──────────────────────────────┤
 │ Overall Status     Attention  │
 ├──────────────────────────────┤
