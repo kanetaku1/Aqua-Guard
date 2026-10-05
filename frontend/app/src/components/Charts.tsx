@@ -203,7 +203,8 @@ export function GrowthVsTargetChart({
           />
           <Area dataKey="band" stroke="none" fill="#EDF4F2" fillOpacity={1} isAnimationActive={false} />
           <Line dataKey="target" stroke={C.muted} strokeWidth={1.5} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
-          <Scatter data={points} dataKey="abw" shape={renderPoint} isAnimationActive={false} />
+          {/* An empty `data` would make Recharts fall back to the curve data, so draw no Scatter without points (AD-04 curve only) */}
+          {points.length > 0 && <Scatter data={points} dataKey="abw" shape={renderPoint} isAnimationActive={false} />}
         </ComposedChart>
       </ResponsiveContainer>
     </div>

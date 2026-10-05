@@ -1073,7 +1073,7 @@ export interface paths {
         };
         /**
          * Farm マスタ一覧
-         * @description Screens: AD-02（AD-F-001）。業務データ（状態・KPI）は含めない。
+         * @description Screens: AD-02（AD-F-001）。業務データ（状態・KPI）は含めない。Inactive を含む全 Farm を名前順で返す（件数が少ないため絞り込みは画面側）。
          */
         get: operations["adminListFarms"];
         put?: never;
@@ -1107,7 +1107,7 @@ export interface paths {
         head?: never;
         /**
          * Farm マスタを更新
-         * @description AD-F-003。
+         * @description AD-F-003。Inactive にすると FM・TM の画面に出なくなる（記録は残る）。
          */
         patch: operations["adminUpdateFarm"];
         trace?: never;
@@ -1159,7 +1159,7 @@ export interface paths {
         };
         /**
          * 機器一覧
-         * @description Screens: AD-03 Devices（AD-F-005）。
+         * @description Screens: AD-03 Devices（AD-F-005）。Pond 順 → センサー（項目順）→ Actuator の順。値は返さない（監視は TM の画面）。
          */
         get: operations["adminListDevices"];
         put?: never;
@@ -1203,7 +1203,8 @@ export interface paths {
         get: operations["adminGetThresholds"];
         /**
          * 閾値を保存
-         * @description 境界値の順序が矛盾する場合は 422（欄ごとの `fieldErrors`）。保存以降の判定にのみ適用する。
+         * @description 境界値の順序が矛盾する場合は 422（欄ごとの `fieldErrors`、field は `{parameter}/{boundary}`）。保存以降の判定にのみ適用する。
+         *     `farmId` 指定時は、送った項目だけがその Farm の上書きになり、送らなかった項目は初期値に戻る。
          */
         put: operations["adminPutThresholds"];
         post?: never;
@@ -1690,12 +1691,17 @@ export interface components {
         Threshold: {
             parameter: components["schemas"]["SensorParameter"] | components["schemas"]["LabParameter"];
             unit?: string;
-            criticalLow?: number | null;
-            warningLow?: number | null;
-            attentionLow?: number | null;
-            attentionHigh?: number | null;
-            warningHigh?: number | null;
-            criticalHigh?: number | null;
+            /**
+             * @description 境界を持てる側（DO は low のみ、TAN・NO2・Vibrio は high のみ）。持てない側の値は常に null
+             * @enum {string}
+             */
+            readonly sides?: "low" | "high" | "both";
+            criticalLow: number | null;
+            warningLow: number | null;
+            attentionLow: number | null;
+            attentionHigh: number | null;
+            warningHigh: number | null;
+            criticalHigh: number | null;
             /** @description Farm の上書きがなく初期値を使っている */
             readonly inherited?: boolean;
         };
@@ -2283,98 +2289,168 @@ export interface components {
             waterQualityComment?: string | null;
             technicalSummary?: string | null;
         };
+        /** @description 一覧は呼び出したユーザーを先頭に、Deactivated を末尾に。その間は SA → FM → TM（Farm 順）→ Active・Invited の順 → 名前の順 */
         AdminUser: {
             id: string;
             name: string;
             /** Format: email */
             email: string;
             role: components["schemas"]["Role"];
-            farm?: components["schemas"]["FarmRef"] | null;
-            language?: components["schemas"]["Language"];
+            farm: components["schemas"]["FarmRef"] | null;
+            language: components["schemas"]["Language"];
             status: components["schemas"]["UserStatus"];
             /** Format: date-time */
-            invitedAt?: string | null;
+            invitedAt: string | null;
+            /** @description 招待した SA（初期ユーザーなどは null） */
+            invitedBy: components["schemas"]["UserRef"] | null;
+            /**
+             * Format: date-time
+             * @description Invited の間だけ（招待から72時間）
+             */
+            invitationExpiresAt: string | null;
+            /**
+             * Format: date-time
+             * @description 招待からパスワードを設定した日時
+             */
+            activatedAt: string | null;
             /** Format: date-time */
-            invitationExpiresAt?: string | null;
-            /** Format: date-time */
-            lastSignInAt?: string | null;
+            lastSignInAt: string | null;
+            /** @description 直近の連続ログイン失敗回数（5回でロック、02 §7） */
+            failedSignIns: number;
             /** @description 自分自身・最後の SA は false */
-            canDeactivate?: boolean;
-            canChangeRole?: boolean;
+            canDeactivate: boolean;
+            /** @description 自分自身・最後の SA は false */
+            canChangeRole: boolean;
+            /** @description この TM が担当 Farm の唯一の Active な TM なら、その Farm（無効化・担当替えの確認で警告する）。それ以外は null */
+            onlyActiveTechnicalManagerOf: components["schemas"]["FarmRef"] | null;
         };
         AdminFarmInput: {
             name: string;
+            /** @description 「Region, Province」（例 East Java, Indonesia） */
             location: string;
-            /** @default Asia/Jakarta */
-            timeZone: string;
-            /** @enum {string} */
+            /**
+             * @description WIB / WITA / WIT
+             * @default Asia/Jakarta
+             * @enum {string}
+             */
+            timeZone: "Asia/Jakarta" | "Asia/Makassar" | "Asia/Jayapura";
+            /**
+             * @description 登録時は常に inactive（Pond・機器・TM をそろえてから AD-03 で有効化）
+             * @enum {string}
+             */
             status?: "active" | "inactive";
         };
         AdminFarm: components["schemas"]["AdminFarmInput"] & {
             id: string;
-            pondCount?: number;
-            pondsInOperation?: number;
-            technicalManagers?: components["schemas"]["UserRef"][];
-            devicesOnline?: number;
-            devicesTotal?: number;
+            /**
+             * Format: date-time
+             * @description AD-03 ヘッダー「Updated 2 Sep 2026 by Yusuf Rahman」
+             */
+            updatedAt: string;
+            updatedBy: components["schemas"]["UserRef"] | null;
+            /** @description 登録済みの Pond 数（休止中を含む） */
+            pondCount: number;
+            pondsInOperation: number;
+            /** @description 担当 TM（Active と Invited。Active が先）。AD-02「Agus Pratama + Fajar Nugroho (invited)」 */
+            technicalManagers: components["schemas"]["AdminFarmTechnicalManager"][];
+            devicesOnline: number;
+            devicesTotal: number;
+        };
+        AdminFarmTechnicalManager: components["schemas"]["UserRef"] & {
+            /** @enum {string} */
+            status: "active" | "invited";
         };
         AdminPondInput: {
+            /** @description Farm 内で重複不可 */
             name: string;
             areaHa: number;
-            /** @enum {string} */
-            status?: "in_operation" | "fallow";
+            /**
+             * @description fallow は監視・生産の画面に出さない（休止・準備中）
+             * @default in_operation
+             * @enum {string}
+             */
+            status: "in_operation" | "fallow";
         };
         AdminPond: components["schemas"]["AdminPondInput"] & {
             id: string;
-            sensorCount?: number;
-            actuatorCount?: number;
+            sensorCount: number;
+            actuatorCount: number;
         };
         AdminDeviceInput: {
-            /** @example A-P02-DO */
+            /**
+             * @description 機器・ゲートウェイに印字された ID。全体で重複不可、登録後は変更しない
+             * @example A-P02-DO
+             */
             deviceId: string;
             type: components["schemas"]["DeviceType"];
             pondId: string;
-            /** @description センサーのみ */
+            /** @description センサーのみ必須（測る項目）。Actuator は null */
             parameter?: components["schemas"]["SensorParameter"] | null;
+            /** @description Actuator の仕様（例 Paddlewheel · 2 HP、Inflow · 15 m³/h）。センサーは null */
+            spec?: string | null;
+        };
+        /** @description Device ID は変えない（付け替えは別の機器として登録する） */
+        AdminDeviceUpdate: {
+            type?: components["schemas"]["DeviceType"];
+            pondId?: string;
+            parameter?: components["schemas"]["SensorParameter"] | null;
+            spec?: string | null;
         };
         AdminDevice: components["schemas"]["AdminDeviceInput"] & {
-            pond?: components["schemas"]["PondRef"];
+            pond: components["schemas"]["PondRef"];
             connection: components["schemas"]["Connection"];
-            /** Format: date-time */
-            lastSeenAt?: string | null;
+            /**
+             * Format: date-time
+             * @description null = 初回の受信待ち（connection は offline だが Offline の件数・警告には含めない）
+             */
+            lastSeenAt: string | null;
         };
         SettingsMeta: {
             /** Format: date-time */
-            updatedAt?: string;
-            updatedBy?: components["schemas"]["UserRef"];
+            updatedAt: string;
+            updatedBy: components["schemas"]["UserRef"];
         };
         ThresholdSettings: components["schemas"]["SettingsMeta"] & {
             /** @description null = 全 Farm 共通の初期値 */
-            farmId?: string | null;
+            farmId: string | null;
+            /** @description 水質（センサー6項目）→ Laboratory（4項目）の順 */
             items: components["schemas"]["Threshold"][];
+            /** @description Apply to の選択肢と保存の確認に使う：Farm ごとの上書きの有無（「Farm D (1 override)」「Farm D keeps its DO override」） */
+            farms: components["schemas"]["ThresholdFarmOverride"][];
+        };
+        ThresholdFarmOverride: {
+            farm: components["schemas"]["FarmRef"];
+            /** @description 上書きしている項目（空 = 初期値を使う） */
+            parameters: string[];
         };
         GrowthTargetSettings: components["schemas"]["SettingsMeta"] & {
             points: components["schemas"]["GrowthTargetPoint"][];
             onTrackBandPct: number;
         };
+        /** @description Offline は Delayed より長く、Production の Warning は Attention より大きい（矛盾は 422） */
         RuleSettingsInput: {
             /**
              * @description 当日の締切時刻 HH:mm（WIB）
              * @example 18:00
              */
-            dailyReportDue?: string;
+            dailyReportDue: string;
             /** @description 翌週の曜日（1 = 月曜） */
-            weeklyReportDueWeekday?: number;
+            weeklyReportDueWeekday: number;
+            /**
+             * @description 翌週のその曜日の締切時刻 HH:mm（WIB）
+             * @example 12:00
+             */
+            weeklyReportDueTime: string;
             /** @example 15 */
-            sensorDelayedAfterMinutes?: number;
+            sensorDelayedAfterMinutes: number;
             /** @example 60 */
-            sensorOfflineAfterMinutes?: number;
+            sensorOfflineAfterMinutes: number;
             /** @example 30 */
-            attentionToAlertMinutes?: number;
+            attentionToAlertMinutes: number;
             /** @example 25 */
-            productionAttentionPct?: number;
+            productionAttentionPct: number;
             /** @example 50 */
-            productionWarningPct?: number;
+            productionWarningPct: number;
         };
         RuleSettings: components["schemas"]["SettingsMeta"] & components["schemas"]["RuleSettingsInput"];
     };
@@ -3875,6 +3951,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PageMeta"] & {
                         items: components["schemas"]["AdminUser"][];
+                        /** @description 絞り込みに関係なく全ユーザーの件数（Page Header「10 users · 7 active · 2 invited · 1 deactivated」） */
+                        counts: {
+                            total: number;
+                            active: number;
+                            invited: number;
+                            deactivated: number;
+                        };
                     };
                 };
             };
@@ -4096,13 +4179,22 @@ export interface operations {
             };
         };
         responses: {
-            /** @description 登録した */
+            /** @description 登録した（status は inactive） */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["AdminFarm"];
+                };
+            };
+            /** @description 同じ名前の Farm がある（`code: farm_name_taken`、`fieldErrors` に name） */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             422: components["responses"]["ValidationError"];
@@ -4152,6 +4244,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminFarm"];
+                };
+            };
+            /** @description 同じ名前の Farm がある（`code: farm_name_taken`） */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             422: components["responses"]["ValidationError"];
@@ -4205,6 +4306,15 @@ export interface operations {
                     "application/json": components["schemas"]["AdminPond"];
                 };
             };
+            /** @description 同じ Farm に同じ名前の Pond がある（`code: pond_name_taken`、`fieldErrors` に name） */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             422: components["responses"]["ValidationError"];
         };
     };
@@ -4230,6 +4340,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminPond"];
+                };
+            };
+            /** @description 同じ Farm に同じ名前の Pond がある（`code: pond_name_taken`、`fieldErrors` に name） */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             422: components["responses"]["ValidationError"];
@@ -4260,6 +4379,14 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PageMeta"] & {
                         items: components["schemas"]["AdminDevice"][];
+                        /** @description 絞り込みに関係なく Farm 全体の件数（「71 devices · 48 sensors · 23 actuators」、Devices タブの Offline 件数） */
+                        counts: {
+                            total: number;
+                            sensors: number;
+                            actuators: number;
+                            /** @description 受信実績があり今 Offline の機器（初回の受信待ちは含めない） */
+                            offline: number;
+                        };
                     };
                 };
             };
@@ -4312,7 +4439,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AdminDeviceInput"];
+                "application/json": components["schemas"]["AdminDeviceUpdate"];
             };
         };
         responses: {
@@ -4409,6 +4536,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @description 2点以上。DOC は重複せず、DOC が進むほど目標 ABW は大きい（矛盾は 422、field は `points/{index}/doc` など） */
                     points: components["schemas"]["GrowthTargetPoint"][];
                     /** @example 5 */
                     onTrackBandPct: number;

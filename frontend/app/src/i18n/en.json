@@ -996,5 +996,375 @@
       "title": "Weekly Report · {{farm}}",
       "period": "{{period}} · DOC {{min}}–{{max}}"
     }
+  },
+  "userStatus": {
+    "active": "Active",
+    "invited": "Invited",
+    "deactivated": "Deactivated"
+  },
+  "language": {
+    "en": "English",
+    "id": "Bahasa Indonesia"
+  },
+  "adUsers": {
+    "title": "Users",
+    "meta": "{{total}} users · {{active}} active · {{invited}} invited · {{deactivated}} deactivated",
+    "invite": "Invite user",
+    "search": "Search name or email",
+    "roleAll": "Role: All",
+    "statusAll": "Status: All",
+    "farmAll": "Farm: All",
+    "col": {
+      "user": "User",
+      "role": "Role",
+      "farm": "Farm",
+      "status": "Status",
+      "lastSignIn": "Last sign-in"
+    },
+    "you": "(you)",
+    "allFarms": "All Farms",
+    "invitedExpires": "Invited {{invited}} · expires {{expires}}",
+    "viewUser": "View {{name}}",
+    "none": "No users match the filters",
+    "showing": "Showing {{from}}–{{to}} of {{total}}",
+    "user": "User",
+    "saveChanges": "Save changes",
+    "field": {
+      "name": "Full name",
+      "email": "Email",
+      "role": "Role",
+      "farm": "Assigned Farm",
+      "language": "Language",
+      "farmChoose": "Choose a Farm",
+      "farmHelp": "A Technical Manager works in exactly one Farm.",
+      "farmRequired": "Choose the Farm this Technical Manager works in.",
+      "nameRequired": "Enter the full name.",
+      "emailInvalid": "Enter a valid email address.",
+      "roleRequired": "Choose a Role."
+    },
+    "roleHelp": {
+      "farms_manager": "Views all Farms and reports. Read-only.",
+      "technical_manager": "Manages the Ponds of one Farm.",
+      "system_administrator": "Manages users, master data and settings. No farm data."
+    },
+    "lockedSelf": "You cannot change your own Role.",
+    "lockedLastAdmin": "The last active System Administrator must keep the Role.",
+    "cannotDeactivateSelf": "You cannot deactivate your own account.",
+    "info": {
+      "invited": "Invited",
+      "invitedBy": "{{date}} by {{name}}",
+      "activated": "Activated",
+      "expires": "Invitation expires",
+      "lastSignIn": "Last sign-in",
+      "failedSignIns": "Failed sign-ins"
+    },
+    "account": "Account",
+    "resend": "Resend invitation",
+    "sendReset": "Send password reset",
+    "deactivate": "Deactivate user",
+    "reactivate": "Reactivate user",
+    "deactivateHelp": "Deactivated users cannot sign in. Their records and reports are kept.",
+    "reactivateHelp": "Reactivated users can sign in again with their previous Role and Farm.",
+    "confirm": {
+      "title": "Deactivate {{name}}?",
+      "body": "{{name}} will be signed out and can no longer sign in. Reports and records created by {{name}} are kept.",
+      "deactivate": "Deactivate"
+    },
+    "soleTm": {
+      "deactivate": "{{farm}} will have no active Technical Manager. Assign another user before deactivating.",
+      "change": "{{farm}} will have no active Technical Manager after this change."
+    },
+    "inviteNotice": "An invitation email will be sent. The link is valid for 72 hours.",
+    "sendInvitation": "Send invitation",
+    "invited": "Invitation sent to {{email}}",
+    "resent": "Invitation sent again to {{email}}",
+    "resetSent": "Password reset email sent to {{email}}",
+    "saved": "Changes to {{name}} saved",
+    "deactivated": "{{name}} deactivated",
+    "reactivated": "{{name}} reactivated",
+    "failed": "Could not complete the request. Try again."
+  },
+  "timeZone": {
+    "Jakarta": "WIB (UTC+7)",
+    "Makassar": "WITA (UTC+8)",
+    "Jayapura": "WIT (UTC+9)"
+  },
+  "adFarms": {
+    "title": "Farms & Ponds",
+    "meta": "Master data · {{farms}} Farms ({{active}} active) · {{ponds}} Ponds",
+    "add": "Add farm",
+    "search": "Search Farm or location",
+    "statusAll": "Status: All",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "col": {
+      "farm": "Farm",
+      "location": "Location",
+      "ponds": "Ponds",
+      "tms": "Technical Managers",
+      "devices": "Devices online",
+      "status": "Status"
+    },
+    "inOperation": "({{count}} in operation)",
+    "invited": "(invited)",
+    "noDevices": "No devices",
+    "none": "No Farms match the filters",
+    "viewFarm": "View {{name}}",
+    "inactiveNote": "Inactive Farms are hidden from Farms Manager and Technical Manager screens.",
+    "field": {
+      "name": "Farm name",
+      "namePlaceholder": "e.g. Farm F",
+      "nameRequired": "Enter a Farm name.",
+      "location": "Location",
+      "locationPlaceholder": "Region, Province",
+      "locationRequired": "Enter the location.",
+      "timeZone": "Time zone"
+    },
+    "startsInactive": "A new Farm starts as <b>Inactive</b>. Add Ponds and devices, assign a Technical Manager, then activate it."
+  },
+  "deviceType": {
+    "sensor": "Sensor",
+    "aerator": "Aerator",
+    "pump": "Water pump"
+  },
+  "connection": {
+    "online": "Online",
+    "offline": "Offline"
+  },
+  "adFarm": {
+    "notFound": "This Farm was not found.",
+    "back": "Back to Farms & Ponds",
+    "tm": "Technical Manager: {{names}}",
+    "noTm": "No Technical Manager",
+    "updatedBy": "Updated {{date}} by {{name}}",
+    "updated": "Updated {{date}}",
+    "tabs": {
+      "info": "Farm Info",
+      "ponds": "Ponds",
+      "devices": "Devices"
+    },
+    "edit": "Edit",
+    "saved": "{{name}} saved",
+    "info": {
+      "title": "Farm information",
+      "status": "Status",
+      "activeHelp": "Active — visible to Farms Manager and Technical Manager",
+      "inactiveHelp": "Inactive — hidden from Farms Manager and Technical Manager"
+    },
+    "setup": {
+      "notice": "Not set up yet: {{items}}. You can still activate the Farm.",
+      "ponds": "no Pond in operation",
+      "devices": "no devices",
+      "tm": "no active Technical Manager"
+    },
+    "deactivate": {
+      "title": "Set {{name}} to Inactive?",
+      "body": "{{name}} will be hidden from Farms Manager and Technical Manager screens. Its Ponds, devices, records and reports are kept.",
+      "confirm": "Set Inactive"
+    },
+    "users": {
+      "title": "Assigned users",
+      "link": "Users",
+      "none": "No Technical Manager is assigned to this Farm.",
+      "note": "Farms Managers see all active Farms. Assign Technical Managers in Users."
+    },
+    "pondStatus": {
+      "in_operation": "In operation",
+      "fallow": "Fallow"
+    },
+    "pondStatusHelp": {
+      "in_operation": "Shown in monitoring and production screens.",
+      "fallow": "Resting or preparing. Hidden from monitoring screens."
+    },
+    "ponds": {
+      "sub": "{{count}} Ponds · {{area}} · {{inOperation}} in operation",
+      "add": "Add pond",
+      "none": "No Ponds yet",
+      "noneHelp": "Add the Ponds of this Farm, then assign their devices.",
+      "col": {
+        "pond": "Pond",
+        "area": "Area",
+        "status": "Status",
+        "sensors": "Sensors",
+        "actuators": "Actuators"
+      },
+      "editPond": "Edit {{name}}",
+      "editTitle": "Edit {{name}}",
+      "total": "{{inOperation}} in operation · {{fallow}} fallow",
+      "note": "Fallow Ponds are hidden from monitoring screens. Stocking, feeding and sampling are recorded by the Technical Manager.",
+      "save": "Save pond",
+      "saved": "{{name}} saved",
+      "added": "{{name}} added",
+      "fallowNotice": "Its {{count}} devices stay assigned. Reassign them in Devices if they are moved.",
+      "field": {
+        "name": "Pond name",
+        "namePlaceholder": "e.g. Pond 10",
+        "nameRequired": "Enter a Pond name.",
+        "area": "Area",
+        "areaRequired": "Enter an area above 0 ha."
+      }
+    },
+    "devices": {
+      "offlineTitle_one": "{{count}} device offline:",
+      "offlineTitle_other": "{{count}} devices offline:",
+      "offlineItem": "{{id}} ({{what}}, {{pond}}) since {{since}}",
+      "sub": "{{total}} devices · {{sensors}} sensors · {{actuators}} actuators",
+      "add": "Add device",
+      "pondAll": "Pond: All",
+      "pondIs": "Pond: {{name}}",
+      "typeAll": "Type: All",
+      "typeIs": "Type: {{type}}",
+      "connectionAll": "Connection: All",
+      "connectionIs": "Connection: {{connection}}",
+      "col": {
+        "id": "Device ID",
+        "type": "Type",
+        "function": "Measures / Function",
+        "pond": "Pond",
+        "connection": "Connection",
+        "lastSeen": "Last seen"
+      },
+      "sensor": "Sensor",
+      "actuator": "Actuator",
+      "waiting": "Waiting for first reading",
+      "none": "No devices yet",
+      "noneMatch": "No devices match the filters",
+      "editDevice": "Edit {{id}}",
+      "editCaption": "Device",
+      "showingPond": "Showing {{count}} devices in {{pond}}",
+      "note": "Device values are not shown here — monitoring is in the Technical Manager screens.",
+      "saved": "{{id}} saved",
+      "added": "{{id}} added",
+      "firstReading": "The device appears as Online after it sends its first reading.",
+      "field": {
+        "idHelp": "The ID printed on the device or gateway.",
+        "idFixed": "The Device ID cannot be changed. Register a replacement as a new device.",
+        "idRequired": "Enter the Device ID.",
+        "measures": "Measures",
+        "measuresRequired": "Choose what the sensor measures.",
+        "spec": "Specification",
+        "choose": "Choose",
+        "pondRequired": "Choose a Pond."
+      }
+    }
+  },
+  "labParam": {
+    "tan": "TAN",
+    "no2": "NO2",
+    "vibrio": "Vibrio",
+    "alkalinity": "Alkalinity"
+  },
+  "adSettings": {
+    "title": "Settings",
+    "meta": "Rules used to judge water quality, growth and reports. Changes apply from the time they are saved.",
+    "updated": "Last updated {{date}} by {{name}}",
+    "unsaved_one": "{{count}} unsaved change",
+    "unsaved_other": "{{count}} unsaved changes",
+    "noChanges": "No unsaved changes",
+    "discard": "Discard changes",
+    "appliesFrom": "Applies from",
+    "now": "Now ({{date}})",
+    "past": "Past Alerts and Reports",
+    "notChanged": "Not changed",
+    "thresholds": {
+      "applyTo": "Apply to",
+      "default": "Default — all Farms",
+      "farmDefault": "{{farm}} (uses default)",
+      "farmOverrides_one": "{{farm}} ({{count}} override)",
+      "farmOverrides_other": "{{farm}} ({{count}} overrides)",
+      "notice": "Enter only the <b>boundary</b> where each status starts. Normal is calculated between the two Attention boundaries. Values must move away from Normal: Attention → Warning → Critical. Leave a side “Not used” when a parameter has no limit on that side.",
+      "sensors": "Water quality (sensors)",
+      "sensorsSub": "Pond Alerts are raised from Warning, or when Attention lasts {{minutes}} min (Rules)",
+      "lab": "Laboratory (weekly sampling)",
+      "labSub": "Highlighted in Weekly Reports · no Alerts are raised",
+      "parameter": "Parameter",
+      "lowSide": "Low side — status when the value is below",
+      "highSide": "High side — status when the value is above",
+      "low": "low",
+      "high": "high",
+      "side": "{{name}} {{side}} side",
+      "notUsed": "Not used",
+      "noUnit": "no unit",
+      "sides": {
+        "low": "Low only",
+        "high": "High only",
+        "both": "Low and high"
+      },
+      "usesDefault": "Uses the default",
+      "resetDefault": "Use the default",
+      "notNumber": "{{name}} must be a number.",
+      "must_below": "{{name}} ({{value}}) must be below {{other}} ({{otherValue}}).",
+      "must_above": "{{name}} ({{value}}) must be above {{other}} ({{otherValue}}).",
+      "overlap": "The high side ({{value}}) must be above the low side ({{low}}).",
+      "errors_one": "{{sides}} · {{count}} error to fix",
+      "errors_other": "{{sides}} · {{count}} errors to fix",
+      "confirmTitle": "Save thresholds?",
+      "confirmDefault": "New thresholds apply to all Farms that use the default ({{farms}}).",
+      "confirmKeeps": "{{farm}} keeps its {{parameters}} override.",
+      "confirmFarm": "These thresholds apply to {{farm}} only. Parameters left on the default follow the default.",
+      "saved": "Thresholds saved"
+    },
+    "growth": {
+      "curve": "Target growth curve",
+      "curveSub": "Target ABW by DOC · values between points are interpolated",
+      "target": "Target ABW",
+      "band": "On-track band",
+      "points": "Curve points",
+      "addPoint": "Add point",
+      "doc": "DOC",
+      "abw": "Target ABW (g)",
+      "docOf": "DOC of point {{n}}",
+      "abwOf": "Target ABW of point {{n}}",
+      "remove": "Remove DOC {{doc}}",
+      "docInvalid": "Enter a whole number of days.",
+      "docOrder": "DOC must be after {{doc}}.",
+      "abwInvalid": "Enter a weight above 0 g.",
+      "abwOrder": "Must be above {{abw}} g.",
+      "bandTitle": "On-track band",
+      "tolerance": "Tolerance",
+      "toleranceHelp": "Behind = ABW below target by this % or more. Ahead = above by this % or more.",
+      "bandInvalid": "Enter 1–50%.",
+      "confirmTitle": "Save growth targets?",
+      "confirmBody": "The new curve and band are used for Growth vs Target in all Farms.",
+      "saved": "Growth targets saved"
+    },
+    "rules": {
+      "deadlines": "Report deadlines",
+      "deadlinesSub": "Overdue reports raise the Farm's Operational Status",
+      "dailyDue": "Daily Report due",
+      "sameDay": "same day",
+      "weeklyDue": "Weekly Report due (next week)",
+      "weeklyTime": "Weekly Report due time",
+      "weekday": {
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday",
+        "7": "Sunday"
+      },
+      "freshness": "Data freshness",
+      "freshnessSub": "Shown as Live / Delayed / Offline",
+      "delayedAfter": "Delayed after",
+      "offlineAfterLabel": "Offline after",
+      "alerts": "Alerts",
+      "attentionLasts": "Raise an Alert when Attention lasts",
+      "attentionHelp": "Warning and Critical always raise an Alert immediately.",
+      "production": "Farm Production Status",
+      "productionSub": "Share of Ponds behind the growth target",
+      "attentionFrom": "Attention from",
+      "warningFrom": "Warning from",
+      "time": "Enter a time as HH:mm.",
+      "wholeNumber": "Enter a whole number above 0.",
+      "percent": "Enter 1–100%.",
+      "offlineAfter": "Must be longer than “Delayed after” ({{minutes}} min).",
+      "warningAfter": "Must be above “Attention from” ({{pct}}%).",
+      "confirmTitle": "Save rules?",
+      "confirmBody": "The new rules are used for all Farms.",
+      "saved": "Rules saved"
+    }
   }
 }

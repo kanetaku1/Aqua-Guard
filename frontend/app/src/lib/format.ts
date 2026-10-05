@@ -10,6 +10,9 @@ const inWib = (value: string | Date) => new TZDate(new Date(value).getTime(), WI
 /** UTC date-time → "29 Sep 2026" in WIB. */
 export const formatDate = (iso: string) => format(inWib(iso), 'd MMM yyyy')
 
+/** UTC date-time → "28 Sep" in WIB. */
+export const formatDayMonth = (iso: string) => format(inWib(iso), 'd MMM')
+
 /** UTC date-time → "09:35" in WIB. */
 export const formatTime = (iso: string) => format(inWib(iso), 'HH:mm')
 

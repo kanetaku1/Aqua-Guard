@@ -19,6 +19,16 @@ Regenerate this list: `python tools/spec_diff.py` (from `frontend/app`).
 - `GET /ponds/{pondId}/feedings`
 - `GET /ponds/{pondId}/mortalities`
 - `GET /ponds/{pondId}/actuators`
+- `GET /admin/users`
+- `GET /admin/farms`
+- `POST /admin/farms`
+- `PATCH /admin/farms/{farmId}`
+- `POST /admin/farms/{farmId}/ponds`
+- `PATCH /admin/ponds/{pondId}`
+- `GET /admin/farms/{farmId}/devices`
+- `PATCH /admin/devices/{deviceId}`
+- `PUT /admin/settings/thresholds`
+- `PUT /admin/settings/growth-targets`
 
 ## Schemas
 
@@ -30,6 +40,9 @@ Regenerate this list: `python tools/spec_diff.py` (from `frontend/app`).
 - `Weather`
 - `EquipmentEvent`
 - `WeeklyAction`
+- `AdminFarmTechnicalManager`
+- `AdminDeviceUpdate`
+- `ThresholdFarmOverride`
 
 ### Changed
 
@@ -73,6 +86,9 @@ Regenerate this list: `python tools/spec_diff.py` (from `frontend/app`).
   - + `openAlerts`: {description: 未解決の Alert 数（Alerts タブの件数）, type: integer}
   - + `feeding`: {description: 給餌の記録フォーム用（回の予定時刻・飼料・当日の計画量）, properties: {feedTypes: {items: {example: Grower 2 (2.0 mm), type: string}, type: array}, pla...
   - required: +['abwG', 'areaHa', 'doc', 'feeding', 'openAlerts', 'stockedOn', 'stockedPl'] −[]
+- `Threshold`
+  - + `sides`: {description: 境界を持てる側（DO は low のみ、TAN・NO2・Vibrio は high のみ）。持てない側の値は常に null, enum: [low, high, both], readOnly: true, type: string}
+  - required: +['attentionHigh', 'attentionLow', 'criticalHigh', 'criticalLow', 'warningHigh', 'warningLow'] −[]
 - `SensorHistoryRow`
   - + `values`: {description: キーは SensorParameter。範囲外の判定はバックエンド, properties: {do: {$ref: '#/components/schemas/HistoryValue'}, ph: {$ref: '#/components/s...
   - − `do` (removed)
@@ -205,3 +221,42 @@ Regenerate this list: `python tools/spec_diff.py` (from `frontend/app`).
   - ~ `waterQualityComment`: {type: string} → {type: [string, 'null']}
   - ~ `technicalSummary`: {type: string} → {type: [string, 'null']}
   - − `laboratoryConfirmed` (removed)
+- `AdminUser`
+  - + `invitedBy`: {description: 招待した SA（初期ユーザーなどは null）, oneOf: [{$ref: '#/components/schemas/UserRef'}, {type: 'null'}]}
+  - ~ `invitationExpiresAt`: {format: date-time, type: [string, 'null']} → {description: Invited の間だけ（招待から72時間）, format: date-time, type: [string, 'null']}
+  - + `activatedAt`: {description: 招待からパスワードを設定した日時, format: date-time, type: [string, 'null']}
+  - + `failedSignIns`: {description: 直近の連続ログイン失敗回数（5回でロック、02 §7）, type: integer}
+  - ~ `canChangeRole`: {type: boolean} → {description: 自分自身・最後の SA は false, type: boolean}
+  - + `onlyActiveTechnicalManagerOf`: {description: この TM が担当 Farm の唯一の Active な TM なら、その Farm（無効化・担当替えの確認で警告する）。それ以外は null, oneOf: [{$ref: '#/components/schemas/FarmRef'}, {t...
+  - required: +['activatedAt', 'canChangeRole', 'canDeactivate', 'failedSignIns', 'farm', 'invitationExpiresAt', 'invitedAt', 'invitedBy', 'language', 'lastSignInAt', 'onlyActiveTechnicalManagerOf'] −[]
+- `AdminFarmInput`
+  - ~ `location`: {type: string} → {description: '「Region, Province」（例 East Java, Indonesia）', type: string}
+  - ~ `timeZone`: {default: Asia/Jakarta, type: string} → {default: Asia/Jakarta, description: WIB / WITA / WIT, enum: [Asia/Jakarta, Asia/Makassar, Asia/Jayapura], type: string}
+  - ~ `status`: {enum: [active, inactive], type: string} → {description: 登録時は常に inactive（Pond・機器・TM をそろえてから AD-03 で有効化）, enum: [active, inactive], type: string}
+- `AdminFarm`
+  - + `updatedAt`: {description: AD-03 ヘッダー「Updated 2 Sep 2026 by Yusuf Rahman」, format: date-time, type: string}
+  - + `updatedBy`: {oneOf: [{$ref: '#/components/schemas/UserRef'}, {type: 'null'}]}
+  - ~ `pondCount`: {type: integer} → {description: 登録済みの Pond 数（休止中を含む）, type: integer}
+  - ~ `technicalManagers`: {items: {$ref: '#/components/schemas/UserRef'}, type: array} → {description: 担当 TM（Active と Invited。Active が先）。AD-02「Agus Pratama + Fajar Nugroho (invited)」, items: {$ref: '#/components/schemas/AdminF...
+  - required: +['devicesOnline', 'devicesTotal', 'pondCount', 'pondsInOperation', 'status', 'technicalManagers', 'timeZone', 'updatedAt', 'updatedBy'] −[]
+- `AdminPondInput`
+  - ~ `name`: {type: string} → {description: Farm 内で重複不可, type: string}
+  - ~ `status`: {enum: [in_operation, fallow], type: string} → {default: in_operation, description: fallow は監視・生産の画面に出さない（休止・準備中）, enum: [in_operation, fallow], type: string}
+- `AdminPond`
+  - required: +['actuatorCount', 'sensorCount', 'status'] −[]
+- `AdminDeviceInput`
+  - ~ `deviceId`: {example: A-P02-DO, type: string} → {description: 機器・ゲートウェイに印字された ID。全体で重複不可、登録後は変更しない, example: A-P02-DO, type: string}
+  - ~ `parameter`: {description: センサーのみ, oneOf: [{$ref: '#/components/schemas/SensorParameter'}, {type: 'null'}]} → {description: センサーのみ必須（測る項目）。Actuator は null, oneOf: [{$ref: '#/components/schemas/SensorParameter'}, {type: 'null'}]}
+  - + `spec`: {description: Actuator の仕様（例 Paddlewheel · 2 HP、Inflow · 15 m³/h）。センサーは null, type: [string, 'null']}
+- `AdminDevice`
+  - ~ `lastSeenAt`: {format: date-time, type: [string, 'null']} → {description: null = 初回の受信待ち（connection は offline だが Offline の件数・警告には含めない）, format: date-time, type: [string, 'null']}
+  - required: +['lastSeenAt', 'parameter', 'pond', 'spec'] −[]
+- `SettingsMeta`
+  - required: +['updatedAt', 'updatedBy'] −[]
+- `ThresholdSettings`
+  - ~ `items`: {items: {$ref: '#/components/schemas/Threshold'}, type: array} → {description: 水質（センサー6項目）→ Laboratory（4項目）の順, items: {$ref: '#/components/schemas/Threshold'}, type: array}
+  - + `farms`: {description: Apply to の選択肢と保存の確認に使う：Farm ごとの上書きの有無（「Farm D (1 override)」「Farm D keeps its DO override」）, items: {$ref: '#/components/sch...
+  - required: +['farmId', 'farms'] −[]
+- `RuleSettingsInput`
+  - + `weeklyReportDueTime`: {description: '翌週のその曜日の締切時刻 HH:mm（WIB）', example: '12:00', type: string}
+  - required: +['attentionToAlertMinutes', 'dailyReportDue', 'productionAttentionPct', 'productionWarningPct', 'sensorDelayedAfterMinutes', 'sensorOfflineAfterMinutes', 'weeklyReportDueTime', 'weeklyReportDueWeekday'] −[]

@@ -1283,11 +1283,20 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/PageMeta'
                   - type: object
-                    required: [items]
+                    required: [items, counts]
                     properties:
                       items:
                         type: array
                         items: { $ref: '#/components/schemas/AdminUser' }
+                      counts:
+                        type: object
+                        description: 絞り込みに関係なく全ユーザーの件数（Page Header「10 users · 7 active · 2 invited · 1 deactivated」）
+                        required: [total, active, invited, deactivated]
+                        properties:
+                          total: { type: integer }
+                          active: { type: integer }
+                          invited: { type: integer }
+                          deactivated: { type: integer }
     post:
       tags: [Admin]
       summary: ユーザーを招待
@@ -1416,7 +1425,7 @@ paths:
     get:
       tags: [Admin]
       summary: Farm マスタ一覧
-      description: 'Screens: AD-02（AD-F-001）。業務データ（状態・KPI）は含めない。'
+      description: 'Screens: AD-02（AD-F-001）。業務データ（状態・KPI）は含めない。Inactive を含む全 Farm を名前順で返す（件数が少ないため絞り込みは画面側）。'
       operationId: adminListFarms
       responses:
         '200':
@@ -1442,10 +1451,15 @@ paths:
             schema: { $ref: '#/components/schemas/AdminFarmInput' }
       responses:
         '201':
-          description: 登録した
+          description: 登録した（status は inactive）
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AdminFarm' }
+        '409':
+          description: '同じ名前の Farm がある（`code: farm_name_taken`、`fieldErrors` に name）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
   /admin/farms/{farmId}:
@@ -1465,7 +1479,7 @@ paths:
     patch:
       tags: [Admin]
       summary: Farm マスタを更新
-      description: AD-F-003。
+      description: AD-F-003。Inactive にすると FM・TM の画面に出なくなる（記録は残る）。
       operationId: adminUpdateFarm
       parameters:
         - $ref: '#/components/parameters/FarmId'
@@ -1480,6 +1494,11 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AdminFarm' }
+        '409':
+          description: '同じ名前の Farm がある（`code: farm_name_taken`）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
   /admin/farms/{farmId}/ponds:
@@ -1519,6 +1538,11 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AdminPond' }
+        '409':
+          description: '同じ Farm に同じ名前の Pond がある（`code: pond_name_taken`、`fieldErrors` に name）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
   /admin/ponds/{pondId}:
@@ -1539,13 +1563,18 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AdminPond' }
+        '409':
+          description: '同じ Farm に同じ名前の Pond がある（`code: pond_name_taken`、`fieldErrors` に name）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
   /admin/farms/{farmId}/devices:
     get:
       tags: [Admin]
       summary: 機器一覧
-      description: 'Screens: AD-03 Devices（AD-F-005）。'
+      description: 'Screens: AD-03 Devices（AD-F-005）。Pond 順 → センサー（項目順）→ Actuator の順。値は返さない（監視は TM の画面）。'
       operationId: adminListDevices
       parameters:
         - $ref: '#/components/parameters/FarmId'
@@ -1563,11 +1592,20 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/PageMeta'
                   - type: object
-                    required: [items]
+                    required: [items, counts]
                     properties:
                       items:
                         type: array
                         items: { $ref: '#/components/schemas/AdminDevice' }
+                      counts:
+                        type: object
+                        description: 絞り込みに関係なく Farm 全体の件数（「71 devices · 48 sensors · 23 actuators」、Devices タブの Offline 件数）
+                        required: [total, sensors, actuators, offline]
+                        properties:
+                          total: { type: integer }
+                          sensors: { type: integer }
+                          actuators: { type: integer }
+                          offline: { type: integer, description: 受信実績があり今 Offline の機器（初回の受信待ちは含めない） }
     post:
       tags: [Admin]
       summary: 機器を登録・割り当て
@@ -1603,7 +1641,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AdminDeviceInput' }
+            schema: { $ref: '#/components/schemas/AdminDeviceUpdate' }
       responses:
         '200':
           description: OK
@@ -1631,7 +1669,9 @@ paths:
     put:
       tags: [Admin]
       summary: 閾値を保存
-      description: 境界値の順序が矛盾する場合は 422（欄ごとの `fieldErrors`）。保存以降の判定にのみ適用する。
+      description: |
+        境界値の順序が矛盾する場合は 422（欄ごとの `fieldErrors`、field は `{parameter}/{boundary}`）。保存以降の判定にのみ適用する。
+        `farmId` 指定時は、送った項目だけがその Farm の上書きになり、送らなかった項目は初期値に戻る。
       operationId: adminPutThresholds
       parameters:
         - { name: farmId, in: query, schema: { type: string } }
@@ -1680,8 +1720,9 @@ paths:
               properties:
                 points:
                   type: array
+                  description: 2点以上。DOC は重複せず、DOC が進むほど目標 ABW は大きい（矛盾は 422、field は `points/{index}/doc` など）
                   items: { $ref: '#/components/schemas/GrowthTargetPoint' }
-                onTrackBandPct: { type: number, example: 5 }
+                onTrackBandPct: { type: number, example: 5, minimum: 1, maximum: 50 }
       responses:
         '200':
           description: OK
@@ -2314,13 +2355,18 @@ components:
     Threshold:
       type: object
       description: 境界値（04 §6.2）。Normal は両側の Attention 境界の間として自動で決まる。使わない値は null
-      required: [parameter]
+      required: [parameter, criticalLow, warningLow, attentionLow, attentionHigh, warningHigh, criticalHigh]
       properties:
         parameter:
           oneOf:
             - $ref: '#/components/schemas/SensorParameter'
             - $ref: '#/components/schemas/LabParameter'
         unit: { type: string }
+        sides:
+          type: string
+          enum: [low, high, both]
+          readOnly: true
+          description: 境界を持てる側（DO は low のみ、TAN・NO2・Vibrio は high のみ）。持てない側の値は常に null
         criticalLow: { type: [number, 'null'] }
         warningLow: { type: [number, 'null'] }
         attentionLow: { type: [number, 'null'] }
@@ -3038,7 +3084,8 @@ components:
     # ── Admin ──
     AdminUser:
       type: object
-      required: [id, name, email, role, status]
+      description: 一覧は呼び出したユーザーを先頭に、Deactivated を末尾に。その間は SA → FM → TM（Farm 順）→ Active・Invited の順 → 名前の順
+      required: [id, name, email, role, farm, language, status, invitedAt, invitedBy, invitationExpiresAt, activatedAt, lastSignInAt, failedSignIns, canDeactivate, canChangeRole, onlyActiveTechnicalManagerOf]
       properties:
         id: { type: string }
         name: { type: string }
@@ -3051,48 +3098,78 @@ components:
         language: { $ref: '#/components/schemas/Language' }
         status: { $ref: '#/components/schemas/UserStatus' }
         invitedAt: { type: [string, 'null'], format: date-time }
-        invitationExpiresAt: { type: [string, 'null'], format: date-time }
+        invitedBy:
+          description: 招待した SA（初期ユーザーなどは null）
+          oneOf:
+            - $ref: '#/components/schemas/UserRef'
+            - type: 'null'
+        invitationExpiresAt: { type: [string, 'null'], format: date-time, description: Invited の間だけ（招待から72時間） }
+        activatedAt: { type: [string, 'null'], format: date-time, description: 招待からパスワードを設定した日時 }
         lastSignInAt: { type: [string, 'null'], format: date-time }
+        failedSignIns: { type: integer, description: 直近の連続ログイン失敗回数（5回でロック、02 §7） }
         canDeactivate: { type: boolean, description: 自分自身・最後の SA は false }
-        canChangeRole: { type: boolean }
+        canChangeRole: { type: boolean, description: 自分自身・最後の SA は false }
+        onlyActiveTechnicalManagerOf:
+          description: この TM が担当 Farm の唯一の Active な TM なら、その Farm（無効化・担当替えの確認で警告する）。それ以外は null
+          oneOf:
+            - $ref: '#/components/schemas/FarmRef'
+            - type: 'null'
 
     AdminFarmInput:
       type: object
       required: [name, location]
       properties:
         name: { type: string }
-        location: { type: string }
-        timeZone: { type: string, default: Asia/Jakarta }
-        status: { type: string, enum: [active, inactive] }
+        location: { type: string, description: '「Region, Province」（例 East Java, Indonesia）' }
+        timeZone:
+          type: string
+          enum: [Asia/Jakarta, Asia/Makassar, Asia/Jayapura]
+          default: Asia/Jakarta
+          description: WIB / WITA / WIT
+        status: { type: string, enum: [active, inactive], description: 登録時は常に inactive（Pond・機器・TM をそろえてから AD-03 で有効化） }
 
     AdminFarm:
       allOf:
         - $ref: '#/components/schemas/AdminFarmInput'
         - type: object
-          required: [id]
+          required: [id, timeZone, status, pondCount, pondsInOperation, technicalManagers, devicesOnline, devicesTotal, updatedAt, updatedBy]
           properties:
             id: { type: string }
-            pondCount: { type: integer }
+            updatedAt: { type: string, format: date-time, description: AD-03 ヘッダー「Updated 2 Sep 2026 by Yusuf Rahman」 }
+            updatedBy:
+              oneOf:
+                - $ref: '#/components/schemas/UserRef'
+                - type: 'null'
+            pondCount: { type: integer, description: 登録済みの Pond 数（休止中を含む） }
             pondsInOperation: { type: integer }
             technicalManagers:
               type: array
-              items: { $ref: '#/components/schemas/UserRef' }
+              description: 担当 TM（Active と Invited。Active が先）。AD-02「Agus Pratama + Fajar Nugroho (invited)」
+              items: { $ref: '#/components/schemas/AdminFarmTechnicalManager' }
             devicesOnline: { type: integer }
             devicesTotal: { type: integer }
+
+    AdminFarmTechnicalManager:
+      allOf:
+        - $ref: '#/components/schemas/UserRef'
+        - type: object
+          required: [status]
+          properties:
+            status: { type: string, enum: [active, invited] }
 
     AdminPondInput:
       type: object
       required: [name, areaHa]
       properties:
-        name: { type: string }
+        name: { type: string, description: Farm 内で重複不可 }
         areaHa: { type: number, exclusiveMinimum: 0 }
-        status: { type: string, enum: [in_operation, fallow] }
+        status: { type: string, enum: [in_operation, fallow], default: in_operation, description: fallow は監視・生産の画面に出さない（休止・準備中） }
 
     AdminPond:
       allOf:
         - $ref: '#/components/schemas/AdminPondInput'
         - type: object
-          required: [id]
+          required: [id, status, sensorCount, actuatorCount]
           properties:
             id: { type: string }
             sensorCount: { type: integer }
@@ -3102,27 +3179,41 @@ components:
       type: object
       required: [deviceId, type, pondId]
       properties:
-        deviceId: { type: string, example: A-P02-DO }
+        deviceId: { type: string, example: A-P02-DO, description: 機器・ゲートウェイに印字された ID。全体で重複不可、登録後は変更しない }
         type: { $ref: '#/components/schemas/DeviceType' }
         pondId: { type: string }
         parameter:
-          description: センサーのみ
+          description: センサーのみ必須（測る項目）。Actuator は null
           oneOf:
             - $ref: '#/components/schemas/SensorParameter'
             - type: 'null'
+        spec: { type: [string, 'null'], description: 'Actuator の仕様（例 Paddlewheel · 2 HP、Inflow · 15 m³/h）。センサーは null' }
+
+    AdminDeviceUpdate:
+      type: object
+      description: Device ID は変えない（付け替えは別の機器として登録する）
+      properties:
+        type: { $ref: '#/components/schemas/DeviceType' }
+        pondId: { type: string }
+        parameter:
+          oneOf:
+            - $ref: '#/components/schemas/SensorParameter'
+            - type: 'null'
+        spec: { type: [string, 'null'] }
 
     AdminDevice:
       allOf:
         - $ref: '#/components/schemas/AdminDeviceInput'
         - type: object
-          required: [connection]
+          required: [pond, connection, lastSeenAt, parameter, spec]
           properties:
             pond: { $ref: '#/components/schemas/PondRef' }
             connection: { $ref: '#/components/schemas/Connection' }
-            lastSeenAt: { type: [string, 'null'], format: date-time }
+            lastSeenAt: { type: [string, 'null'], format: date-time, description: 'null = 初回の受信待ち（connection は offline だが Offline の件数・警告には含めない）' }
 
     SettingsMeta:
       type: object
+      required: [updatedAt, updatedBy]
       properties:
         updatedAt: { type: string, format: date-time }
         updatedBy: { $ref: '#/components/schemas/UserRef' }
@@ -3131,12 +3222,27 @@ components:
       allOf:
         - $ref: '#/components/schemas/SettingsMeta'
         - type: object
-          required: [items]
+          required: [farmId, items, farms]
           properties:
             farmId: { type: [string, 'null'], description: null = 全 Farm 共通の初期値 }
             items:
               type: array
+              description: 水質（センサー6項目）→ Laboratory（4項目）の順
               items: { $ref: '#/components/schemas/Threshold' }
+            farms:
+              type: array
+              description: 'Apply to の選択肢と保存の確認に使う：Farm ごとの上書きの有無（「Farm D (1 override)」「Farm D keeps its DO override」）'
+              items: { $ref: '#/components/schemas/ThresholdFarmOverride' }
+
+    ThresholdFarmOverride:
+      type: object
+      required: [farm, parameters]
+      properties:
+        farm: { $ref: '#/components/schemas/FarmRef' }
+        parameters:
+          type: array
+          description: 上書きしている項目（空 = 初期値を使う）
+          items: { type: string }
 
     GrowthTargetSettings:
       allOf:
@@ -3151,9 +3257,12 @@ components:
 
     RuleSettingsInput:
       type: object
+      description: 'Offline は Delayed より長く、Production の Warning は Attention より大きい（矛盾は 422）'
+      required: [dailyReportDue, weeklyReportDueWeekday, weeklyReportDueTime, sensorDelayedAfterMinutes, sensorOfflineAfterMinutes, attentionToAlertMinutes, productionAttentionPct, productionWarningPct]
       properties:
         dailyReportDue: { type: string, description: '当日の締切時刻 HH:mm（WIB）', example: '18:00' }
         weeklyReportDueWeekday: { type: integer, minimum: 1, maximum: 7, description: 翌週の曜日（1 = 月曜） }
+        weeklyReportDueTime: { type: string, description: '翌週のその曜日の締切時刻 HH:mm（WIB）', example: '12:00' }
         sensorDelayedAfterMinutes: { type: integer, example: 15 }
         sensorOfflineAfterMinutes: { type: integer, example: 60 }
         attentionToAlertMinutes: { type: integer, example: 30 }

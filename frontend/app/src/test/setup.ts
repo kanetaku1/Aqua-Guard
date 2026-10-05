@@ -2,6 +2,8 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, configure } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import '@/i18n'
+import { resetAdmin } from '@/mocks/admin'
+import { resetSettings } from '@/mocks/settings'
 import { resetAuthState } from '@/mocks/handlers/auth'
 import { resetSamplings } from '@/mocks/handlers/ponds'
 import { setSession } from '@/mocks/http'
@@ -24,6 +26,8 @@ afterEach(() => {
   cleanup()
   server.resetHandlers()
   resetAuthState()
+  resetAdmin()
+  resetSettings()
   resetSamplings()
   resetPondStore()
   resetReports()

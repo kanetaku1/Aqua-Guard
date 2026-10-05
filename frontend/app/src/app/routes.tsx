@@ -12,6 +12,10 @@ import { FmFarms } from '@/pages/fm/Farms'
 import { FmDailyReport } from '@/pages/fm/DailyReportView'
 import { FmReports } from '@/pages/fm/Reports'
 import { FmWeeklyReport } from '@/pages/fm/WeeklyReportView'
+import { AdFarmDetail } from '@/pages/ad/FarmDetail'
+import { AdFarms } from '@/pages/ad/Farms'
+import { AdSettings } from '@/pages/ad/Settings'
+import { AdUsers } from '@/pages/ad/Users'
 import { Placeholder } from '@/pages/Placeholder'
 import { SCREENS } from '@/pages/screens'
 import { TmDashboard } from '@/pages/tm/Dashboard'
@@ -33,6 +37,10 @@ const PAGES: Record<string, ComponentType> = {
   'TM-03': TmPondDetail,
   'TM-04': TmDailyReport,
   'TM-05': TmWeeklyReport,
+  'AD-01': AdUsers,
+  'AD-02': AdFarms,
+  'AD-03': AdFarmDetail,
+  'AD-04': AdSettings,
 }
 
 const ROLES: Role[] = ['farms_manager', 'technical_manager', 'system_administrator']

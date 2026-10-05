@@ -134,6 +134,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
   busy,
+  danger,
 }: {
   title: string
   children: ReactNode
@@ -141,6 +142,8 @@ export function ConfirmDialog({
   onConfirm: () => void
   onCancel: () => void
   busy?: boolean
+  /** Destructive action (e.g. Deactivate): Danger button (08) */
+  danger?: boolean
 }) {
   const { t } = useTranslation()
   const titleId = useId()
@@ -162,7 +165,7 @@ export function ConfirmDialog({
           <button type="button" className="btn btn--outline" onClick={onCancel}>
             {t('common.cancel')}
           </button>
-          <button type="button" className="btn btn--primary" onClick={onConfirm} disabled={busy}>
+          <button type="button" className={danger ? 'btn btn--danger' : 'btn btn--primary'} onClick={onConfirm} disabled={busy}>
             {confirmLabel}
           </button>
         </div>
