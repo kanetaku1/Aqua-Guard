@@ -1,6 +1,8 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
+import { server } from '@/mocks/server'
 import { renderApp } from '@/test/render'
 
 describe('Role guard and sign-in (SCR-COM-001/002, AU-01)', () => {
@@ -42,5 +44,16 @@ describe('Role guard and sign-in (SCR-COM-001/002, AU-01)', () => {
     }
     expect(await screen.findByText(/locked for 15 minutes after 5 failed attempts/)).toBeInTheDocument()
     expect(signIn).toBeDisabled()
+  })
+
+  it('says the server cannot be reached (not "signed out") when the session check fails, and recovers on Retry', async () => {
+    // e.g. `npm run dev` without a backend: the dev proxy answers 503
+    server.use(http.get('*/api/v1/auth/me', () => HttpResponse.json({ title: 'Backend not reachable', status: 503, code: 'backend_unreachable' }, { status: 503 }), { once: true }))
+    const { router } = renderApp('/tm/dashboard', { userId: 'u-sari' })
+    expect(await screen.findByRole('heading', { name: 'Cannot reach the server' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/tm/dashboard') // not sent to Login
+
+    await userEvent.click(screen.getByRole('button', { name: 'Retry' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Dashboard' })).toBeInTheDocument()
   })
 })

@@ -6,11 +6,23 @@ Vite + React + TypeScript. Design docs: `../docs/01〜08`, latest design: `../im
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev:mock` | Dev server with the API served by MSW (`src/mocks`) — no backend needed |
-| `npm run dev` | Dev server; `/api` is proxied to the backend at `http://localhost:8000` |
+| `npm run dev:mock` | Dev server with the API served by MSW (`src/mocks`) — **use this while the backend is not running** |
+| `npm run dev` | Dev server; `/api` is proxied to the backend (`API_PROXY_TARGET`, default `http://localhost:8000`) |
 | `npm run gen:api` | Regenerate `src/api/schema.d.ts` after changing `api/openapi.frontend.yaml` (then `python tools/spec_diff.py`) |
 | `npm test` | Vitest (jsdom + MSW) |
 | `npm run lint` / `npm run build` | oxlint / type check + production build |
+
+### Running against the backend (`dev`)
+
+Set the backend URL in `.env.local` if it is not `http://localhost:8000`:
+
+```
+API_PROXY_TARGET=http://localhost:8080
+```
+
+If nothing answers there, the terminal prints `[aquaguard] No backend at …` (followed by Vite's `http proxy error … ECONNREFUSED`)
+and the app shows "Cannot reach the server". Start the backend, fix `API_PROXY_TARGET`, or use `npm run dev:mock`.
+Note: the backend draft (`docs/backend/api_design.md`) uses other paths than the agreed contract (`docs/api/openapi.yaml`); align them before connecting.
 
 ### Mock sign-in (`dev:mock`)
 
@@ -19,8 +31,8 @@ Password `password123` for every user:
 | Email | Role | First screen |
 | --- | --- | --- |
 | `sari.wijaya@nusantarashrimp.co.id` | Technical Manager (Farm A) | TM-01 Dashboard |
-| `hendra.kusuma@nusantarashrimp.co.id` | Farms Manager | FM-01 (placeholder) |
-| `yusuf.rahman@nusantarashrimp.co.id` | System Administrator | AD-01 (placeholder) |
+| `hendra.kusuma@nusantarashrimp.co.id` | Farms Manager | FM-01 Dashboard |
+| `yusuf.rahman@nusantarashrimp.co.id` | System Administrator | AD-01 Users |
 | `eko.wibowo@nusantarashrimp.co.id` | deactivated | — |
 
 Five wrong passwords lock the account for 15 minutes. Set Password links: `/set-password?token=invite-demo` · `reset-demo` · `expired-demo`. Sign out: `/logout`.
@@ -36,7 +48,7 @@ The mock clock is fixed at 29 Sep 2026 09:35 WIB (`VITE_MOCK_NOW`) so labels mat
 | `components/` | Thin wrappers over the design-system classes (`StatusMark`: Normal = Indicator, others = Badge) |
 | `pages/` | Screens. `screens.ts` lists every screen; unbuilt ones render `Placeholder` |
 | `lib/format.ts` | WIB date / time and number formatting |
-| `i18n/` | `en.json` (base) and `id.json` (missing keys fall back to English) |
+| `i18n/` | `en.json` and `id.json` (same keys, checked by `i18n.test.ts`; terms in `GLOSSARY-id.md`) |
 | `mocks/` | MSW handlers and data from `prototype/mock_data.md` |
 
 ## Rules
