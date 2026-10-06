@@ -1,0 +1,3276 @@
+openapi: 3.1.0
+info:
+  title: AquaGuard API
+  version: 0.1.0-draft
+  description: |
+    AquaGuard Web UI とバックエンドの間の API 契約（フロントエンド起案のドラフト）。
+
+    参照ドキュメント（矛盾したら番号の小さい方が優先）：
+    `frontend/docs/01〜08`、サンプル値は `frontend/prototype/mock_data.md`。
+    各オペレーションの説明にある `Screens:` は 05_画面・機能要件書 の画面ID。
+
+    ## 基本方針
+    - **KPI・状態の判定はすべてバックエンドで計算する**（04 §3〜§7）。フロントは表示と書式化のみ。
+      ABW / ADG / Size Uniformity は Pond 単位でのみ返し、Farm / Company の平均値は返さない（04 §4）。
+    - **IoT データ**：センサー（3〜5分ごと）→ InfluxDB。バックエンドは **5分ごと** に InfluxDB を参照し、
+      現在値・Alert 判定・集計を更新する。`x-refresh-interval-seconds: 300` のオペレーションは、
+      フロントが5分ごとに再取得する（ライブ表示）。
+    - **時刻**：`date-time` はすべて UTC（ISO 8601, `Z`）。表示は WIB（UTC+7）にフロントで変換する。
+      `date`（記録日・Report 日付）は WIB の暦日。
+    - **単位**：重量 kg、面積 ha、Biomass は kg（表示で t に変換）、比率は % の数値（88 = 88%）。
+      Vibrio は ×10³ CFU/mL。
+    - **値の種類**：Survival Rate と Biomass は Estimated、それ以外の生産KPIは Actual（04 §3）。
+    - **RBAC はサーバー側で強制する**（02）。権限のないデータは返さない（403、範囲外の個別リソースは 404）。
+      - Farms Manager：Company 配下の全 Farm。生のセンサー値・時系列、個々の記録、Draft の Report は返さない。
+      - Technical Manager：担当 Farm とその Pond のみ。
+      - System Administrator：`/admin/*` のみ。業務データは返さない。
+    - **エラー**：`application/problem+json`（RFC 9457）＋ `code`・`fieldErrors`。
+    - **一覧**：`page`（1始まり）・`pageSize` で取得し、`{ items, page, pageSize, total }` を返す。
+
+    ## 未確定（バックエンドと要相談）
+    - 表示言語：クライアントは `Accept-Language: en | id` を送る。サーバーが組み立てる文（Alert の title、FarmSummary の mainReason・fact、Issue / Action の文、Actuator の scope など）をこの言語で返してほしい（id の用語は frontend/app/src/i18n/GLOSSARY-id.md）。
+    - 認証方式：httpOnly Cookie のセッションを仮置き（無操作12時間でログアウト）。
+    - Actuator の Safety Layer の判定ルールと、拒否理由のコード一覧。
+    - Report 提出期限（Daily 当日18:00 / Weekly 翌週月曜、仮）。
+servers:
+  - url: /api/v1
+tags:
+  - name: Auth
+    description: AU-01〜03、自分の設定
+  - name: Common
+    description: Global Header（データ鮮度）
+  - name: Farms
+    description: Farm の状態・概況（FM-01〜03, TM-01）
+  - name: Issues
+    description: Risk / Issue（Alert の集約ビュー・FM 閲覧用）
+  - name: Production
+    description: 生産 KPI（バックエンドで計算）
+  - name: Ponds
+    description: Pond の一覧・詳細（TM）
+  - name: Sensors
+    description: センサー値・時系列（TM のみ）
+  - name: Alerts
+    description: Pond Alert の確認・対応（TM のみ）
+  - name: Records
+    description: 給餌・死亡・サンプリングの記録（TM のみ）
+  - name: Actuators
+    description: エアレーター・ポンプ（TM のみ）
+  - name: Reports
+    description: Daily / Weekly Report（FM 閲覧・TM 作成）
+  - name: Admin
+    description: ユーザー・マスタ・設定（SA のみ）
+
+security:
+  - sessionCookie: []
+
+paths:
+  # ───────────────────────── Auth ─────────────────────────
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: ログイン
+      description: |
+        Screens: AU-01。5回連続で失敗すると15分ロック。エラーはメール・パスワードのどちらが違うかを示さない。
+        成功するとセッション Cookie を発行する。
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '200':
+          description: ログイン成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401':
+          description: 'メールアドレスかパスワードが違う（`code: invalid_credentials`, `remainingAttempts` 付き）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/LoginProblem' }
+        '403':
+          description: '無効化されたアカウント（`code: account_deactivated`）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '423':
+          description: 'ロック中（`code: account_locked`, `lockedUntil` 付き）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/LoginProblem' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: ログアウト
+      operationId: logout
+      responses:
+        '204': { description: ログアウトした }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: ログイン中のユーザー
+      description: アプリ起動時に呼び、Role に応じた最初の画面へ遷移する（AU-005）。未ログインは 401。
+      operationId: getMe
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Auth]
+      summary: 自分の表示言語を変更
+      operationId: updateMe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                language: { $ref: '#/components/schemas/Language' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+
+  /auth/password/forgot:
+    post:
+      tags: [Auth]
+      summary: パスワード再設定メールを依頼
+      description: 'Screens: AU-02。アカウントの有無にかかわらず 202 を返す（リンクの有効期限1時間）。'
+      operationId: requestPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '202': { description: 受け付けた（登録されていればメールを送信） }
+
+  /auth/password/tokens/{token}:
+    get:
+      tags: [Auth]
+      summary: 招待・再設定リンクの検証
+      description: 'Screens: AU-03。画面の表示内容（招待 / 再設定）を決めるために呼ぶ。'
+      operationId: getPasswordToken
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: 有効なリンク
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PasswordToken' }
+        '410':
+          description: '期限切れ（`code: token_expired`。招待72時間 / 再設定1時間）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /auth/password/set:
+    post:
+      tags: [Auth]
+      summary: パスワードを設定（招待・再設定）
+      description: |
+        Screens: AU-03。パスワードは10文字以上・英字と数字を含む。
+        招待の場合は成功時にログイン済みとしてセッションを発行する。
+      operationId: setPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token: { type: string }
+                password: { type: string, format: password, minLength: 10 }
+      responses:
+        '200':
+          description: 設定した（招待時はログイン済み）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '410':
+          description: 期限切れ
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ───────────────────────── Common ─────────────────────────
+  /sync-status:
+    get:
+      tags: [Common]
+      summary: データ鮮度（ヘッダー表示）
+      description: |
+        Screens: 全業務画面の Global Header（SCR-COM-005）。ログインユーザーのスコープ（FM: 全 Farm / TM: 担当 Farm）で、
+        InfluxDB から最後に参照できた時刻と品質を返す。SA は呼ばない。
+      operationId: getSyncStatus
+      x-refresh-interval-seconds: 300
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SyncStatus' }
+
+  # ───────────────────────── Farms ─────────────────────────
+  /farms:
+    get:
+      tags: [Farms]
+      summary: Farm の状態一覧
+      description: |
+        Screens: FM-01 Farm Status, FM-02 Farm List。FM は全 Farm、TM は担当 Farm のみ。
+        `counts` は絞り込み前の状態別 Farm 数。
+      operationId: listFarms
+      x-refresh-interval-seconds: 300
+      parameters:
+        - { name: q, in: query, schema: { type: string }, description: Farm 名で検索 }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/Severity' } }
+        - { name: location, in: query, schema: { type: string } }
+        - { name: hasIssues, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, counts]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/FarmSummary' }
+                  counts: { $ref: '#/components/schemas/SeverityCounts' }
+
+  /farms/{farmId}:
+    get:
+      tags: [Farms]
+      summary: Farm Detail（ヘッダー＋3観点の状態）
+      description: 'Screens: FM-03 Farm Header / Farm Status。'
+      operationId: getFarm
+      x-refresh-interval-seconds: 300
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FarmDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /farms/{farmId}/status-trend:
+    get:
+      tags: [Farms]
+      summary: Farm 状態の推移
+      description: 'Screens: FM-03 Status Trend（直近14日）。日ごとの最も重い状態。'
+      operationId: getFarmStatusTrend
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+        - { name: days, in: query, schema: { type: integer, default: 14, maximum: 90 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [date, status]
+                      properties:
+                        date: { type: string, format: date }
+                        status: { $ref: '#/components/schemas/Severity' }
+                        waterQuality: { $ref: '#/components/schemas/Severity' }
+                        growth: { $ref: '#/components/schemas/Severity' }
+                        operations: { $ref: '#/components/schemas/Severity' }
+
+  /farms/{farmId}/operational-status:
+    get:
+      tags: [Farms]
+      summary: 現場の運用状態
+      description: 'Screens: TM-01 Operational Status（エアレーター・ポンプ稼働、センサー接続、当日の給餌、次回サンプリング、発電機）。'
+      operationId: getOperationalStatus
+      x-refresh-interval-seconds: 300
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationalStatus' }
+
+  /farms/{farmId}/report-status:
+    get:
+      tags: [Farms, Reports]
+      summary: Report の提出状況
+      description: 'Screens: TM-01 Report Status（当日の Daily、今週の Weekly、最終提出）。'
+      operationId: getReportStatus
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReportStatusSummary' }
+
+  # ───────────────────────── Issues (FM view of alerts) ─────────────────────────
+  /issues:
+    get:
+      tags: [Issues]
+      summary: Risk / Issue 一覧
+      description: |
+        Screens: FM-01 Risk / Issue（全 Farm）、FM-03 Risk / Issue（`farmId` 指定）。
+        Alert から直接（ライブ）生成し、Report の提出を待たない。生のセンサー値は含めない（02 `**`）。
+        既定の並びは Severity の重い順 → 継続時間の長い順。
+      operationId: listIssues
+      x-refresh-interval-seconds: 300
+      parameters:
+        - { name: farmId, in: query, schema: { type: string } }
+        - { name: state, in: query, schema: { $ref: '#/components/schemas/IssueState' }, description: 省略時は ongoing }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Issue' }
+
+  /issues/{issueId}:
+    get:
+      tags: [Issues]
+      summary: Issue の詳細（Alert Drawer・閲覧のみ）
+      description: 'Screens: FM-03 Alert Drawer（`?issue=`）。概要、集約した傾向（文章）、対応状態、TM が実施した対応、関連 Report。'
+      operationId: getIssue
+      parameters:
+        - { name: issueId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IssueDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ───────────────────────── Production ─────────────────────────
+  /production/summary:
+    get:
+      tags: [Production]
+      summary: Company の生産状況
+      description: 'Screens: FM-01 Production Status（総 Biomass〔Estimated・合計〕、目標より遅れている Pond 数）。平均 ABW は返さない。'
+      operationId: getCompanyProduction
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CompanyProduction' }
+
+  /farms/{farmId}/production:
+    get:
+      tags: [Production]
+      summary: Farm の生産 KPI と Pond Production Summary
+      description: |
+        Screens: FM-03 Production Status, FM-06 / TM-05 Production Status。
+        `samplingDate` を指定するとその時点のサンプリングで計算した値（Weekly Report 用）。省略時は最新。
+        Farm の SR・FCR は重み付き（04 §4）。
+      operationId: getFarmProduction
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+        - { name: samplingDate, in: query, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FarmProduction' }
+
+  # ───────────────────────── Ponds (TM) ─────────────────────────
+  /farms/{farmId}/ponds/water-quality:
+    get:
+      tags: [Ponds, Sensors]
+      summary: Pond × 水質の現在値（TM ダッシュボード）
+      description: 'Screens: TM-01 Pond Status。範囲外の値は `severity` で示す。`counts` は状態別の Pond 数。'
+      operationId: listPondWaterQuality
+      x-refresh-interval-seconds: 300
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, counts, normalRanges]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/PondWaterQualityRow' }
+                  counts: { $ref: '#/components/schemas/SeverityCounts' }
+                  normalRanges:
+                    description: 表の下に注記する Normal の範囲
+                    type: array
+                    items: { $ref: '#/components/schemas/ParameterRange' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /farms/{farmId}/ponds:
+    get:
+      tags: [Ponds]
+      summary: Pond 一覧（管理用）
+      description: 'Screens: TM-02 Pond List（ABW・目標比・当日の給餌・死亡・エアレーター）。水質の現在値は含めない。'
+      operationId: listPonds
+      x-refresh-interval-seconds: 300
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/Severity' } }
+        - { name: alertState, in: query, schema: { $ref: '#/components/schemas/AlertState' } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, latestSamplingDate]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/PondListRow' }
+                  latestSamplingDate:
+                    type: [string, 'null']
+                    format: date
+                    description: ABW・目標比の元になった最新のサンプリング日
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /ponds/{pondId}:
+    get:
+      tags: [Ponds]
+      summary: Pond Detail ヘッダー
+      description: 'Screens: TM-03 ヘッダー（Pond 名、Status、Farm、面積、放養日・DOC、放養尾数・ABW、最終更新）。'
+      operationId: getPond
+      x-refresh-interval-seconds: 300
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PondDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ───────────────────────── Sensors (TM) ─────────────────────────
+  /ponds/{pondId}/sensors/current:
+    get:
+      tags: [Sensors]
+      summary: 6項目の現在値
+      description: 'Screens: TM-03 IoT / Water Quality（TM-PD-001 / 004）。閾値・センサー状態付き。'
+      operationId: getCurrentSensorData
+      x-refresh-interval-seconds: 300
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/SensorReading' }
+
+  /ponds/{pondId}/sensors/series:
+    get:
+      tags: [Sensors]
+      summary: センサー時系列（グラフ）
+      description: |
+        Screens: TM-03 時系列グラフ（TM-PD-002）。期間に応じてバックエンドで間引く（`interval`）。
+        閾値の帯は `thresholds` で返す。
+      operationId: getSensorSeries
+      x-refresh-interval-seconds: 300
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+        - { name: parameter, in: query, required: true, schema: { $ref: '#/components/schemas/SensorParameter' } }
+        - { name: from, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date-time } }
+        - name: interval
+          in: query
+          description: 集計間隔。省略時は期間から自動（24h → 5m, 7d → 1h, 30d → 6h）
+          schema: { type: string, enum: [5m, 15m, 1h, 6h, 1d] }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SensorSeries' }
+
+  /ponds/{pondId}/sensors/history:
+    get:
+      tags: [Sensors]
+      summary: 生データ（Historical Data）
+      description: 'Screens: TM-03 Historical Data（TM-PD-003）。1行 = 1計測時刻の6項目。'
+      operationId: getSensorHistory
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/SensorHistoryRow' }
+
+  /ponds/{pondId}/sensors/anomalies:
+    get:
+      tags: [Sensors]
+      summary: 範囲外の区間（Anomalies）
+      description: 'Screens: TM-03 Anomalies（TM-PD-005）。'
+      operationId: listSensorAnomalies
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/SensorAnomaly' }
+
+  # ───────────────────────── Alerts (TM) ─────────────────────────
+  /alerts:
+    get:
+      tags: [Alerts]
+      summary: Pond Alert 一覧
+      description: 'Screens: TM-01 Active Alerts（`state` 未解決）、TM-03 Alerts（`pondId` 指定）。'
+      operationId: listAlerts
+      x-refresh-interval-seconds: 300
+      parameters:
+        - { name: farmId, in: query, schema: { type: string } }
+        - { name: pondId, in: query, schema: { type: string } }
+        - name: state
+          in: query
+          description: 複数指定可。`open` は resolved 以外すべて
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [open, unacknowledged, acknowledged, in_progress, resolved]
+          style: form
+          explode: false
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Alert' }
+
+  /alerts/{alertId}:
+    get:
+      tags: [Alerts]
+      summary: Alert の詳細（Drawer）
+      description: 'Screens: TM-03 Alert Drawer（TM-PD-007）。記録済みの対応を含む。'
+      operationId: getAlert
+      parameters:
+        - $ref: '#/components/parameters/AlertId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AlertDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /alerts/{alertId}/acknowledge:
+    post:
+      tags: [Alerts]
+      summary: Alert を確認（Acknowledge）
+      description: TM-PD-008。unacknowledged → acknowledged。
+      operationId: acknowledgeAlert
+      parameters:
+        - $ref: '#/components/parameters/AlertId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AlertDetail' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /alerts/{alertId}/actions:
+    post:
+      tags: [Alerts]
+      summary: 対応を記録（Record action）
+      description: |
+        TM-PD-022。最初の記録で in_progress になる。記録した対応は、その日の Daily Report の
+        Actions Taken に自動で入る（source: alert_handling）。
+      operationId: recordAlertAction
+      parameters:
+        - $ref: '#/components/parameters/AlertId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AlertActionInput' }
+      responses:
+        '201':
+          description: 記録した
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AlertDetail' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /alerts/{alertId}/resolve:
+    post:
+      tags: [Alerts]
+      summary: Alert を解決（Resolve）
+      description: TM-PD-023。
+      operationId: resolveAlert
+      parameters:
+        - $ref: '#/components/parameters/AlertId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note: { type: string, maxLength: 1000 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AlertDetail' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  # ───────────────────────── Records (TM) ─────────────────────────
+  /ponds/{pondId}/feedings:
+    get:
+      tags: [Records]
+      summary: 給餌の履歴
+      description: TM-PD-011。
+      operationId: listFeedings
+      x-sort: 新しい順（日付・回）
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/FeedingRecord' }
+                      dailyTotals:
+                        type: array
+                        description: 直近 2 日の合計（カードの補足 "28 Sep total 152 kg · 29 Sep so far 74 kg"）
+                        items:
+                          type: object
+                          required: [date, totalKg]
+                          properties:
+                            date: { type: string, format: date }
+                            totalKg: { type: number }
+    post:
+      tags: [Records]
+      summary: 給餌を記録
+      description: TM-PD-010。日付は未来日を受け付けない（422）。
+      operationId: createFeeding
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeedingInput' }
+      responses:
+        '201':
+          description: 記録した
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedingRecord' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /feedings/{recordId}:
+    patch:
+      tags: [Records]
+      summary: 給餌の記録を修正
+      description: TM-PD-012。
+      operationId: updateFeeding
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeedingInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeedingRecord' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /ponds/{pondId}/mortalities:
+    get:
+      tags: [Records]
+      summary: 死亡の履歴
+      description: TM-PD-014。
+      operationId: listMortalities
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/MortalityRecord' }
+                      last7Days:
+                        type: object
+                        required: [count, weightKg]
+                        properties:
+                          count: { type: integer }
+                          weightKg: { type: number }
+    post:
+      tags: [Records]
+      summary: 死亡を記録
+      description: TM-PD-013。
+      operationId: createMortality
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MortalityInput' }
+      responses:
+        '201':
+          description: 記録した
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MortalityRecord' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /mortalities/{recordId}:
+    patch:
+      tags: [Records]
+      summary: 死亡の記録を修正
+      description: TM-PD-015。
+      operationId: updateMortality
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MortalityInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MortalityRecord' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /ponds/{pondId}/samplings:
+    get:
+      tags: [Records]
+      summary: サンプリングの履歴＋成長グラフ
+      description: TM-PD-017。ABW・ADG・目標比はバックエンドで計算。`growthCurve` は Pond の成長グラフ用。
+      operationId: listSamplings
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, growthCurve]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/SamplingRecord' }
+                  growthCurve:
+                    description: 目標成長曲線（DOC → 目標 ABW）
+                    type: array
+                    items: { $ref: '#/components/schemas/GrowthTargetPoint' }
+    post:
+      tags: [Records]
+      summary: サンプリングを記録
+      description: TM-PD-016。Laboratory は任意（未着なら空で保存し、後から PATCH で追記）。
+      operationId: createSampling
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SamplingInput' }
+      responses:
+        '201':
+          description: 記録した
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SamplingRecord' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /samplings/{recordId}:
+    patch:
+      tags: [Records]
+      summary: サンプリングの記録を修正・検査結果を追記
+      description: TM-PD-018。
+      operationId: updateSampling
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SamplingInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SamplingRecord' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /farms/{farmId}/samplings:
+    get:
+      tags: [Records]
+      summary: ある日の週次サンプリング（一括入力の初期値）
+      description: |
+        Screens: TM-02 Record weekly sampling。指定日に記録済みの Pond の値と、目標比の表示に使う目標成長曲線を返す。
+        入力中の ABW・目標比はフロントで表示用に試算し、保存後はバックエンドが計算した値を正とする。
+      operationId: listFarmSamplings
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+        - { name: date, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, growthCurve, onTrackBandPct]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/SamplingRecord' }
+                  growthCurve:
+                    type: array
+                    items: { $ref: '#/components/schemas/GrowthTargetPoint' }
+                  onTrackBandPct: { type: number, example: 5 }
+
+  /farms/{farmId}/samplings/batch:
+    post:
+      tags: [Records]
+      summary: 週次サンプリングの一括記録
+      description: |
+        Screens: TM-02 Record weekly sampling（TM-P-005）。測定しない Pond は `entries` に含めない。
+        同じ Pond・同じ日の記録があれば更新する。
+      operationId: batchCreateSamplings
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, entries]
+              properties:
+                date: { type: string, format: date }
+                entries:
+                  type: array
+                  items:
+                    allOf:
+                      - type: object
+                        required: [pondId]
+                        properties:
+                          pondId: { type: string }
+                      - $ref: '#/components/schemas/SamplingMeasurement'
+      responses:
+        '200':
+          description: 保存した
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/SamplingRecord' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ───────────────────────── Actuators (TM) ─────────────────────────
+  /ponds/{pondId}/actuators:
+    get:
+      tags: [Actuators]
+      summary: 機器の状態
+      description: 'Screens: TM-03 Actuator（TM-PD-019）。Safety Layer で禁止されている操作は `blockedCommands` に理由付きで返す。'
+      operationId: listActuators
+      x-refresh-interval-seconds: 300
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, autoControl]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Actuator' }
+                  autoControl:
+                    type: object
+                    description: 自動制御（PID）の状態
+                    required: [status, target, overrides, scope]
+                    properties:
+                      status: { type: string, enum: [running, paused, stopped] }
+                      target: { type: string, example: DO ≥ 5.0 }
+                      overrides: { type: integer, description: Manual（override）中の機器数 }
+                      scope: { type: string, example: Aerator 1–4 and Water Pump 1 }
+
+  /actuators/{actuatorId}/commands:
+    post:
+      tags: [Actuators]
+      summary: 機器を操作
+      description: |
+        TM-PD-020。Auto 中に手動操作すると Manual（override）になる。
+        Safety Layer が拒否した場合は 409（`code: safety_blocked`, `detail` に理由）。
+      operationId: sendActuatorCommand
+      parameters:
+        - { name: actuatorId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [command]
+              properties:
+                command: { $ref: '#/components/schemas/ActuatorCommand' }
+      responses:
+        '202':
+          description: 受け付けた（反映は状態の再取得で確認）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Actuator' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /ponds/{pondId}/actuator-logs:
+    get:
+      tags: [Actuators]
+      summary: 操作履歴
+      description: 'TM-PD-021。Daily Report の Actions Taken にも自動で入る（source: actuator_log）。'
+      operationId: listActuatorLogs
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/ActuatorLog' }
+
+  # ───────────────────────── Reports ─────────────────────────
+  /reports:
+    get:
+      tags: [Reports]
+      summary: Report 一覧
+      description: |
+        Screens: FM-04 Report List、TM-04 / TM-05 History。
+        FM には submitted のみを返す（`status=draft` を指定しても空）。TM は担当 Farm のみ。
+      operationId: listReports
+      parameters:
+        - { name: type, in: query, required: true, schema: { $ref: '#/components/schemas/ReportType' } }
+        - { name: farmId, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/ReportState' } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/ReportListItem' }
+
+  /reports/daily:
+    post:
+      tags: [Reports]
+      summary: Daily Report の下書きを作成
+      description: |
+        TM-R-001。記録・Alert・Actuator ログから自動で集めた内容で下書きを作る。
+        同じ Farm・日付の Report が既にあれば 409（`existingReportId` 付き）。
+      operationId: createDailyReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [farmId, date]
+              properties:
+                farmId: { type: string }
+                date: { type: string, format: date }
+      responses:
+        '201':
+          description: 作成した
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DailyReport' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /reports/daily/{reportId}:
+    get:
+      tags: [Reports]
+      summary: Daily Report
+      description: |
+        Screens: FM-05、TM-04。自動で集めた値は読み取り専用（`source` 付き）。
+        Draft の場合、自動の値は取得のたびに最新の記録から作り直す。FM が Draft を取得すると 404。
+      operationId: getDailyReport
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DailyReport' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Reports]
+      summary: Daily Report の下書きを保存（Save Draft）
+      description: TM-R-002。TM が入力する項目のみ。Submitted は 409。
+      operationId: updateDailyReport
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DailyReportInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DailyReport' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /reports/weekly:
+    post:
+      tags: [Reports]
+      summary: Weekly Report の下書きを作成
+      description: TM-R-005。`weekStart` は月曜。週の水質傾向・生産 KPI・Alert を自動集計する。
+      operationId: createWeeklyReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [farmId, weekStart]
+              properties:
+                farmId: { type: string }
+                weekStart: { type: string, format: date }
+      responses:
+        '201':
+          description: 作成した
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WeeklyReport' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /reports/weekly/{reportId}:
+    get:
+      tags: [Reports]
+      summary: Weekly Report
+      description: 'Screens: FM-06、TM-05。'
+      operationId: getWeeklyReport
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WeeklyReport' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Reports]
+      summary: Weekly Report の下書きを保存
+      description: TM-R-006。
+      operationId: updateWeeklyReport
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WeeklyReportInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WeeklyReport' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /reports/{reportId}/submit:
+    post:
+      tags: [Reports]
+      summary: Report を提出
+      description: |
+        TM-R-003 / 007。Draft → Submitted。必須項目（Daily：Weather・Summary、Weekly：Weekly Technical Summary）が
+        未入力なら 422。提出後は閲覧のみ。
+      operationId: submitReport
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      responses:
+        '200':
+          description: 提出した
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReportListItem' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ───────────────────────── Admin (SA) ─────────────────────────
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: ユーザー一覧
+      description: 'Screens: AD-01（AD-U-001）。'
+      operationId: adminListUsers
+      parameters:
+        - { name: q, in: query, schema: { type: string }, description: 名前・メールで検索 }
+        - { name: role, in: query, schema: { $ref: '#/components/schemas/Role' } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/UserStatus' } }
+        - { name: farmId, in: query, schema: { type: string } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items, counts]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/AdminUser' }
+                      counts:
+                        type: object
+                        description: 絞り込みに関係なく全ユーザーの件数（Page Header「10 users · 7 active · 2 invited · 1 deactivated」）
+                        required: [total, active, invited, deactivated]
+                        properties:
+                          total: { type: integer }
+                          active: { type: integer }
+                          invited: { type: integer }
+                          deactivated: { type: integer }
+    post:
+      tags: [Admin]
+      summary: ユーザーを招待
+      description: AD-U-002。招待メールを送る（有効期限72時間）。TM は `farmId` 必須、FM・SA は指定しない。
+      operationId: adminInviteUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, role]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                role: { $ref: '#/components/schemas/Role' }
+                farmId: { type: [string, 'null'] }
+                language: { $ref: '#/components/schemas/Language' }
+      responses:
+        '201':
+          description: 招待した
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUser' }
+        '409':
+          description: '同じメールアドレスのユーザーがいる（`code: email_taken`）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/users/{userId}:
+    get:
+      tags: [Admin]
+      summary: ユーザーの詳細
+      operationId: adminGetUser
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUser' }
+    patch:
+      tags: [Admin]
+      summary: Role・担当 Farm・言語を変更
+      description: AD-U-003。自分自身と最後の SA の Role は変更できない（409）。
+      operationId: adminUpdateUser
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { $ref: '#/components/schemas/Role' }
+                farmId: { type: [string, 'null'] }
+                language: { $ref: '#/components/schemas/Language' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUser' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/users/{userId}/resend-invitation:
+    post:
+      tags: [Admin]
+      summary: 招待を再送
+      description: AD-U-004。Invited のユーザーのみ。
+      operationId: adminResendInvitation
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '202': { description: 再送した }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/users/{userId}/send-password-reset:
+    post:
+      tags: [Admin]
+      summary: パスワード再設定メールを送る
+      description: AD-U-004。
+      operationId: adminSendPasswordReset
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '202': { description: 送信した }
+
+  /admin/users/{userId}/deactivate:
+    post:
+      tags: [Admin]
+      summary: 無効化
+      description: AD-U-005。ログイン不可になるが記録は残る。自分自身と最後の SA は 409。
+      operationId: adminDeactivateUser
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUser' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/users/{userId}/reactivate:
+    post:
+      tags: [Admin]
+      summary: 再有効化
+      description: AD-U-005。
+      operationId: adminReactivateUser
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUser' }
+
+  /admin/farms:
+    get:
+      tags: [Admin]
+      summary: Farm マスタ一覧
+      description: 'Screens: AD-02（AD-F-001）。業務データ（状態・KPI）は含めない。Inactive を含む全 Farm を名前順で返す（件数が少ないため絞り込みは画面側）。'
+      operationId: adminListFarms
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdminFarm' }
+    post:
+      tags: [Admin]
+      summary: Farm を登録
+      description: AD-F-002。
+      operationId: adminCreateFarm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminFarmInput' }
+      responses:
+        '201':
+          description: 登録した（status は inactive）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminFarm' }
+        '409':
+          description: '同じ名前の Farm がある（`code: farm_name_taken`、`fieldErrors` に name）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/farms/{farmId}:
+    get:
+      tags: [Admin]
+      summary: Farm マスタ
+      description: 'Screens: AD-03 ヘッダー・Farm Info。'
+      operationId: adminGetFarm
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminFarm' }
+    patch:
+      tags: [Admin]
+      summary: Farm マスタを更新
+      description: AD-F-003。Inactive にすると FM・TM の画面に出なくなる（記録は残る）。
+      operationId: adminUpdateFarm
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminFarmInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminFarm' }
+        '409':
+          description: '同じ名前の Farm がある（`code: farm_name_taken`）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/farms/{farmId}/ponds:
+    get:
+      tags: [Admin]
+      summary: Pond マスタ一覧
+      description: 'Screens: AD-03 Ponds（AD-F-004）。'
+      operationId: adminListPonds
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdminPond' }
+    post:
+      tags: [Admin]
+      summary: Pond を登録
+      operationId: adminCreatePond
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminPondInput' }
+      responses:
+        '201':
+          description: 登録した
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminPond' }
+        '409':
+          description: '同じ Farm に同じ名前の Pond がある（`code: pond_name_taken`、`fieldErrors` に name）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/ponds/{pondId}:
+    patch:
+      tags: [Admin]
+      summary: Pond マスタを更新
+      operationId: adminUpdatePond
+      parameters:
+        - $ref: '#/components/parameters/PondId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminPondInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminPond' }
+        '409':
+          description: '同じ Farm に同じ名前の Pond がある（`code: pond_name_taken`、`fieldErrors` に name）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/farms/{farmId}/devices:
+    get:
+      tags: [Admin]
+      summary: 機器一覧
+      description: 'Screens: AD-03 Devices（AD-F-005）。Pond 順 → センサー（項目順）→ Actuator の順。値は返さない（監視は TM の画面）。'
+      operationId: adminListDevices
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+        - { name: pondId, in: query, schema: { type: string } }
+        - { name: type, in: query, schema: { $ref: '#/components/schemas/DeviceType' } }
+        - { name: connection, in: query, schema: { $ref: '#/components/schemas/Connection' } }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items, counts]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/AdminDevice' }
+                      counts:
+                        type: object
+                        description: 絞り込みに関係なく Farm 全体の件数（「71 devices · 48 sensors · 23 actuators」、Devices タブの Offline 件数）
+                        required: [total, sensors, actuators, offline]
+                        properties:
+                          total: { type: integer }
+                          sensors: { type: integer }
+                          actuators: { type: integer }
+                          offline: { type: integer, description: 受信実績があり今 Offline の機器（初回の受信待ちは含めない） }
+    post:
+      tags: [Admin]
+      summary: 機器を登録・割り当て
+      operationId: adminCreateDevice
+      parameters:
+        - $ref: '#/components/parameters/FarmId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminDeviceInput' }
+      responses:
+        '201':
+          description: 登録した
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminDevice' }
+        '409':
+          description: '同じ Device ID がある（`code: device_id_taken`）'
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/devices/{deviceId}:
+    patch:
+      tags: [Admin]
+      summary: 機器の割り当てを変更
+      operationId: adminUpdateDevice
+      parameters:
+        - { name: deviceId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminDeviceUpdate' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminDevice' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/settings/thresholds:
+    get:
+      tags: [Admin]
+      summary: 閾値
+      description: |
+        Screens: AD-04 Thresholds（AD-S-001）。`farmId` 省略時は全 Farm 共通の初期値、指定時はその Farm の上書き
+        （上書きのない項目は `inherited: true` で初期値を返す）。
+      operationId: adminGetThresholds
+      parameters:
+        - { name: farmId, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ThresholdSettings' }
+    put:
+      tags: [Admin]
+      summary: 閾値を保存
+      description: |
+        境界値の順序が矛盾する場合は 422（欄ごとの `fieldErrors`、field は `{parameter}/{boundary}`）。保存以降の判定にのみ適用する。
+        `farmId` 指定時は、送った項目だけがその Farm の上書きになり、送らなかった項目は初期値に戻る。
+      operationId: adminPutThresholds
+      parameters:
+        - { name: farmId, in: query, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  items: { $ref: '#/components/schemas/Threshold' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ThresholdSettings' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/settings/growth-targets:
+    get:
+      tags: [Admin]
+      summary: 目標成長曲線
+      description: 'Screens: AD-04 Growth Targets（AD-S-002）。'
+      operationId: adminGetGrowthTargets
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GrowthTargetSettings' }
+    put:
+      tags: [Admin]
+      summary: 目標成長曲線を保存
+      operationId: adminPutGrowthTargets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [points, onTrackBandPct]
+              properties:
+                points:
+                  type: array
+                  description: 2点以上。DOC は重複せず、DOC が進むほど目標 ABW は大きい（矛盾は 422、field は `points/{index}/doc` など）
+                  items: { $ref: '#/components/schemas/GrowthTargetPoint' }
+                onTrackBandPct: { type: number, example: 5, minimum: 1, maximum: 50 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GrowthTargetSettings' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /admin/settings/rules:
+    get:
+      tags: [Admin]
+      summary: 運用ルール
+      description: 'Screens: AD-04 Rules（AD-S-003）。'
+      operationId: adminGetRules
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RuleSettings' }
+    put:
+      tags: [Admin]
+      summary: 運用ルールを保存
+      operationId: adminPutRules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RuleSettingsInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RuleSettings' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: aquaguard_session
+      description: httpOnly・Secure・SameSite=Lax のセッション Cookie（仮）。無操作12時間で失効。
+
+  parameters:
+    FarmId: { name: farmId, in: path, required: true, schema: { type: string, example: farm-a } }
+    PondId: { name: pondId, in: path, required: true, schema: { type: string, example: farm-a-pond-02 } }
+    AlertId: { name: alertId, in: path, required: true, schema: { type: string, example: ALT-1042 } }
+    ReportId: { name: reportId, in: path, required: true, schema: { type: string } }
+    RecordId: { name: recordId, in: path, required: true, schema: { type: string } }
+    UserId: { name: userId, in: path, required: true, schema: { type: string } }
+    Page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    PageSize: { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+
+  responses:
+    Unauthorized:
+      description: 未ログイン・セッション切れ（フロントはログイン画面へ。ログイン後は直前の画面へ戻る）
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: Role の権限外
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: 存在しない、またはスコープ外
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: 状態が操作と矛盾する（例：提出済みの Report を編集、Safety Layer の拒否、最後の SA の無効化）
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ValidationError:
+      description: 入力エラー（欄ごとのエラーは `fieldErrors`）
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+    # ── 共通 ──
+    Problem:
+      type: object
+      required: [title, status, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code:
+          type: string
+          description: 機械判定用のコード（例 invalid_credentials, report_submitted, safety_blocked, last_admin）
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field: { type: string, description: 'JSON Pointer 風のパス（例 items/0/warningLow）' }
+              message: { type: string }
+        existingReportId: { type: string }
+
+    LoginProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            remainingAttempts: { type: integer }
+            lockedUntil: { type: string, format: date-time }
+
+    PageMeta:
+      type: object
+      required: [page, pageSize, total]
+      properties:
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+
+    Severity:
+      type: string
+      description: 状態・重大度（Normal / Attention / Warning / Critical）
+      enum: [normal, attention, warning, critical]
+
+    SeverityCounts:
+      type: object
+      required: [normal, attention, warning, critical]
+      properties:
+        normal: { type: integer }
+        attention: { type: integer }
+        warning: { type: integer }
+        critical: { type: integer }
+
+    Trend:
+      type: string
+      enum: [increasing, decreasing, stable]
+
+    DataQuality:
+      type: string
+      description: 最終取得から15分以内 live、15分超 delayed、60分超 offline、実績なし no_data（04 §7、閾値は Rules で変更可）
+      enum: [live, delayed, offline, no_data]
+
+    Language:
+      type: string
+      enum: [en, id]
+
+    Role:
+      type: string
+      enum: [farms_manager, technical_manager, system_administrator]
+
+    UserStatus:
+      type: string
+      enum: [invited, active, deactivated]
+
+    SensorParameter:
+      type: string
+      enum: [do, ph, temperature, tds, turbidity, water_level]
+
+    LabParameter:
+      type: string
+      enum: [tan, no2, vibrio, alkalinity]
+
+    GrowthJudgement:
+      type: string
+      description: 目標比 ≤ −5% behind、≥ +5% ahead、それ以外 on_track（幅は Growth Targets で変更可）
+      enum: [behind, on_track, ahead]
+
+    AlertState:
+      type: string
+      enum: [unacknowledged, acknowledged, in_progress, resolved]
+
+    IssueState:
+      type: string
+      enum: [ongoing, resolved]
+
+    ReportType:
+      type: string
+      enum: [daily, weekly]
+
+    ReportState:
+      type: string
+      enum: [draft, submitted]
+
+    Appetite:
+      type: string
+      enum: [good, reduced, poor]
+
+    TrayCondition:
+      type: string
+      description: 給餌トレイ（anco）の状態
+      enum: [clean, leftover, much_leftover]
+
+    HealthObservation:
+      type: string
+      enum: [reduced_appetite, abnormal_swimming, gill_discoloration, shell_condition, other]
+
+    ActionType:
+      type: string
+      enum: [increased_aeration, water_exchange, equipment_inspection, water_treatment, other]
+
+    DeviceType:
+      type: string
+      enum: [sensor, aerator, pump]
+
+    Connection:
+      type: string
+      enum: [online, offline]
+
+    UserRef:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string }
+
+    FarmRef:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string, example: Farm A }
+
+    PondRef:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string, example: Pond 02 }
+
+    ReportRef:
+      type: object
+      required: [id, type, label]
+      properties:
+        id: { type: string }
+        type: { $ref: '#/components/schemas/ReportType' }
+        label: { type: string, example: Daily 28 Sep }
+        date: { type: string, format: date }
+        weekStart: { type: string, format: date }
+
+    # ── Auth / Common ──
+    Me:
+      type: object
+      required: [id, name, initials, email, role, language, company, scopeLabel, farm]
+      properties:
+        id: { type: string }
+        name: { type: string, example: Sari Wijaya }
+        initials: { type: string, example: SW }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+        language: { $ref: '#/components/schemas/Language' }
+        company: { type: string, example: Nusantara Shrimp Co. }
+        scopeLabel:
+          type: string
+          description: 'ヘッダーの対象範囲（TM "Farm A · East Java" / FM "All Farms (4)" / SA "System Administration"）'
+        farm:
+          description: TM の担当 Farm（FM・SA は null）
+          oneOf:
+            - $ref: '#/components/schemas/FarmRef'
+            - type: 'null'
+
+    PasswordToken:
+      type: object
+      required: [mode]
+      properties:
+        mode: { type: string, enum: [invite, reset] }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+        farm:
+          oneOf:
+            - $ref: '#/components/schemas/FarmRef'
+            - type: 'null'
+        expiresAt: { type: string, format: date-time }
+
+    SyncStatus:
+      type: object
+      required: [quality]
+      properties:
+        quality: { $ref: '#/components/schemas/DataQuality' }
+        syncedAt:
+          type: [string, 'null']
+          format: date-time
+          description: バックエンドが InfluxDB を最後に参照できた時刻
+        nextSyncAt: { type: string, format: date-time }
+
+    # ── Farms ──
+    StatusAspect:
+      type: object
+      description: Water quality / Growth / Operations の1観点
+      required: [status, fact]
+      properties:
+        status: { $ref: '#/components/schemas/Severity' }
+        count: { type: integer, description: 該当 Pond 数（範囲外 / 目標より遅れ / 問題のある設備等） }
+        fact: { type: string, description: '一覧用の短い根拠（例 "3 of 8 Ponds"）' }
+        detail: { type: [string, 'null'], description: 'FM-03 のタイル用の根拠（例 "Pond 02 DO (2 days) · Pond 05 Temp · Pond 04 pH"）。生の時系列は含めない' }
+
+    FarmSummary:
+      type: object
+      required: [id, name, location, pondCount, status, mainReason, waterQuality, growth, operations, openIssues]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        location: { type: string, example: East Java, Indonesia }
+        pondCount: { type: integer }
+        status:
+          allOf: [{ $ref: '#/components/schemas/Severity' }]
+          description: 3観点のうち最も重いもの（Overall という別の状態は持たない）
+        mainReason: { type: string, description: 状態の根拠を1文で }
+        waterQuality: { $ref: '#/components/schemas/StatusAspect' }
+        growth: { $ref: '#/components/schemas/StatusAspect' }
+        operations: { $ref: '#/components/schemas/StatusAspect' }
+        openIssues: { type: integer }
+
+    FarmDetail:
+      allOf:
+        - $ref: '#/components/schemas/FarmSummary'
+        - type: object
+          required: [technicalManagers, docRange, updatedAt]
+          properties:
+            technicalManagers:
+              type: array
+              items: { $ref: '#/components/schemas/UserRef' }
+            docRange:
+              type: object
+              properties:
+                min: { type: integer }
+                max: { type: integer }
+            updatedAt: { type: string, format: date-time }
+            statusSentence: { type: string, description: Farm の状態がどの観点から来ているかの1文 }
+            latestReport:
+              oneOf:
+                - $ref: '#/components/schemas/ReportRef'
+                - type: 'null'
+
+    OperationalStatus:
+      type: object
+      required: [aerators, pumps, sensors, feedingToday, nextSampling, generator]
+      properties:
+        aerators: { $ref: '#/components/schemas/OnCount' }
+        pumps: { $ref: '#/components/schemas/OnCount' }
+        sensors:
+          type: object
+          required: [online, total, offline]
+          properties:
+            online: { type: integer }
+            total: { type: integer }
+            offline:
+              type: array
+              items:
+                type: object
+                properties:
+                  deviceId: { type: string }
+                  pond: { $ref: '#/components/schemas/PondRef' }
+                  parameter: { $ref: '#/components/schemas/SensorParameter' }
+                  since: { type: string, format: date-time }
+        feedingToday:
+          type: object
+          description: 当日の給餌の進み具合（例 2 / 4 rounds）
+          required: [roundsDone, roundsPlanned]
+          properties:
+            roundsDone: { type: integer }
+            roundsPlanned: { type: integer }
+            totalKg: { type: number }
+        nextSampling: { type: [string, 'null'], format: date }
+        generator:
+          type: object
+          required: [state]
+          properties:
+            state: { type: string, enum: [standby, running, fault] }
+            lastTestedAt: { type: string, format: date-time }
+
+    OnCount:
+      type: object
+      required: ['on', total]
+      properties:
+        'on': { type: integer }
+        total: { type: integer }
+
+    ReportStatusSummary:
+      type: object
+      required: [dailyToday, weeklyThisWeek, lastSubmitted]
+      properties:
+        dailyToday: { $ref: '#/components/schemas/ReportStatusItem' }
+        weeklyThisWeek: { $ref: '#/components/schemas/ReportStatusItem' }
+        lastSubmitted:
+          oneOf:
+            - $ref: '#/components/schemas/ReportListItem'
+            - type: 'null'
+
+    ReportStatusItem:
+      type: object
+      required: [reportId, state, dueAt]
+      properties:
+        reportId: { type: [string, 'null'], description: 未作成なら null }
+        state:
+          type: string
+          enum: [not_started, draft, submitted, overdue]
+        date: { type: string, format: date, description: Daily のみ }
+        weekStart: { type: string, format: date, description: Weekly のみ }
+        weekEnd: { type: string, format: date, description: Weekly のみ }
+        dueAt: { type: string, format: date-time }
+        savedAt: { type: [string, 'null'], format: date-time, description: 下書きの最終保存 }
+
+    # ── Issues ──
+    Issue:
+      type: object
+      description: FM 向けの集約ビュー。生のセンサー値は含めない
+      required: [id, farm, pond, issueType, parameter, trend, severity, handling, state, since]
+      properties:
+        id: { type: string, example: ISS-218 }
+        farm: { $ref: '#/components/schemas/FarmRef' }
+        pond: { $ref: '#/components/schemas/PondRef' }
+        issueType: { type: string, enum: [water_quality, mortality, equipment, sensor] }
+        parameter: { type: string, description: 'SensorParameter または mortality 等', example: do }
+        trend: { $ref: '#/components/schemas/Trend' }
+        severity: { $ref: '#/components/schemas/Severity' }
+        handling: { $ref: '#/components/schemas/AlertState' }
+        state: { $ref: '#/components/schemas/IssueState' }
+        since: { type: string, format: date-time, description: 継続時間はフロントで now − since }
+        resolvedAt: { type: [string, 'null'], format: date-time }
+
+    IssueDetail:
+      allOf:
+        - $ref: '#/components/schemas/Issue'
+        - type: object
+          required: [summary, trendDescription, handledBy, actions, relatedReports]
+          properties:
+            summary: { type: string }
+            trendDescription: { type: string, description: 集約した傾向（文章） }
+            handledBy:
+              description: 対応している TM（未対応なら null）
+              oneOf:
+                - $ref: '#/components/schemas/UserRef'
+                - type: 'null'
+            actions:
+              type: array
+              description: TM が実施した対応
+              items: { $ref: '#/components/schemas/AlertAction' }
+            relatedReports:
+              type: array
+              items: { $ref: '#/components/schemas/ReportRef' }
+
+    # ── Production ──
+    CompanyProduction:
+      type: object
+      required: [biomassKg, survivalRatePct, pondsBehind, pondsTotal, latestSamplingDate]
+      properties:
+        biomassKg: { type: number, description: Estimated・全 Pond の合計 }
+        survivalRatePct: { type: number, description: 'Estimated・重み付き（Σ推定生存尾数 ÷ Σ放養尾数、04 §4）。Pond の％の平均ではない' }
+        pondsBehind: { type: integer }
+        pondsTotal: { type: integer }
+        latestSamplingDate: { type: string, format: date }
+        previous:
+          type: object
+          description: 前週の値（比較表示用）
+          required: [biomassKg, survivalRatePct, pondsBehind]
+          properties:
+            biomassKg: { type: number }
+            survivalRatePct: { type: number }
+            pondsBehind: { type: integer }
+
+    FarmProduction:
+      type: object
+      required: [samplingDate, kpis, ponds, growthCurve]
+      properties:
+        samplingDate: { type: string, format: date }
+        kpis:
+          type: object
+          required: [biomassKg, survivalRatePct, fcr, growthDistribution]
+          properties:
+            biomassKg: { type: number, description: Estimated・合計 }
+            survivalRatePct: { type: number, description: 'Estimated・重み付き（Σ推定生存尾数 ÷ Σ放養尾数）' }
+            fcr: { type: number, description: 重み付き（Σ給餌量 ÷ Σ増重量） }
+            growthDistribution:
+              type: object
+              required: [behind, onTrack, ahead]
+              properties:
+                behind: { type: integer }
+                onTrack: { type: integer }
+                ahead: { type: integer }
+            previous:
+              type: object
+              description: 前回サンプリング時の値
+              properties:
+                biomassKg: { type: number }
+                survivalRatePct: { type: number }
+                fcr: { type: number }
+        ponds:
+          type: array
+          items: { $ref: '#/components/schemas/PondProduction' }
+        growthCurve:
+          type: array
+          items: { $ref: '#/components/schemas/GrowthTargetPoint' }
+
+    PondProduction:
+      type: object
+      required: [pond, doc]
+      properties:
+        pond: { $ref: '#/components/schemas/PondRef' }
+        areaHa: { type: number }
+        stockedOn: { type: string, format: date }
+        stockedPl: { type: integer }
+        doc: { type: integer }
+        abwG: { type: [number, 'null'] }
+        targetAbwG: { type: [number, 'null'] }
+        vsTargetPct: { type: [number, 'null'] }
+        growth:
+          oneOf:
+            - $ref: '#/components/schemas/GrowthJudgement'
+            - type: 'null'
+        adgGPerDay: { type: [number, 'null'] }
+        survivalRatePct: { type: [number, 'null'], description: Estimated }
+        fcr: { type: [number, 'null'] }
+        biomassKg: { type: [number, 'null'], description: Estimated }
+        sizeUniformityPct: { type: [number, 'null'] }
+
+    GrowthTargetPoint:
+      type: object
+      required: [doc, targetAbwG]
+      properties:
+        doc: { type: integer }
+        targetAbwG: { type: number }
+
+    # ── Ponds / Sensors ──
+    SensorValue:
+      type: object
+      required: [value, severity, quality]
+      properties:
+        value: { type: [number, 'null'], description: offline / no_data の場合 null }
+        severity: { $ref: '#/components/schemas/Severity' }
+        quality: { $ref: '#/components/schemas/DataQuality' }
+        measuredAt: { type: [string, 'null'], format: date-time }
+
+    PondWaterQualityRow:
+      type: object
+      required: [pond, status, values, openAlerts]
+      properties:
+        pond: { $ref: '#/components/schemas/PondRef' }
+        status: { $ref: '#/components/schemas/Severity' }
+        values:
+          type: object
+          description: キーは SensorParameter
+          required: [do, ph, temperature, tds, turbidity, water_level]
+          properties:
+            do: { $ref: '#/components/schemas/SensorValue' }
+            ph: { $ref: '#/components/schemas/SensorValue' }
+            temperature: { $ref: '#/components/schemas/SensorValue' }
+            tds: { $ref: '#/components/schemas/SensorValue' }
+            turbidity: { $ref: '#/components/schemas/SensorValue' }
+            water_level: { $ref: '#/components/schemas/SensorValue' }
+        openAlerts: { type: integer }
+        worstAlertState:
+          oneOf:
+            - $ref: '#/components/schemas/AlertState'
+            - type: 'null'
+
+    ParameterRange:
+      type: object
+      required: [parameter, unit]
+      properties:
+        parameter: { $ref: '#/components/schemas/SensorParameter' }
+        unit: { type: string, example: mg/L }
+        normalMin: { type: [number, 'null'] }
+        normalMax: { type: [number, 'null'] }
+
+    PondListRow:
+      type: object
+      required: [pond, areaHa, stockedOn, doc, status, openAlerts, worstAlertState, abwG, vsTargetPct, growth, feedTodayKg, feedRoundsToday, feedRoundsPlanned, mortalityTodayPcs, aerators]
+      properties:
+        pond: { $ref: '#/components/schemas/PondRef' }
+        areaHa: { type: number }
+        stockedOn: { type: [string, 'null'], format: date, description: 放養日（未放養なら null） }
+        doc: { type: [integer, 'null'], description: 今日の DOC（未放養なら null） }
+        status: { $ref: '#/components/schemas/Severity' }
+        openAlerts: { type: integer }
+        worstAlertState:
+          oneOf:
+            - $ref: '#/components/schemas/AlertState'
+            - type: 'null'
+        abwG: { type: [number, 'null'], description: 最新サンプリング }
+        vsTargetPct: { type: [number, 'null'] }
+        growth:
+          oneOf:
+            - $ref: '#/components/schemas/GrowthJudgement'
+            - type: 'null'
+        feedTodayKg: { type: [number, 'null'] }
+        feedRoundsToday: { type: integer }
+        feedRoundsPlanned: { type: integer, description: 1日の給餌回数の予定（例 4） }
+        mortalityTodayPcs: { type: [integer, 'null'] }
+        aerators: { $ref: '#/components/schemas/OnCount' }
+
+    PondDetail:
+      type: object
+      required: [pond, farm, status, areaHa, stockedOn, doc, stockedPl, abwG, openAlerts, feeding, updatedAt]
+      properties:
+        pond: { $ref: '#/components/schemas/PondRef' }
+        farm: { $ref: '#/components/schemas/FarmRef' }
+        status: { $ref: '#/components/schemas/Severity' }
+        areaHa: { type: number }
+        stockedOn: { type: [string, 'null'], format: date }
+        doc: { type: [integer, 'null'] }
+        stockedPl: { type: [integer, 'null'] }
+        abwG: { type: [number, 'null'], description: 最新サンプリング }
+        openAlerts: { type: integer, description: 未解決の Alert 数（Alerts タブの件数） }
+        feeding:
+          type: object
+          description: 給餌の記録フォーム用（回の予定時刻・飼料・当日の計画量）
+          required: [schedule, feedTypes, planToday]
+          properties:
+            schedule:
+              type: array
+              description: '回ごとの時刻 HH:mm（WIB）。round は 1 始まりの添字'
+              items: { type: string, example: '06:00' }
+            feedTypes:
+              type: array
+              items: { type: string, example: Grower 2 (2.0 mm) }
+            planToday:
+              type: array
+              items:
+                type: object
+                required: [round, amountKg]
+                properties:
+                  round: { type: integer, minimum: 1 }
+                  amountKg: { type: number }
+                  note: { type: [string, 'null'], example: reduced 10% due to low DO }
+        updatedAt: { type: string, format: date-time }
+
+    Threshold:
+      type: object
+      description: 境界値（04 §6.2）。Normal は両側の Attention 境界の間として自動で決まる。使わない値は null
+      required: [parameter, criticalLow, warningLow, attentionLow, attentionHigh, warningHigh, criticalHigh]
+      properties:
+        parameter:
+          oneOf:
+            - $ref: '#/components/schemas/SensorParameter'
+            - $ref: '#/components/schemas/LabParameter'
+        unit: { type: string }
+        sides:
+          type: string
+          enum: [low, high, both]
+          readOnly: true
+          description: 境界を持てる側（DO は low のみ、TAN・NO2・Vibrio は high のみ）。持てない側の値は常に null
+        criticalLow: { type: [number, 'null'] }
+        warningLow: { type: [number, 'null'] }
+        attentionLow: { type: [number, 'null'] }
+        attentionHigh: { type: [number, 'null'] }
+        warningHigh: { type: [number, 'null'] }
+        criticalHigh: { type: [number, 'null'] }
+        inherited: { type: boolean, readOnly: true, description: Farm の上書きがなく初期値を使っている }
+
+    SensorReading:
+      allOf:
+        - $ref: '#/components/schemas/SensorValue'
+        - type: object
+          required: [parameter, unit, threshold]
+          properties:
+            parameter: { $ref: '#/components/schemas/SensorParameter' }
+            unit: { type: string }
+            deviceId: { type: string, example: A-P02-DO }
+            threshold: { $ref: '#/components/schemas/Threshold' }
+
+    SensorSeries:
+      type: object
+      required: [parameter, unit, interval, points, threshold]
+      properties:
+        parameter: { $ref: '#/components/schemas/SensorParameter' }
+        unit: { type: string }
+        interval: { type: string }
+        points:
+          type: array
+          items:
+            type: object
+            required: [t]
+            properties:
+              t: { type: string, format: date-time }
+              avg: { type: [number, 'null'], description: 欠損区間は null }
+              min: { type: [number, 'null'] }
+              max: { type: [number, 'null'] }
+        threshold: { $ref: '#/components/schemas/Threshold' }
+
+    SensorHistoryRow:
+      type: object
+      required: [measuredAt, values]
+      properties:
+        measuredAt: { type: string, format: date-time }
+        values:
+          type: object
+          description: キーは SensorParameter。範囲外の判定はバックエンド
+          required: [do, ph, temperature, tds, turbidity, water_level]
+          properties:
+            do: { $ref: '#/components/schemas/HistoryValue' }
+            ph: { $ref: '#/components/schemas/HistoryValue' }
+            temperature: { $ref: '#/components/schemas/HistoryValue' }
+            tds: { $ref: '#/components/schemas/HistoryValue' }
+            turbidity: { $ref: '#/components/schemas/HistoryValue' }
+            water_level: { $ref: '#/components/schemas/HistoryValue' }
+
+    HistoryValue:
+      type: object
+      required: [value, severity]
+      properties:
+        value: { type: [number, 'null'], description: 欠測は null }
+        severity: { $ref: '#/components/schemas/Severity' }
+
+    SensorAnomaly:
+      type: object
+      description: 閾値の逸脱（below / above_threshold）または傾向（increasing / decreasing）
+      required: [kind, parameter, severity, unit, startedAt, endedAt, extremeValue, change24h, comparedWith, withinRange, alertId]
+      properties:
+        kind: { type: string, enum: [below_threshold, above_threshold, increasing, decreasing] }
+        parameter: { $ref: '#/components/schemas/SensorParameter' }
+        severity: { $ref: '#/components/schemas/Severity' }
+        unit: { type: string }
+        startedAt: { type: string, format: date-time }
+        endedAt: { type: [string, 'null'], format: date-time, description: 継続中は null }
+        extremeValue: { type: [number, 'null'], description: 閾値の逸脱：区間中の最も外れた値 }
+        change24h: { type: [number, 'null'], description: '傾向：変化量（例 −1.3）。comparedWith が null なら 24 時間の変化' }
+        comparedWith: { type: [string, 'null'], format: date, description: '傾向：変化量の比較元の日（その日の平均と比べた値。例 27 Sep avg.）' }
+        withinRange: { type: boolean, description: 傾向だが値は Normal の範囲内 }
+        alertId: { type: [string, 'null'] }
+
+    # ── Alerts ──
+    Alert:
+      type: object
+      required: [id, pond, title, parameter, severity, state, value, thresholdValue, unit, direction, occurredAt, resolvedAt, handledBy]
+      properties:
+        id: { type: string, example: ALT-1042 }
+        pond: { $ref: '#/components/schemas/PondRef' }
+        title: { type: string, example: DO below threshold (4.1 mg/L < 4.5) }
+        parameter: { type: string, description: SensorParameter、または sensor_offline }
+        severity: { $ref: '#/components/schemas/Severity' }
+        state: { $ref: '#/components/schemas/AlertState' }
+        value: { type: [number, 'null'] }
+        thresholdValue: { type: [number, 'null'] }
+        unit: { type: [string, 'null'], example: mg/L }
+        direction:
+          description: 閾値のどちら側に外れたか
+          oneOf:
+            - { type: string, enum: [below, above] }
+            - { type: 'null' }
+        occurredAt: { type: string, format: date-time }
+        resolvedAt: { type: [string, 'null'], format: date-time }
+        handledBy:
+          description: 確認・対応した TM（未対応なら null）
+          oneOf:
+            - $ref: '#/components/schemas/UserRef'
+            - type: 'null'
+
+    AlertDetail:
+      allOf:
+        - $ref: '#/components/schemas/Alert'
+        - type: object
+          required: [acknowledgedAt, acknowledgedBy, sensor, issueId, actions]
+          properties:
+            sensor:
+              oneOf:
+                - type: object
+                  required: [deviceId, connection]
+                  properties:
+                    deviceId: { type: string, example: A-P02-DO }
+                    connection: { $ref: '#/components/schemas/Connection' }
+                - type: 'null'
+            issueId: { type: [string, 'null'], description: 'FM に見える Farm の Issue（例 ISS-218）' }
+            acknowledgedAt: { type: [string, 'null'], format: date-time }
+            acknowledgedBy:
+              oneOf:
+                - $ref: '#/components/schemas/UserRef'
+                - type: 'null'
+            actions:
+              type: array
+              items: { $ref: '#/components/schemas/AlertAction' }
+
+    AlertActionInput:
+      type: object
+      required: [performedAt, type]
+      properties:
+        performedAt: { type: string, format: date-time }
+        type: { $ref: '#/components/schemas/ActionType' }
+        note: { type: string, maxLength: 1000 }
+
+    AlertAction:
+      allOf:
+        - $ref: '#/components/schemas/AlertActionInput'
+        - type: object
+          required: [id, recordedBy, source]
+          properties:
+            id: { type: string }
+            recordedBy: { $ref: '#/components/schemas/UserRef' }
+            source:
+              type: string
+              enum: [alert_handling, actuator_log]
+              description: TM の記録、または Actuator 操作ログからの自動追加
+
+    # ── Records ──
+    FeedingInput:
+      type: object
+      description: 1 回分の給餌（Pond Detail › Feeding）
+      required: [date, round, feedType, amountKg]
+      properties:
+        date: { type: string, format: date }
+        round: { type: integer, minimum: 1, description: 'PondDetail.feeding.schedule の何回目か' }
+        feedType: { type: string, example: Grower 2 (2.0 mm) }
+        amountKg: { type: number, exclusiveMinimum: 0 }
+        trayCheck:
+          oneOf:
+            - $ref: '#/components/schemas/TrayCheck'
+            - type: 'null'
+        note: { type: [string, 'null'] }
+
+    FeedingRecord:
+      allOf:
+        - $ref: '#/components/schemas/FeedingInput'
+        - $ref: '#/components/schemas/RecordMeta'
+        - type: object
+          required: [time]
+          properties:
+            time: { type: string, readOnly: true, description: 回の時刻 HH:mm（WIB）, example: '09:00' }
+
+    TrayCheck:
+      type: string
+      description: 'トレイ確認の結果（仮の選択肢。05 未確定事項）'
+      enum: [empty_within_2h, leftover_under_5, leftover_10, leftover_over_20]
+
+    MortalityInput:
+      type: object
+      required: [date, count, weightKg]
+      properties:
+        date: { type: string, format: date }
+        count: { type: integer, minimum: 0 }
+        weightKg: { type: number, minimum: 0 }
+        observation:
+          oneOf:
+            - $ref: '#/components/schemas/MortalityObservation'
+            - type: 'null'
+        note: { type: [string, 'null'] }
+
+    MortalityObservation:
+      type: string
+      description: '死亡時の観察（仮の選択肢。05 未確定事項）。low_do / disease_signs は異常な死亡として扱う'
+      enum: [routine_check, low_do, disease_signs, molting, other]
+
+    MortalityRecord:
+      allOf:
+        - $ref: '#/components/schemas/MortalityInput'
+        - $ref: '#/components/schemas/RecordMeta'
+
+    SamplingMeasurement:
+      type: object
+      properties:
+        sampleCount: { type: [integer, 'null'], minimum: 1 }
+        sampleWeightG: { type: [number, 'null'], minimum: 0 }
+        tan: { type: [number, 'null'], description: mg/L }
+        no2: { type: [number, 'null'], description: mg/L }
+        vibrio: { type: [number, 'null'], description: ×10³ CFU/mL }
+        alkalinity: { type: [number, 'null'], description: mg/L }
+
+    SamplingInput:
+      allOf:
+        - type: object
+          required: [date]
+          properties:
+            date: { type: string, format: date }
+            note: { type: [string, 'null'] }
+        - $ref: '#/components/schemas/SamplingMeasurement'
+
+    SamplingRecord:
+      allOf:
+        - $ref: '#/components/schemas/SamplingInput'
+        - $ref: '#/components/schemas/RecordMeta'
+        - type: object
+          description: バックエンドで計算する値
+          required: [doc, abwG, adgGPerDay, targetAbwG, vsTargetPct, growth, labPending, labSeverity]
+          properties:
+            doc: { type: integer }
+            abwG: { type: [number, 'null'] }
+            adgGPerDay: { type: [number, 'null'] }
+            targetAbwG: { type: [number, 'null'] }
+            vsTargetPct: { type: [number, 'null'] }
+            growth:
+              oneOf:
+                - $ref: '#/components/schemas/GrowthJudgement'
+                - type: 'null'
+            labPending: { type: boolean, description: Laboratory が未着 }
+            labSeverity:
+              type: object
+              description: Laboratory の閾値判定（04 §6.2）。未測定は null
+              properties:
+                tan: { oneOf: [{ $ref: '#/components/schemas/Severity' }, { type: 'null' }] }
+                no2: { oneOf: [{ $ref: '#/components/schemas/Severity' }, { type: 'null' }] }
+                vibrio: { oneOf: [{ $ref: '#/components/schemas/Severity' }, { type: 'null' }] }
+                alkalinity: { oneOf: [{ $ref: '#/components/schemas/Severity' }, { type: 'null' }] }
+
+    RecordMeta:
+      type: object
+      required: [id, pondId, recordedBy, updatedAt]
+      properties:
+        id: { type: string }
+        pondId: { type: string }
+        recordedBy: { $ref: '#/components/schemas/UserRef' }
+        updatedAt: { type: string, format: date-time }
+
+    # ── Actuators ──
+    ActuatorCommand:
+      type: string
+      description: turn_on / turn_off は Auto 中なら Manual（override）に切り替えて実行する
+      enum: [turn_on, turn_off, set_manual, set_auto]
+
+    Actuator:
+      type: object
+      required: [id, type, name, state, mode, connection, autoRule, spec, runtimeTodayH, modeSince, lastRunAt, safety, blockedCommands]
+      properties:
+        id: { type: string, example: A-P02-AER1 }
+        type: { type: string, enum: [aerator, pump] }
+        name: { type: string, example: Aerator 1 }
+        state: { type: string, enum: ['on', 'off', fault] }
+        mode: { type: string, enum: [auto, manual] }
+        connection: { $ref: '#/components/schemas/Connection' }
+        autoRule: { type: [string, 'null'], description: '自動制御の状態（例 "On when DO < 5.0"）' }
+        spec: { type: [string, 'null'], example: Paddlewheel · 2 HP }
+        runtimeTodayH: { type: [number, 'null'], description: 当日の稼働時間 }
+        modeSince: { type: [string, 'null'], format: date-time, description: 現在のモードになった時刻（Manual のとき表示） }
+        lastRunAt: { type: [string, 'null'], format: date-time, description: 停止中のとき最後に稼働した時刻 }
+        safety:
+          type: array
+          description: 操作の確認ダイアログに示す制約（例 Current water level 132 cm / Safety limit Stops at 150 cm）
+          items:
+            type: object
+            required: [label, value]
+            properties:
+              label: { type: string }
+              value: { type: string }
+        blockedCommands:
+          type: array
+          description: Safety Layer で禁止された操作と理由（UI でボタンを無効にして理由を示す）
+          items:
+            type: object
+            required: [command, reason]
+            properties:
+              command: { $ref: '#/components/schemas/ActuatorCommand' }
+              reason: { type: string }
+        updatedAt: { type: string, format: date-time }
+
+    ActuatorLog:
+      type: object
+      required: [id, actuatorId, actuatorName, command, at, by, mode, result]
+      properties:
+        id: { type: string }
+        actuatorId: { type: string }
+        actuatorName: { type: string }
+        command:
+          type: string
+          description: ActuatorCommand、または自動制御による auto_on / auto_off
+        at: { type: string, format: date-time }
+        by:
+          oneOf:
+            - $ref: '#/components/schemas/UserRef'
+            - type: 'null'
+          description: 自動制御の場合 null
+        mode: { type: string, enum: [auto, manual, manual_override] }
+        result: { type: string, enum: [succeeded, failed, blocked] }
+
+    # ── Reports ──
+    ReportListItem:
+      type: object
+      required: [id, type, farm, status, technicalManager, submittedAt, dueAt, savedAt]
+      properties:
+        id: { type: string }
+        type: { $ref: '#/components/schemas/ReportType' }
+        farm: { $ref: '#/components/schemas/FarmRef' }
+        date: { type: string, format: date, description: Daily のみ }
+        weekStart: { type: string, format: date, description: Weekly のみ }
+        weekEnd: { type: string, format: date, description: Weekly のみ }
+        technicalManager: { $ref: '#/components/schemas/UserRef' }
+        status: { $ref: '#/components/schemas/ReportState' }
+        issueCount: { type: integer }
+        submittedAt: { type: [string, 'null'], format: date-time }
+        dueAt: { type: string, format: date-time }
+        savedAt: { type: [string, 'null'], format: date-time }
+        pondsNeedingAttention: { type: [integer, 'null'], description: '注意以上の Pond 数（健康状態・含めた Alert）' }
+        feedKg: { type: [number, 'null'], description: 期間の給餌量の合計 }
+        mortalityPcs: { type: [integer, 'null'], description: 期間の死亡数の合計 }
+        biomassKg: { type: [number, 'null'], description: Weekly のみ・週末時点の Biomass（Estimated） }
+        survivalRatePct: { type: [number, 'null'], description: Weekly のみ・Survival Rate（Estimated・重み付き） }
+        pondsBehind: { type: [integer, 'null'], description: Weekly のみ・目標より遅れている Pond 数 }
+
+    Source:
+      type: string
+      description: 値の参照元（UI の「From records」等）
+      enum: [records, alert_system, alert_handling, actuator_log, sensor_database, sampling, manual]
+
+    DailyPondRow:
+      type: object
+      description: 'Feeding · Mortality · Health の 1 行（センサー値は含めない）。feed* / mortality* は記録から（source: records）'
+      required: [pond, feedKg, feedRounds, feedRoundsPlanned, feedType, appetite, tray, mortalityPcs, mortalityKg, mortalityNote, health, observations, healthNote, aerators]
+      properties:
+        pond: { $ref: '#/components/schemas/PondRef' }
+        feedKg: { type: number }
+        feedRounds: { type: integer }
+        feedRoundsPlanned: { type: integer }
+        feedType: { type: [string, 'null'] }
+        appetite: { $ref: '#/components/schemas/Appetite' }
+        tray: { $ref: '#/components/schemas/TrayCondition' }
+        mortalityPcs: { type: integer }
+        mortalityKg: { type: number }
+        mortalityNote: { type: [string, 'null'], description: 異常な死亡の観察（あれば） }
+        health: { $ref: '#/components/schemas/Severity' }
+        observations:
+          type: array
+          items: { $ref: '#/components/schemas/HealthObservation' }
+        healthNote: { type: [string, 'null'] }
+        aerators: { $ref: '#/components/schemas/OnCount' }
+
+    Weather:
+      type: string
+      enum: [sunny, cloudy, rain, heavy_rain]
+
+    EquipmentEvent:
+      type: object
+      required: [id, source, equipment, pond, failure, occurredAt, action, status]
+      properties:
+        id: { type: string }
+        source: { type: string, enum: [actuator, manual], description: Actuator の故障検知、または TM の手入力 }
+        equipment: { type: string, example: Aerator 4 }
+        pond:
+          oneOf:
+            - $ref: '#/components/schemas/PondRef'
+            - type: 'null'
+        failure: { type: string, example: Motor overheating }
+        occurredAt: { type: string, format: date-time }
+        action: { type: [string, 'null'], example: Stopped, technician called }
+        status: { type: string, enum: [in_progress, resolved] }
+
+    DailyReport:
+      allOf:
+        - $ref: '#/components/schemas/ReportListItem'
+        - type: object
+          description: |
+            Draft の間、記録から集める値（ponds の feed* / mortality*、alerts、actuator_log / alert_handling の actions、
+            equipmentEvents の actuator 分）は取得のたびに最新の記録から作り直す。Submitted は提出時点の内容で固定。
+          required: [farmStatus, ponds, totals, environment, equipmentEvents, alerts, actions, summary, previousReportId, nextReportId, previousReportDate, nextReportDate]
+          properties:
+            farmStatus:
+              description: その日の Farm の状態（FM-05 の Farm Condition。Draft の間は現在の状態）
+              allOf: [{ $ref: '#/components/schemas/Severity' }]
+            previousReportId: { type: [string, 'null'], description: 同じ Farm の前の Report（呼び出し元が開けるものだけ。FM は提出済みのみ。nextReportId も同様） }
+            nextReportId: { type: [string, 'null'] }
+            previousReportDate: { type: [string, 'null'], format: date, description: 'previousReportId の日付。前後ボタンに日付を表示する（未提出の日があっても正しい日付を出すため）' }
+            nextReportDate: { type: [string, 'null'], format: date }
+            ponds:
+              type: array
+              items: { $ref: '#/components/schemas/DailyPondRow' }
+            totals:
+              type: object
+              description: Farm の合計（加算可能な値のみ。平均は出さない）
+              required: [feedKg, mortalityPcs, mortalityKg, reducedAppetitePonds, leftoverTrayPonds, healthNotedPonds]
+              properties:
+                feedKg: { type: number }
+                mortalityPcs: { type: integer }
+                mortalityKg: { type: number }
+                reducedAppetitePonds: { type: integer, description: Appetite が Good 以外の Pond 数 }
+                leftoverTrayPonds: { type: integer, description: Tray が Clean 以外の Pond 数 }
+                healthNotedPonds: { type: integer, description: Health が Normal 以外の Pond 数 }
+            environment:
+              type: object
+              required: [weather, rainfallMm, events]
+              properties:
+                weather:
+                  description: 提出に必須
+                  oneOf:
+                    - $ref: '#/components/schemas/Weather'
+                    - type: 'null'
+                rainfallMm: { type: [number, 'null'] }
+                events: { type: [string, 'null'] }
+            equipmentEvents:
+              type: array
+              items: { $ref: '#/components/schemas/EquipmentEvent' }
+            alerts:
+              type: array
+              description: 'その日に発生した、またはその日に継続していた Alert（source: alert_system）。TM が除外したものは excluded: true'
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/Alert'
+                  - type: object
+                    required: [durationMinutes, excluded]
+                    properties:
+                      durationMinutes: { type: integer, description: 発生から解決まで（継続中は現在まで） }
+                      excluded: { type: boolean }
+            actions:
+              type: array
+              description: 時刻順
+              items: { $ref: '#/components/schemas/ReportAction' }
+            summary: { type: [string, 'null'], description: Technical Manager Summary（提出に必須） }
+
+    ReportAction:
+      type: object
+      required: [id, source, at, pond, action, outcome]
+      properties:
+        id: { type: string }
+        source:
+          type: string
+          enum: [alert_handling, actuator_log, manual]
+        at: { type: string, format: date-time }
+        pond:
+          oneOf:
+            - $ref: '#/components/schemas/PondRef'
+            - type: 'null'
+        action: { type: string }
+        outcome: { type: [string, 'null'] }
+
+    DailyReportInput:
+      type: object
+      description: |
+        TM が入力する項目のみ（記録から集めた値はここでは変えない）。送った項目だけを更新する。
+        ponds は Pond ごとに上書き、excludedAlertIds・manualActions・manualEquipmentEvents は全件を送って置き換える。
+      properties:
+        ponds:
+          type: array
+          items:
+            type: object
+            required: [pondId]
+            properties:
+              pondId: { type: string }
+              appetite: { $ref: '#/components/schemas/Appetite' }
+              tray: { $ref: '#/components/schemas/TrayCondition' }
+              mortalityNote: { type: [string, 'null'] }
+              health: { $ref: '#/components/schemas/Severity' }
+              observations:
+                type: array
+                items: { $ref: '#/components/schemas/HealthObservation' }
+              healthNote: { type: [string, 'null'] }
+        environment:
+          type: object
+          properties:
+            weather:
+              oneOf:
+                - $ref: '#/components/schemas/Weather'
+                - type: 'null'
+            rainfallMm: { type: [number, 'null'] }
+            events: { type: [string, 'null'] }
+        excludedAlertIds:
+          type: array
+          items: { type: string }
+        manualActions:
+          type: array
+          description: 手入力の対応（Add action）
+          items:
+            type: object
+            required: [at, action]
+            properties:
+              id: { type: string, description: 既存の手入力を更新する場合 }
+              at: { type: string, format: date-time }
+              pondId: { type: [string, 'null'] }
+              action: { type: string }
+              outcome: { type: [string, 'null'] }
+        manualEquipmentEvents:
+          type: array
+          description: 手入力の設備の出来事（Add equipment event）
+          items:
+            type: object
+            required: [equipment, failure, occurredAt, status]
+            properties:
+              id: { type: string }
+              equipment: { type: string }
+              pondId: { type: [string, 'null'] }
+              failure: { type: string }
+              occurredAt: { type: string, format: date-time }
+              action: { type: [string, 'null'] }
+              status: { type: string, enum: [in_progress, resolved] }
+        summary: { type: [string, 'null'] }
+
+    WeeklyReport:
+      allOf:
+        - $ref: '#/components/schemas/ReportListItem'
+        - type: object
+          description: |
+            1 週間で Farm がどう推移したか（05 FM-06 / TM-05）。7 日分の羅列ではなく傾向を示す。
+            記録・サンプリング・Sensor Database・Alert から集める値はバックエンドで集計し、平均は出さない（04 §4.1）。
+          required: [docRange, summary, samplingCoverage, production, feeding, mortality, pondsThisWeek, alerts, majorActions, waterQualityComment, technicalSummary, previousReportId, nextReportId]
+          properties:
+            previousReportId: { type: [string, 'null'] }
+            nextReportId: { type: [string, 'null'] }
+            docRange:
+              type: object
+              required: [min, max]
+              properties:
+                min: { type: integer }
+                max: { type: integer }
+            summary:
+              type: object
+              required: [farmCondition, systemFarmStatus, pondsBehind, pondsTotal, feedKg, mortalityPcs, mortalityKg, alertCount, alertsOngoing]
+              properties:
+                farmCondition:
+                  description: TM が確認した Farm の状態（初期値は systemFarmStatus）
+                  allOf: [{ $ref: '#/components/schemas/Severity' }]
+                systemFarmStatus: { $ref: '#/components/schemas/Severity' }
+                pondsBehind: { type: integer }
+                pondsTotal: { type: integer }
+                feedKg: { type: number }
+                mortalityPcs: { type: integer }
+                mortalityKg: { type: number }
+                alertCount: { type: integer }
+                alertsOngoing: { type: integer }
+            samplingCoverage:
+              type: object
+              description: 週次サンプリングの測定状況（04 §4.1）
+              required: [date, sampled, total, labReceived, notSampled]
+              properties:
+                date: { type: [string, 'null'], format: date }
+                sampled: { type: integer }
+                total: { type: integer }
+                labReceived: { type: integer }
+                notSampled:
+                  type: array
+                  items: { $ref: '#/components/schemas/PondRef' }
+            production: { $ref: '#/components/schemas/FarmProduction' }
+            feeding: { $ref: '#/components/schemas/WeeklyTotalByPond' }
+            mortality: { $ref: '#/components/schemas/WeeklyTotalByPond' }
+            pondsThisWeek:
+              type: array
+              items: { $ref: '#/components/schemas/WeeklyPondRow' }
+            alerts:
+              type: array
+              description: 週の Alert（自動集計）。TM が Cause / Action / Outcome を追記できる
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/Alert'
+                  - type: object
+                    required: [durationMinutes, cause, action, outcome]
+                    properties:
+                      durationMinutes: { type: integer }
+                      cause: { type: [string, 'null'] }
+                      action: { type: [string, 'null'] }
+                      outcome: { type: [string, 'null'] }
+            majorActions:
+              type: array
+              description: 週の主要な対応（TM が入力）
+              items: { $ref: '#/components/schemas/WeeklyAction' }
+            waterQualityComment: { type: [string, 'null'] }
+            technicalSummary: { type: [string, 'null'], description: Weekly Technical Summary（提出に必須） }
+
+    WeeklyAction:
+      type: object
+      required: [id, date, pond, action]
+      properties:
+        id: { type: string }
+        date: { type: string, format: date }
+        pond:
+          oneOf:
+            - $ref: '#/components/schemas/PondRef'
+            - type: 'null'
+        action: { type: string }
+
+    WeeklyTotalByPond:
+      type: object
+      description: 週合計と前週比、Pond 別の内訳（全 Pond・Others にまとめない）
+      required: [unit, total, previousTotal, byPond]
+      properties:
+        unit: { type: string, example: kg }
+        total: { type: number }
+        previousTotal: { type: [number, 'null'] }
+        totalKg: { type: [number, 'null'], description: 死亡のみ・死亡重量の合計 }
+        per10kStocked: { type: [number, 'null'], description: '死亡のみ・Farm 全体の放養1万尾あたり（Σ死亡 ÷ Σ放養）' }
+        reducedAppetitePonds: { type: [integer, 'null'], description: 給餌のみ・摂餌が落ちた日のある Pond 数 }
+        byPond:
+          type: array
+          items:
+            type: object
+            required: [pond, value, changePct]
+            properties:
+              pond: { $ref: '#/components/schemas/PondRef' }
+              value: { type: number }
+              changePct: { type: [number, 'null'], description: 前週比（%） }
+              per10kStocked: { type: [number, 'null'], description: 死亡のみ・放養1万尾あたり }
+              peakDate: { type: [string, 'null'], format: date, description: 死亡のみ・最多の日 }
+              peakValue: { type: [number, 'null'], description: 死亡のみ・最多の日の値 }
+              reducedAppetiteDays: { type: [integer, 'null'], description: 給餌のみ }
+
+    WeeklyPondRow:
+      type: object
+      description: Ponds this week のタブ（growth / wq / feed / lab）の Pond 1 行分。feed は feeding / mortality.byPond を使う
+      required: [pond, growth, waterQuality, laboratory]
+      properties:
+        pond: { $ref: '#/components/schemas/PondRef' }
+        growth: { $ref: '#/components/schemas/PondProduction' }
+        waterQuality:
+          type: object
+          description: 'Sensor Database から週次で自動集計（source: sensor_database）。平均は出さない'
+          required: [doMin, phMin, phMax, temperatureMax, outOfRangeDays, alertCount, trend, trendParameter, severity]
+          properties:
+            doMin: { type: [number, 'null'] }
+            phMin: { type: [number, 'null'] }
+            phMax: { type: [number, 'null'] }
+            temperatureMax: { type: [number, 'null'] }
+            outOfRangeDays: { type: integer }
+            alertCount: { type: integer }
+            trend: { $ref: '#/components/schemas/Trend' }
+            trendParameter:
+              description: 傾向のある項目（stable なら null）
+              oneOf:
+                - $ref: '#/components/schemas/SensorParameter'
+                - type: 'null'
+            severity:
+              type: object
+              description: 各値の閾値判定（強調表示用）
+              required: [doMin, ph, temperatureMax]
+              properties:
+                doMin: { $ref: '#/components/schemas/Severity' }
+                ph: { $ref: '#/components/schemas/Severity' }
+                temperatureMax: { $ref: '#/components/schemas/Severity' }
+        laboratory:
+          type: object
+          required: [sampledOn, pending, expectedOn, tan, no2, vibrio, alkalinity, severity]
+          properties:
+            sampledOn: { type: [string, 'null'], format: date }
+            pending: { type: boolean }
+            expectedOn: { type: [string, 'null'], format: date, description: 未着のとき結果の予定日 }
+            tan: { type: [number, 'null'] }
+            no2: { type: [number, 'null'] }
+            vibrio: { type: [number, 'null'] }
+            alkalinity: { type: [number, 'null'] }
+            severity:
+              type: object
+              properties:
+                tan: { oneOf: [{ $ref: '#/components/schemas/Severity' }, { type: 'null' }] }
+                no2: { oneOf: [{ $ref: '#/components/schemas/Severity' }, { type: 'null' }] }
+                vibrio: { oneOf: [{ $ref: '#/components/schemas/Severity' }, { type: 'null' }] }
+                alkalinity: { oneOf: [{ $ref: '#/components/schemas/Severity' }, { type: 'null' }] }
+
+    WeeklyReportInput:
+      type: object
+      description: TM が入力する項目のみ。送った項目だけを更新する（alertNotes・majorActions は全件を送って置き換え）
+      properties:
+        farmCondition: { $ref: '#/components/schemas/Severity' }
+        alertNotes:
+          type: array
+          items:
+            type: object
+            required: [alertId]
+            properties:
+              alertId: { type: string }
+              cause: { type: [string, 'null'] }
+              action: { type: [string, 'null'] }
+              outcome: { type: [string, 'null'] }
+        majorActions:
+          type: array
+          items:
+            type: object
+            required: [date, action]
+            properties:
+              id: { type: string }
+              date: { type: string, format: date }
+              pondId: { type: [string, 'null'] }
+              action: { type: string }
+        waterQualityComment: { type: [string, 'null'] }
+        technicalSummary: { type: [string, 'null'] }
+
+    # ── Admin ──
+    AdminUser:
+      type: object
+      description: 一覧は呼び出したユーザーを先頭に、Deactivated を末尾に。その間は SA → FM → TM（Farm 順）→ Active・Invited の順 → 名前の順
+      required: [id, name, email, role, farm, language, status, invitedAt, invitedBy, invitationExpiresAt, activatedAt, lastSignInAt, failedSignIns, canDeactivate, canChangeRole, onlyActiveTechnicalManagerOf]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+        farm:
+          oneOf:
+            - $ref: '#/components/schemas/FarmRef'
+            - type: 'null'
+        language: { $ref: '#/components/schemas/Language' }
+        status: { $ref: '#/components/schemas/UserStatus' }
+        invitedAt: { type: [string, 'null'], format: date-time }
+        invitedBy:
+          description: 招待した SA（初期ユーザーなどは null）
+          oneOf:
+            - $ref: '#/components/schemas/UserRef'
+            - type: 'null'
+        invitationExpiresAt: { type: [string, 'null'], format: date-time, description: Invited の間だけ（招待から72時間） }
+        activatedAt: { type: [string, 'null'], format: date-time, description: 招待からパスワードを設定した日時 }
+        lastSignInAt: { type: [string, 'null'], format: date-time }
+        failedSignIns: { type: integer, description: 直近の連続ログイン失敗回数（5回でロック、02 §7） }
+        canDeactivate: { type: boolean, description: 自分自身・最後の SA は false }
+        canChangeRole: { type: boolean, description: 自分自身・最後の SA は false }
+        onlyActiveTechnicalManagerOf:
+          description: この TM が担当 Farm の唯一の Active な TM なら、その Farm（無効化・担当替えの確認で警告する）。それ以外は null
+          oneOf:
+            - $ref: '#/components/schemas/FarmRef'
+            - type: 'null'
+
+    AdminFarmInput:
+      type: object
+      required: [name, location]
+      properties:
+        name: { type: string }
+        location: { type: string, description: '「Region, Province」（例 East Java, Indonesia）' }
+        timeZone:
+          type: string
+          enum: [Asia/Jakarta, Asia/Makassar, Asia/Jayapura]
+          default: Asia/Jakarta
+          description: WIB / WITA / WIT
+        status: { type: string, enum: [active, inactive], description: 登録時は常に inactive（Pond・機器・TM をそろえてから AD-03 で有効化） }
+
+    AdminFarm:
+      allOf:
+        - $ref: '#/components/schemas/AdminFarmInput'
+        - type: object
+          required: [id, timeZone, status, pondCount, pondsInOperation, technicalManagers, devicesOnline, devicesTotal, updatedAt, updatedBy]
+          properties:
+            id: { type: string }
+            updatedAt: { type: string, format: date-time, description: AD-03 ヘッダー「Updated 2 Sep 2026 by Yusuf Rahman」 }
+            updatedBy:
+              oneOf:
+                - $ref: '#/components/schemas/UserRef'
+                - type: 'null'
+            pondCount: { type: integer, description: 登録済みの Pond 数（休止中を含む） }
+            pondsInOperation: { type: integer }
+            technicalManagers:
+              type: array
+              description: 担当 TM（Active と Invited。Active が先）。AD-02「Agus Pratama + Fajar Nugroho (invited)」
+              items: { $ref: '#/components/schemas/AdminFarmTechnicalManager' }
+            devicesOnline: { type: integer }
+            devicesTotal: { type: integer }
+
+    AdminFarmTechnicalManager:
+      allOf:
+        - $ref: '#/components/schemas/UserRef'
+        - type: object
+          required: [status]
+          properties:
+            status: { type: string, enum: [active, invited] }
+
+    AdminPondInput:
+      type: object
+      required: [name, areaHa]
+      properties:
+        name: { type: string, description: Farm 内で重複不可 }
+        areaHa: { type: number, exclusiveMinimum: 0 }
+        status: { type: string, enum: [in_operation, fallow], default: in_operation, description: fallow は監視・生産の画面に出さない（休止・準備中） }
+
+    AdminPond:
+      allOf:
+        - $ref: '#/components/schemas/AdminPondInput'
+        - type: object
+          required: [id, status, sensorCount, actuatorCount]
+          properties:
+            id: { type: string }
+            sensorCount: { type: integer }
+            actuatorCount: { type: integer }
+
+    AdminDeviceInput:
+      type: object
+      required: [deviceId, type, pondId]
+      properties:
+        deviceId: { type: string, example: A-P02-DO, description: 機器・ゲートウェイに印字された ID。全体で重複不可、登録後は変更しない }
+        type: { $ref: '#/components/schemas/DeviceType' }
+        pondId: { type: string }
+        parameter:
+          description: センサーのみ必須（測る項目）。Actuator は null
+          oneOf:
+            - $ref: '#/components/schemas/SensorParameter'
+            - type: 'null'
+        spec: { type: [string, 'null'], description: 'Actuator の仕様（例 Paddlewheel · 2 HP、Inflow · 15 m³/h）。センサーは null' }
+
+    AdminDeviceUpdate:
+      type: object
+      description: Device ID は変えない（付け替えは別の機器として登録する）
+      properties:
+        type: { $ref: '#/components/schemas/DeviceType' }
+        pondId: { type: string }
+        parameter:
+          oneOf:
+            - $ref: '#/components/schemas/SensorParameter'
+            - type: 'null'
+        spec: { type: [string, 'null'] }
+
+    AdminDevice:
+      allOf:
+        - $ref: '#/components/schemas/AdminDeviceInput'
+        - type: object
+          required: [pond, connection, lastSeenAt, parameter, spec]
+          properties:
+            pond: { $ref: '#/components/schemas/PondRef' }
+            connection: { $ref: '#/components/schemas/Connection' }
+            lastSeenAt: { type: [string, 'null'], format: date-time, description: 'null = 初回の受信待ち（connection は offline だが Offline の件数・警告には含めない）' }
+
+    SettingsMeta:
+      type: object
+      required: [updatedAt, updatedBy]
+      properties:
+        updatedAt: { type: string, format: date-time }
+        updatedBy: { $ref: '#/components/schemas/UserRef' }
+
+    ThresholdSettings:
+      allOf:
+        - $ref: '#/components/schemas/SettingsMeta'
+        - type: object
+          required: [farmId, items, farms]
+          properties:
+            farmId: { type: [string, 'null'], description: null = 全 Farm 共通の初期値 }
+            items:
+              type: array
+              description: 水質（センサー6項目）→ Laboratory（4項目）の順
+              items: { $ref: '#/components/schemas/Threshold' }
+            farms:
+              type: array
+              description: 'Apply to の選択肢と保存の確認に使う：Farm ごとの上書きの有無（「Farm D (1 override)」「Farm D keeps its DO override」）'
+              items: { $ref: '#/components/schemas/ThresholdFarmOverride' }
+
+    ThresholdFarmOverride:
+      type: object
+      required: [farm, parameters]
+      properties:
+        farm: { $ref: '#/components/schemas/FarmRef' }
+        parameters:
+          type: array
+          description: 上書きしている項目（空 = 初期値を使う）
+          items: { type: string }
+
+    GrowthTargetSettings:
+      allOf:
+        - $ref: '#/components/schemas/SettingsMeta'
+        - type: object
+          required: [points, onTrackBandPct]
+          properties:
+            points:
+              type: array
+              items: { $ref: '#/components/schemas/GrowthTargetPoint' }
+            onTrackBandPct: { type: number }
+
+    RuleSettingsInput:
+      type: object
+      description: 'Offline は Delayed より長く、Production の Warning は Attention より大きい（矛盾は 422）'
+      required: [dailyReportDue, weeklyReportDueWeekday, weeklyReportDueTime, sensorDelayedAfterMinutes, sensorOfflineAfterMinutes, attentionToAlertMinutes, productionAttentionPct, productionWarningPct]
+      properties:
+        dailyReportDue: { type: string, description: '当日の締切時刻 HH:mm（WIB）', example: '18:00' }
+        weeklyReportDueWeekday: { type: integer, minimum: 1, maximum: 7, description: 翌週の曜日（1 = 月曜） }
+        weeklyReportDueTime: { type: string, description: '翌週のその曜日の締切時刻 HH:mm（WIB）', example: '12:00' }
+        sensorDelayedAfterMinutes: { type: integer, example: 15 }
+        sensorOfflineAfterMinutes: { type: integer, example: 60 }
+        attentionToAlertMinutes: { type: integer, example: 30 }
+        productionAttentionPct: { type: number, example: 25 }
+        productionWarningPct: { type: number, example: 50 }
+
+    RuleSettings:
+      allOf:
+        - $ref: '#/components/schemas/SettingsMeta'
+        - $ref: '#/components/schemas/RuleSettingsInput'
