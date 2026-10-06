@@ -1,6 +1,11 @@
 {
   "app": {
-    "name": "AquaGuard"
+    "name": "AquaGuard",
+    "serverDown": {
+      "title": "Cannot reach the server",
+      "body": "AquaGuard could not connect to its server. Check your connection and try again.",
+      "devHint": "Development: start the backend (API_PROXY_TARGET, default http://localhost:8000) or run npm run dev:mock to use the mock API."
+    }
   },
   "role": {
     "farms_manager": "Farms Manager",

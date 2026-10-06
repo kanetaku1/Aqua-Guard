@@ -1,6 +1,11 @@
 {
   "app": {
-    "name": "AquaGuard"
+    "name": "AquaGuard",
+    "serverDown": {
+      "title": "Tidak dapat terhubung ke server",
+      "body": "AquaGuard tidak dapat terhubung ke server. Periksa koneksi Anda lalu coba lagi.",
+      "devHint": "Pengembangan: jalankan backend (API_PROXY_TARGET, default http://localhost:8000) atau jalankan npm run dev:mock untuk memakai API tiruan."
+    }
   },
   "role": {
     "farms_manager": "Farms Manager",

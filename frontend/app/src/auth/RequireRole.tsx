@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router'
 import { useMe } from '@/api/queries/auth'
 import type { Role } from '@/api/types'
 import { QueryState } from '@/components/QueryState'
+import { ServerUnavailable } from '@/components/ServerUnavailable'
 import { AppShell } from '@/layout/AppShell'
 import { consumeSessionExpired } from './session'
 import { HOME_PATH } from './roles'
@@ -13,6 +14,7 @@ import { HOME_PATH } from './roles'
 export function RequireRole({ role }: { role: Role }) {
   const meQuery = useMe()
   const location = useLocation()
+  if (meQuery.isError) return <ServerUnavailable onRetry={() => void meQuery.refetch()} retrying={meQuery.isFetching} />
 
   return (
     <QueryState query={meQuery}>
@@ -36,5 +38,6 @@ export function RequireRole({ role }: { role: Role }) {
 /** `/` → the signed-in Role's home, or Login. */
 export function HomeRedirect() {
   const meQuery = useMe()
+  if (meQuery.isError) return <ServerUnavailable onRetry={() => void meQuery.refetch()} retrying={meQuery.isFetching} />
   return <QueryState query={meQuery}>{(me) => <Navigate to={me ? HOME_PATH[me.role] : '/login'} replace />}</QueryState>
 }
