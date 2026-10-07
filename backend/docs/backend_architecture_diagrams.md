@@ -55,7 +55,7 @@ sequenceDiagram
   participant Ing as Ingestion Service
   participant PG as PostgreSQL
   participant IFX as InfluxDB
-  participant Critical as 受信Critical判定
+  participant Crit as 受信Critical判定
   participant Worker as 5分参照処理
   participant API as Backend API
   participant TM as Technical Manager
@@ -68,9 +68,9 @@ sequenceDiagram
   Ing->>PG: Receiptと点参照・閾値版を記録（生データなし）
   Ing->>IFX: Sensor点／Heartbeat／設備通知を保存
   IFX-->>Ing: 書込結果
-  Ing->>Critical: 保存済み受信点を渡す（5分周期を待たない）
-  Critical->>PG: Critical条件・検知状態を確認
-  Critical->>PG: Critical証跡とReceipt判定完了を同一Transactionで保存
+  Ing->>Crit: 保存済み受信点を渡す（5分周期を待たない）
+  Crit->>PG: Critical条件・検知状態を確認
+  Crit->>PG: Critical証跡とReceipt判定完了を同一Transactionで保存
   loop 5分ごと
     Worker->>IFX: 未処理区間の全測定値を参照
     IFX-->>Worker: 観測値と品質
@@ -94,7 +94,7 @@ Critical判定失敗時も受信完了扱いにせず、保存済み点と未完
 sequenceDiagram
   autonumber
   participant Ing as Ingestion Service
-  participant Critical as 受信Critical判定
+  participant Crit as 受信Critical判定
   participant Worker as 5分参照・通常判定
   participant IFX as InfluxDB
   participant PG as PostgreSQL
@@ -109,12 +109,12 @@ sequenceDiagram
   API-->>UI: SSE接続・保存済み未受信通知を再送
 
   loop 有効な新規受信点ごと（InfluxDB保存成功後）
-    Ing->>Critical: 検証済みSensor点・元の計測時刻
-    Critical->>PG: 計測時点の閾値版・鮮度設定・検知状態を取得
-    Critical->>Critical: Critical境界だけを判定
+    Ing->>Crit: 検証済みSensor点・元の計測時刻
+    Crit->>PG: 計測時点の閾値版・鮮度設定・検知状態を取得
+    Crit->>Crit: Critical境界だけを判定
     alt 鮮度条件内の新規Critical
-      Critical->>PG: 検知状態をロックしAlert作成または既存Alert昇格
-      Critical->>PG: Issue・Anomaly・Outbox・Receiptを同一Transactionで保存
+      Crit->>PG: 検知状態をロックしAlert作成または既存Alert昇格
+      Crit->>PG: Issue・Anomaly・Outbox・Receiptを同一Transactionで保存
       Notify->>PG: Commit済みOutboxを取得（5分周期を待たない）
       Notify->>PG: TM／FM別通知・Sequence・宛先配送依頼を保存
       Notify->>API: 権限内のCritical通知をSSE配信へ渡す
@@ -125,7 +125,7 @@ sequenceDiagram
       API-->>UI: 許可範囲の最新情報
       Note over Notify,UI: 接続中の画面内通知。未接続は保存して再接続時に再送
     else 非Criticalまたは即時判定対象外
-      Critical->>PG: 判定完了または除外理由をReceiptへ保存
+      Crit->>PG: 判定完了または除外理由をReceiptへ保存
     end
   end
 
