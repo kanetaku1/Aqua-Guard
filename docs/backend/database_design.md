@@ -2,8 +2,8 @@
 
 | 項目 | 内容 |
 | --- | --- |
-| 版 | 0.3（API契約整合ドラフト） |
-| 更新日 | 2026-10-05 |
+| 版 | 0.7（SSEによる管理画面内の即時通知） |
+| 更新日 | 2026-10-06 |
 | 基準 | [OpenAPI](../api/openapi.yaml)、[API詳細設計](./api_design.md)、[KPI定義](../../frontend/docs/04_KPI・データ項目定義書.md)、[画面要件](../../frontend/docs/05_画面・機能要件書.md) |
 | 関連資料 | [全体設計](../backend_architecture_overview.md)、[ダイアグラム](../backend_architecture_diagrams.md) |
 
@@ -42,7 +42,7 @@ InfluxDBのVersion・提供形態は未決定のため、第10章は製品固有
 | Alert、Issue、Anomaly区間、Farm状態履歴 | PostgreSQL | FM/TMの状態表示と対応履歴。判定の元となる生時系列はInfluxDB |
 | Actuator Command、Safety判断、操作結果 | PostgreSQL | 再送防止、監査、`actuator-logs`。機器が送った生通知はInfluxDB |
 | Report提出時の集計結果 | PostgreSQL | 提出済みReportを当時の内容のまま再現するための派生値 |
-| IngestionのMessage ID・処理Checkpoint | PostgreSQL | 冪等化と障害後の再処理に必要な技術メタデータ。測定値本文は保持しない |
+| IngestionのMessage ID・Critical判定状態・処理Checkpoint | PostgreSQL | 受信ごとの判定、冪等化と再処理のメタデータ。測定値本文は保持しない |
 
 InfluxDBとPostgreSQLの間にFKや分散Transactionはない。APIはRole・Company・担当FarmをPostgreSQLで確認してからInfluxDBを問い合わせる。InfluxDBのタグにあるFarm/Pond IDは受信時の割当結果であり、認可の根拠にはしない。古い測定値の表示・安全制御・Alert判定は別々に鮮度と品質を判定する。
 
@@ -90,6 +90,7 @@ APIの`AdminDevice.connection`／`lastSeenAt`は、Device割当とInfluxDBの最
 | `growth_target_sets` | `id uuid PK`, `on_track_band_pct numeric`, `effective_from`, `effective_to`, `updated_by uuid FK` | OpenAPIは共通設定のみ。Farm別設定列は設けない |
 | `growth_target_points` | `set_id uuid FK`, `doc integer`, `target_abw_g numeric` | PK `(set_id, doc)`。`doc >= 0`、`target_abw_g > 0`。中間DOCは直線補間 |
 | `operational_rule_versions` | `id uuid PK`, `daily_report_due time`, `weekly_report_due_weekday smallint`, `sensor_delayed_after_minutes integer`, `sensor_offline_after_minutes integer`, `attention_to_alert_minutes integer`, `production_attention_pct numeric`, `production_warning_pct numeric`, `effective_from`, `effective_to`, `updated_by uuid FK` | OpenAPIの`RuleSettingsInput`と1対1。共通設定のみ |
+| `critical_detection_policy_versions` | `id uuid PK`, `max_input_age_seconds integer`, `effective_from timestamptz`, `effective_to timestamptz NULL`, `updated_at timestamptz` | 即時判定用の内部鮮度設定。正の秒数。APIのRulesに新しいフィールドを加えず、運用設定・監査で版管理。初期値は検知期限と実機周期から確定 |
 
 ThresholdのFarm別取得では、現在のFarm版にあるParameterはその値を使い、ないParameterは共通版を返して`inherited: true`とする。この値は保存せず導出する。Low側はNormalから離れるにつれAttention→Warning→Critical、高側も同様の順序で検証し、逆転時は422。設定のPUTは同一Scopeの版更新をTransactionで完結させる。Rulesでは`delayed < offline`、`production_attention_pct < production_warning_pct`等の整合性を検証する。`daily_report_due`は`HH:mm`、週次曜日は1=月曜～7=日曜へ変換してAPIに返す。期限の時刻はWIBで解釈する。18:00、翌週月曜、15分、60分、30分、25%／50%は初期値・仮値であり固定値として埋め込まない。
 
@@ -137,10 +138,46 @@ KPIはPond・サイクル単位で算出する。DOC=`基準日 - stocked_on`、
 | `sensor_anomaly_intervals` | `id uuid PK`, `pond_id uuid FK`, `parameter text`, `severity text`, `started_at timestamptz`, `ended_at timestamptz NULL`, `extreme_value numeric NULL`, `threshold_set_id uuid FK NULL`, `alert_id uuid FK NULL` | `SensorAnomaly`。時間区間と判定の派生結果のみ |
 | `equipment_incidents` | `id uuid PK`, `device_id uuid FK`, `pond_id uuid FK`, `failure text`, `occurred_at timestamptz`, `resolved_at timestamptz NULL`, `action text NULL`, `status text` | IoT故障通知や点検結果から作る業務イベント。Daily Reportの`equipmentEvents`と設備起点Issueの元データ |
 | `issues` | `id uuid PK`, `public_id text UNIQUE`, `farm_id uuid FK`, `pond_id uuid FK`, `issue_type text`, `parameter text`, `severity text`, `trend text`, `state text`, `source_type text`, `source_id uuid`, `since timestamptz`, `resolved_at timestamptz NULL`, `summary text NULL`, `trend_description text NULL` | FM向け`Issue`／`IssueDetail`の安定したID。Alert等から継続的に更新し、Report提出を待たない |
+| `alert_detection_states` | `id uuid PK`, `pond_id uuid FK`, `device_id uuid FK`, `parameter text`, `direction text`, `episode_no bigint`, `current_alert_id uuid FK NULL`, `live_measured_through timestamptz NULL`, `live_event_id text NULL`, `critical_active boolean`, `periodic_measured_through timestamptz NULL`, `periodic_severity text NULL`, `periodic_anomaly_started_at timestamptz NULL`, `updated_at timestamptz` | `UNIQUE (pond_id, device_id, parameter, direction)`。`direction IN ('low','high')`。両判定経路で行ロックする。異常区間の状態のみで生の測定列を保存しない |
+| `alert_notification_outbox` | `id uuid PK`, `alert_id uuid FK`, `event_kind text`, `detected_at timestamptz`, `status text`, `attempt_count integer`, `next_attempt_at timestamptz NULL`, `materialized_at timestamptz NULL`, `last_error text NULL` | `UNIQUE (alert_id, event_kind)`。初回Critical／Critical昇格は`event_kind='critical_detected'`。`status IN ('pending','materialized','failed','no_recipient')`。`materialized`は利用者通知と配送依頼を保存済みという意味で、受信・既読ではない |
 
-Alertの`severity`（`normal`／`attention`／`warning`／`critical`のうち発報対象）と`state`（`unacknowledged`／`acknowledged`／`in_progress`／`resolved`）は別軸。`issues.state`は`ongoing`／`resolved`で別enum。`issues.issue_type`は`water_quality`／`mortality`／`equipment`／`sensor`。Alert起点のIssueは`source_type='alert'`と`source_id=alerts.id`を一意にし、対応記録は`alert_actions`から参照する。設備起点のIssueは`equipment_incidents`を参照する。Alert以外のIssue生成元と詳細の本文は対応する業務イベントから作る。継続中AlertはPond・Parameter・判定方向の組合せなどで重複を防ぐが、正式な同一視・再発条件は未確定。確定までは単に`(pond_id, parameter)`を永続一意にはしない。
+Alertの`severity`（`normal`／`attention`／`warning`／`critical`のうち発報対象）と`state`（`unacknowledged`／`acknowledged`／`in_progress`／`resolved`）は別軸。`issues.state`は`ongoing`／`resolved`で別enum。`issues.issue_type`は`water_quality`／`mortality`／`equipment`／`sensor`。Alert起点のIssueは`source_type='alert'`と`source_id=alerts.id`を一意にし、対応記録は`alert_actions`から参照する。設備起点のIssueは`equipment_incidents`を参照する。Alert以外のIssue生成元と詳細の本文は対応する業務イベントから作る。
 
-5分ごとのInfluxDB参照で新しい異常を判定し、Alert・Anomaly・Issue・CheckpointをPostgreSQLの1Transactionで更新する。Thresholdの判定版を参照し、設定変更後も過去行を書き換えない。`resolve`は状態と解決時刻を同一Transactionで更新し、状態競合は409。Alertの対応はDaily ReportのActions Takenへ`alert_handling`として参照される。
+受信ごとの経路は、有効かつ鮮度条件内のSensor点をCritical境界で判定する。該当すればAlert・Anomaly・Issue・Outbox・Receiptの判定完了をPostgreSQLの1Transactionで保存する。非Critical点ではCritical判定の完了と最新判定位置のみ記録し、Warning／Attentionの新規Alertは作らない。5分経路は未処理区間の全点から通常Alert・Attention継続・回復を判定し、Alert・Anomaly・Issue・検知状態・Checkpointを1Transactionで更新する。区間の途中にあるCriticalは既存の受信判定へ照合し、即時経路と同じAlertに結び付ける。
+
+`alerts`に内部列`detection_state_id uuid FK NULL`、`episode_no bigint NULL`、`detection_source text`（`ingestion`／`periodic`）、`detected_at timestamptz`、`critical_detected_at timestamptz NULL`を追加する。`occurred_at`は元の計測時刻、`detected_at`は検知・保存時刻で区別し、新しい列は現行APIへ返さない。閾値がFarm上書きか共通かを確定して`threshold_set_id`へ保存する。各点は計測時刻に有効な版で判定し、過去行を設定変更で書き換えない。
+
+### 7.1 即時処理と5分処理の競合防止
+
+両経路は同じ検知状態行を`SELECT FOR UPDATE`し、初回行の同時作成は一意制約＋再試行で直列化する。`UNIQUE (detection_state_id, episode_no)`（双方非NULLの行）で1異常区間に1Alertとする。未解決の同一区間のWarningがあればそのAlertをCriticalへ昇格し、確認者・対応履歴を保持する。Critical通知Outboxは1Alertあたり1件なので再送・5分再読込・同時実行で増えない。異常区間が終わるまで同じAlertを使い、回復後の再発は`episode_no`を増やして新しいAlertを作る。TMが解決済みにした後に新しい有効なCritical点を受信した場合も新しいAlertとし、同じEventの再送では新規作成しない。
+
+即時経路の`live_measured_through`と5分経路の`periodic_measured_through`を分け、旧点による即時状態の巻戻しを防ぐ。5分処理の古いWarningで既存Criticalの`severity`を下げない。同一Alertの重大度はその区間の最高重大度を保持し、現在の水質はSensor APIから返す。回復点が即時判定位置より古い場合は現在区間を閉じず、履歴だけを補完する。通常処理の継続時間は前周期の`periodic_anomaly_started_at`を引き継ぎ、欠測時間を自動的に異常継続とみなさない。回復とTMによる`resolve`は別の操作であり、自動回復で対応履歴や解決時刻を書き換えない。
+
+未完了Receiptを復旧する場合の順序検査は、同じ検知状態の即時・定期の両処理位置を確認する。5分処理がすでに後の回復点まで進んでいれば、古いCritical点を現在の異常として再開しない。過去点は計測時刻と`telemetry_from`／`telemetry_to`で既存のAlert区間に照合し、現在の`current_alert_id`だけを根拠に別区間へ結び付けない。昇格時の値・閾値・閾値版はCriticalを検知した点の証跡へ更新し、後の古い点で上書きしない。
+
+古い受信点・不正な時刻・無効な品質・順序逆転は即時Critical発報に使わず理由をReceiptに残す。遅延点は5分の履歴処理で過去区間を補完できるが、現在の危険としてCritical通知Outboxを作らない。`resolve`は状態と解決時刻を同一Transactionで更新し、検知状態とAlertの順にロックして検知との競合を抑える。状態競合は409。Alertの対応はDaily ReportのActions Takenへ`alert_handling`として参照される。
+
+### 7.2 Critical即時通知の保存と配送
+
+通知の正本もPostgreSQLに置く。InfluxDBの構造は変更しない。配送はSSEによる管理画面内通知のみとし、通知APIは[API設計第11.4節](./api_design.md)に記載する。
+
+| テーブル | 主な列 | 制約・用途 |
+| --- | --- | --- |
+| `user_notifications` | `id uuid PK`, `public_id text UNIQUE`, `outbox_id uuid FK`, `user_id uuid FK`, `farm_id uuid FK`, `pond_id uuid FK`, `recipient_role text`, `alert_id uuid FK NULL`, `issue_id uuid FK NULL`, `stream_sequence bigint`, `summary text`, `created_at timestamptz`, `client_received_at timestamptz NULL`, `read_at timestamptz NULL` | `UNIQUE (outbox_id, user_id)`、`UNIQUE (user_id, stream_sequence)`。TMはAlert、FMはIssueのどちらか一方を参照。FMのsummaryは生Sensor値なし。受信・既読はAlertの対応状態と独立 |
+| `notification_stream_cursors` | `user_id uuid PK/FK`, `last_sequence bigint`, `updated_at timestamptz` | 利用者ごとのSSE Sequence採番。利用者行をロックし、通知保存と同じTransactionで増加させる |
+| `notification_deliveries` | `id uuid PK`, `notification_id uuid FK`, `channel text`, `delivery_key text`, `status text`, `attempt_count integer`, `next_attempt_at timestamptz NULL`, `dispatched_at timestamptz NULL`, `expires_at timestamptz NULL`, `last_error text NULL`, `updated_at timestamptz` | `UNIQUE (notification_id, channel, delivery_key)`。`channel = 'sse'`のみ。利用者ストリーム単位の配送メタデータで、各SSE接続への配信を抑止するフラグではない。`status IN ('pending','available','dispatched','retry_wait','failed','revoked','expired')` |
+
+OutboxのCommit後、Dispatcherは`pending`行を`FOR UPDATE SKIP LOCKED`で取得し、対象Farmの有効なTMと同Companyの有効なFMへ通知を作る。TMにはAlert参照、FMにはIssue参照を保存する。対象ユーザーを安定した順で処理し、Cursor行をロックしてSequenceを採番する。利用者通知、SSE配信可能状態・配送メタデータ、Outboxの`materialized`更新を1TransactionでCommitする。ユーザーごとの採番をTransaction内で直列化するため、遅れてCommitした通知が先に進んだSSE Cursorの背後へ取り残されない。宛先が0人なら`no_recipient`を記録して運用監視する。
+
+Commit後のPostgreSQL通知は配送・SSEを起動する合図として使い、Payloadは通知IDなどの参照だけとする。合図が失われても、Dispatcherは1秒間隔の未処理検索、SSEはDBの未配信Sequence検索で復旧する。複数のSSEプロセスは合図をそれぞれ受け取り、自分の接続ユーザーへ配信する。1プロセスの送信成功で他プロセスの接続への配信を省略しない。新規接続・再接続は本人の保持済み通知から再送し、通知作成と接続開始が競合しても取りこぼさない。
+
+SSEへのネットワーク書込はDBロックを持たずに行い、結果は別Transactionで保存する。SSEは各接続のCursorから再送し、送信と結果保存の間の障害でも同じnotificationIdを使う。複数プロセス・接続で共通の配送行を独占して配信を省略しない。少なくとも1回の配送試行を前提にクライアント側で重複表示を抑止する。SSE書込成功は`dispatched`、クライアント受信は`user_notifications.client_received_at`、既読は`read_at`で区別する。
+
+初回の通知作成・接続中の画面への配送はCommit直後に開始し、一時障害は1秒、5秒、15秒、以後最大60秒間隔で再試行する。恒久エラーは`failed`、一時障害は`retry_wait`とし、他の宛先は続行する。未接続の利用者も通知を保存して`available`とし、配送成功とは扱わない。再接続時には保持期間内の未受信通知を元の発生時刻付きで再送する。緊急表示の期限後は配送を`expired`とし、過去の通知として再送・一覧確認はできるが現在発生した危険として表示しない。通知保持期間、緊急表示の期限と試行上限は受入前に確定する。ページを閉じている間の端末通知は行わない。
+
+配送直前とSSEの各イベント送信時にRole・現在の所属・アカウント状態・セッションを再検査する。Roleが`recipient_role`と異なる旧通知も配送対象から外す。権限を失った宛先は`revoked`にし、接続を閉じる。通知の既読・受信APIも本人かつ現在の権限内の行だけ更新する。ログアウト・セッション失効・ユーザー無効化時はSSE接続を閉じる。既存ログアウトAPIへ新しい入力を要求せず、204契約を維持する。
+
+監視はCritical保存から通知作成・送信開始・クライアント受信までの遅延、未処理Outbox、再試行・恒久失敗・宛先不在を対象とする。通知の保存・送信成功で人間が対応済みになったとみなさない。保持期間内の通知は再接続で再送し、Cursor保持期間外はAPIの409で一覧再同期を要求する。
 
 ## 8. Report（PostgreSQL）
 
@@ -192,12 +229,16 @@ InfluxDBにはDeviceから受け取った**時系列の観測事実**だけを�
 
 `measured_at`はDeviceの計測時刻、`received_at_ns`はIngestionが受け取った時刻。WIB変換はAPI/画面側。再送では元の`measured_at`を保持し、受信時刻で過去の計測順を上書きしない。`validity`は受信データの物理的妥当性を表し、画面用の`live`／`delayed`／`offline`／`no_data`とは別。業務閾値を超えた実測値は異常でも有効な観測として保存する。不正形式・時刻異常は隔離し、制御・Alert・KPIに使わない。
 
-再送の同一EventはIngestionで`device_id`＋`event_id`等を使って冪等化する。同じDevice・Parameter・計測時刻に異なるEventが衝突した場合は黙って上書きせず、隔離して調査する。Brokerの再配送、InfluxDB書込成功後のPostgreSQL障害を考慮し、`ingestion_receipts`に`device_id`、`event_id`、`payload_hash`、`processed_at`、`status`だけを持たせる案とする。測定値本文はPostgreSQLに入れない。Inbox運用の詳細はBrokerとInfluxDB Versionの決定時に検証する。
+再送の同一EventはIngestionで`device_id`＋`event_id`等を使って冪等化する。同じDevice・Parameter・計測時刻に異なるEventが衝突した場合は黙って上書きせず、隔離して調査する。Brokerの再配送、InfluxDB書込成功後のPostgreSQL障害に備え、`ingestion_receipts`で時系列保存とCritical判定を別段階として追跡する。測定値本文はPostgreSQLに入れない。Event IDがない機器にはDevice・Sequence等から安定したIDを付ける契約を確定する。
 
 | PostgreSQLの連携テーブル | 主な列 | 制約 |
 | --- | --- | --- |
-| `ingestion_receipts` | `id uuid PK`, `device_id uuid FK`, `event_id text`, `payload_hash text`, `status text`, `processed_at timestamptz` | `UNIQUE (device_id, event_id)`。再送判定用メタデータのみ |
+| `ingestion_receipts` | `id uuid PK`, `device_id uuid FK`, `event_id text`, `payload_hash text`, `observation_refs jsonb`, `received_at timestamptz`, `stored_at timestamptz NULL`, `status text`, `critical_evaluation_status text`, `critical_evaluated_at timestamptz NULL`, `critical_policy_version_id uuid FK`, `evaluation_metadata jsonb`, `retry_count integer`, `next_retry_at timestamptz NULL`, `processed_at timestamptz NULL` | `UNIQUE (device_id, event_id)`。`status IN ('pending','stored','completed','quarantined')`、判定状態は`pending`／`evaluated`／`skipped`／`failed`。生データなし。点の識別情報・閾値版・除外理由・処理進捗を保持 |
 | `sensor_sync_checkpoints` | `scope_key text PK`, `last_success_at timestamptz NULL`, `processed_through timestamptz NULL`, `next_sync_at timestamptz NULL`, `updated_at timestamptz` | 5分処理の復旧点。`scope_key`でCompany/Farm単位の進捗を区別 |
+
+ReceiptはInfluxDB書込前に作成し、`observation_refs`には系列名・Device/Pond/Parameter・元時刻・各点に適用する閾値版だけを保存する。書込成功後は検証済み受信点でCritical判定し、全点が判定済みまたは理由付き対象外になった時だけ`completed`とする。非Sensor通知も保存し、Sensor Critical判定は`skipped`とする。Heartbeat欠落のような無受信は5分の時刻監視で扱う。
+
+再配送時に`stored`だが判定未完了のReceiptを「受信済み」として読み飛ばさず、保存済み点をInfluxDBから取得して再試行する。書込後のReceipt更新が失敗して`pending`が残る場合も、参照情報と同一点検出で復旧する。受信経路と復旧処理はReceiptを先に、検知状態を安定したキー順に、Alertを最後にロックする。5分処理はReceiptを更新しない。Brokerの受信確認は時系列保存と判定の永続化後に行う設計とし、QoS・受信確認の具体方式はBroker仕様で確定する。障害復旧時に鮮度条件を外れた点は現在のCriticalとして通知しない。未完了件数と最古の判定待ち時間を運用監視する。
 
 ### 10.1 APIごとの検索
 
@@ -211,7 +252,7 @@ InfluxDBにはDeviceから受け取った**時系列の観測事実**だけを�
 | Weekly Report | WIB週をUTCの半開区間へ変換し、Pond別のDO最小、pH最小・最大、水温最大、範囲外日数等を集計 |
 | Safety／PID | 最新の有効測定値と取得時刻を参照。遅延・欠損値は制御入力に使わない |
 
-画面向けの5分再取得と別に、バックエンドはOpenAPIの方針どおり**5分ごとにInfluxDBを参照**して現在値・Alert・集計を更新する。`sensor_sync_checkpoints`（PostgreSQL）には対象範囲、前回成功時刻、処理済み計測時刻、次回予定時刻を保持し、`GET /sync-status`の`syncedAt`／`nextSyncAt`へ利用する。5分ごとの処理が失敗した場合はCheckpointを進めず再実行する。再送による遅延点は一定のLookbackで再読込し、Alert／Anomalyの重複を抑える。Lookback長と過去判定を訂正するかは運用決定が必要である。
+画面向けの5分再取得と別に、バックエンドは**5分ごとにInfluxDBの未処理区間の全点を参照**してWarning・Attention継続、過去の異常区間、現在値・集計を更新する。Critical初回判定は受信経路で実行する。`sensor_sync_checkpoints`には5分処理の前回成功時刻、処理済み計測時刻、次回予定時刻を保持し、`GET /sync-status`の`syncedAt`／`nextSyncAt`へ利用する。受信Critical判定でこのCheckpointは進めない。`GET /alerts`・`GET /issues`は即時Commit済みの行を取得でき、同期Checkpointの進行を待たない。5分処理の失敗時はCheckpointを進めず再実行する。再送による遅延点はLookbackで再読込し、共通の検知状態で重複を抑える。Lookback長と過去判定の訂正範囲は運用決定が必要である。
 
 Raw Dataと集計Dataの保持期間は必要なSensor History検索期間とBackup要件から決める。提出済みReportはPostgreSQLのSnapshotにより、InfluxDBのRaw保持期間が切れても内容を再現できる。InfluxDB障害時は最新値を捏造せず、取得不可・古さを示す。Deviceの最初の状態通知がない場合、OpenAPIの`Actuator.state`が`on`／`off`／`fault`必須で「未確認」を表せないため、初期表示の扱いはフロントと契約を確認する。未確認を勝手に`off`や`fault`と見なさない。
 
@@ -225,10 +266,11 @@ Raw Dataと集計Dataの保持期間は必要なSensor History検索期間とBac
 | Master | `farms(company_id)`、`ponds(farm_id)`、`devices(device_id)`一意、Device割当・設定版の有効期間非重複 |
 | Setting | Scopeごとの現行`threshold_sets`一意、`threshold_values(set_id, parameter)`一意、Growth点のDOC一意 |
 | Records | `feeding_records(pond_id, record_date)`、`mortality_records(pond_id, record_date)`、`sampling_records(pond_id, sample_date)`一意 |
-| Alert／Issue | `alerts(pond_id, state, occurred_at DESC)`、`issues(farm_id, state, severity, since)`、`issues(source_type, source_id)`一意 |
+| Alert／Issue | `alerts(pond_id, state, occurred_at DESC)`、`alerts(detection_state_id, episode_no)`部分一意、`alert_detection_states(pond_id, device_id, parameter, direction)`一意、`issues(farm_id, state, severity, since)`、`issues(source_type, source_id)`一意 |
+| 通知 | Outbox `(alert_id, event_kind)`一意、`(status, next_attempt_at)`検索。利用者通知 `(outbox_id, user_id)`・`(user_id, stream_sequence)`一意、未読 `(user_id, created_at DESC) WHERE read_at IS NULL`。SSE配送 `(notification_id, channel, delivery_key)`一意・`(status, next_attempt_at)`検索 |
 | Report | Daily `(farm_id, report_date)`、Weekly `(farm_id, week_start)`の部分一意索引、`reports(farm_id, type, status, submitted_at DESC)` |
 | Control | `actuator_commands(device_id, requested_at DESC)`、`actuator_logs(pond_id, at DESC)`、冪等Keyの部分一意索引 |
-| Checkpoint | `ingestion_receipts(device_id, event_id)`一意、`sensor_sync_checkpoints(scope_key)`一意 |
+| Checkpoint | `ingestion_receipts(device_id, event_id)`一意、未完了Receiptの`(critical_evaluation_status, next_retry_at)`部分索引、`sensor_sync_checkpoints(scope_key)`一意 |
 
 Device割当の期間非重複はPostgreSQLのRange排他制約か、対象Device行をロックするTransactionで保証する。設定版と養殖サイクルも同様に期間重複を防ぐ。IDから所属を解決してから更新し、`pond_id`と`cycle_id`、ReportとPond、AlertとReportのFarmが一致することを検証する。FK単体ではこの横断整合性を保証できないため、Transaction内の検証または複合キーで担保する。
 
@@ -240,7 +282,11 @@ Device割当の期間非重複はPostgreSQLのRange排他制約か、対象Devic
 | Device再割当 | 旧期間終了と新期間開始を1Transactionにする。過去IoT点は書き換えない |
 | Threshold／Rule保存 | 現行版の終了と新版挿入を1Transactionにし、反映時刻を固定する |
 | Sampling一括保存 | 対象Farm内の全Entryを検証して1TransactionでUpsert。1件失敗なら全件Rollback |
-| Alert処理 | 5分参照結果からAlert・Issue・Anomaly・Checkpointを1Transactionで更新。再処理は一意条件で冪等化 |
+| 受信Critical処理 | InfluxDB保存後、Receiptと検知状態をロックし、Alert・Issue・Anomaly・通知Outbox・判定完了を1Transactionで更新。失敗時は再配送・未完了Receiptで再試行 |
+| 5分Alert処理 | 通常判定・区間補完とAlert・Issue・Anomaly・Checkpointを1Transactionで更新。受信経路と同じ検知状態・一意制約で重複抑止 |
+| Critical通知作成 | OutboxをClaimし、利用者Cursorをロックして通知・配送依頼・Outbox完了を1Transactionで保存。再試行でも同じ利用者通知を複製しない |
+| 通知配送 | 各SSE接続のCursorに従いDBロック外で書込。利用者別に結果・再試行を保存。送信とDB更新の間の障害は同じnotificationIdで再送し、1接続の成功で他接続の配信を省略しない |
+| 通知受信・既読 | 本人と現在の権限を確認し、初回時刻のみ保存。Alertの確認・解決状態は変更しない |
 | Report下書き | Report行をロックし、TM入力テーブルと手入力Action置換を1Transactionで保存 |
 | Report提出 | Report行をロックし、状態・必須項目を再検証してSnapshotと提出情報を1Transactionで保存。二重提出は409 |
 | Actuator Command | 受付・Safety結果をまず永続化。配送とACKは別Transactionで進め、202と実機成功を混同しない |
@@ -260,6 +306,8 @@ InfluxDB書込とPostgreSQLのReceipt／Checkpoint更新は原子的にCommitで
 | 養殖サイクル | 再放養の終了・開始手順と放養記録APIの採用。現行OpenAPIには放養更新APIがない |
 | KPI | 不明減耗、初期Biomass、Size Uniformityの元データと正式式。未算出時はNULLにする |
 | Report | Weekly Draftの再構成時点、提出後Revision、遅延IoTデータの扱い、設定期限変更の既存Draftへの適用 |
-| Alert／Control | 継続Alertの同一視、遅延点の再判定、Safety条件、Command Timeout／再送、Emergency Stop解除 |
+| Alert／Control | 区間同一視の基本ルールは第7.1節。欠測を挟む区間の分割・回復のヒステリシス・遅延点訂正範囲、Safety条件、Command Timeout／再送、Emergency Stop解除を確定する |
+| Critical判定 | 受信から保存までの目標時間、`max_input_age_seconds`の初期値、実機の測定・送信周期、未完了Receiptの再試行間隔 |
+| Critical通知 | SSE、TM／FM宛先、利用者別再送を第7.2節に定義。通知保持期間・緊急表示の期限・再送上限・接続中の到達目標を確定する |
 
 上記の未決定事項はOpenAPIを暗黙に変更する理由にはしない。契約変更が必要な項目はAPI設計書の追加提案として合意してから反映する。
