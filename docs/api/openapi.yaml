@@ -13,8 +13,14 @@ info:
     - **KPI・状態の判定はすべてバックエンドで計算する**（04 §3〜§7）。フロントは表示と書式化のみ。
       ABW / ADG / Size Uniformity は Pond 単位でのみ返し、Farm / Company の平均値は返さない（04 §4）。
     - **IoT データ**：センサー（3〜5分ごと）→ InfluxDB。バックエンドは **5分ごと** に InfluxDB を参照し、
-      現在値・Alert 判定・集計を更新する。`x-refresh-interval-seconds: 300` のオペレーションは、
+      現在値・通常 Alert 判定・集計を更新する。Critical 閾値判定のみ、有効な新規受信点ごとに
+      Ingestion 側で行い、5分参照を待たず Alert・Issue を保存する。両経路は同じ異常を重複発報しない。
+      `x-refresh-interval-seconds: 300` のオペレーションは、
       フロントが5分ごとに再取得する（ライブ表示）。
+      Critical は保存後すぐに SSE による接続中の画面内通知を開始する設計。
+      通常の5分再取得に加え、SSE受信時は対象APIを即時再取得する。
+      通知用の新規APIは docs/backend/api_design.md 第11.4節の追加案（本契約には未収録）。
+      ページを閉じている間や通信断中の即時通知は対象外とし、再接続時に保存済み通知を確認する。
     - **時刻**：`date-time` はすべて UTC（ISO 8601, `Z`）。表示は WIB（UTC+7）にフロントで変換する。
       `date`（記録日・Report 日付）は WIB の暦日。
     - **単位**：重量 kg、面積 ha、Biomass は kg（表示で t に変換）、比率は % の数値（88 = 88%）。
