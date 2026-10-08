@@ -4,8 +4,10 @@
 | --- | --- |
 | 版 | 0.7（SSEによる管理画面内の即時通知） |
 | 更新日 | 2026-10-06 |
-| API契約の基準 | [フロントエンド起案 OpenAPI](../api/openapi.yaml)（OpenAPI 3.1.0、`0.1.0-draft`） |
-| 関連資料 | [全体設計](../backend_architecture_overview.md)、[ダイアグラム](../backend_architecture_diagrams.md)、[データベース設計](./database_design.md) |
+| API契約の基準 | [統合OpenAPI](../../docs/api/openapi.yaml)（OpenAPI 3.1.0、`0.1.0-draft`） |
+| 関連資料 | [全体設計](./backend_architecture_overview.md)、[ダイアグラム](./backend_architecture_diagrams.md)、[データベース設計](./database_design.md) |
+
+> **更新上の注意（2026-10-08）**：読みやすい一覧は[API統合資料](../../docs/api/API_INTEGRATED.md)、公開Web APIの機械可読な契約は[統合OpenAPI](../../docs/api/openapi.yaml)である。フロントエンドの[OpenAPI](../../frontend/app/api/openapi.frontend.yaml)と[変更要求](../../frontend/app/api/OPENAPI_CHANGES.md)を優先して反映した。以下は統合前のバックエンド設計メモとして参照し、操作数・入出力・命名・判定周期などが統合契約と異なる場合は採用しない。第11章の追加案は統合OpenAPIの`x-backend-integration`に未確定候補として記載し、`paths`には含めない。
 
 ## 1. 本書の位置付け
 
