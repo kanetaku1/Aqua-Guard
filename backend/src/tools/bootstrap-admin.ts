@@ -34,8 +34,8 @@ export async function bootstrapAdmin(client: PoolClient, input: BootstrapAdminIn
     [input.companyId.trim(), input.companyName.trim()],
   );
   await client.query(
-    `INSERT INTO users (public_id, company_id, name, email, password_hash, role, status)
-     VALUES ($1, $2, $3, $4, $5, 'system_administrator', 'active')`,
+    `INSERT INTO users (public_id, company_id, name, email, password_hash, role, status, activated_at)
+     VALUES ($1, $2, $3, $4, $5, 'system_administrator', 'active', now())`,
     [input.adminId.trim(), company.rows[0].id, input.adminName.trim(),
       input.adminEmail.trim().toLowerCase(), await hashPassword(input.adminPassword)],
   );
