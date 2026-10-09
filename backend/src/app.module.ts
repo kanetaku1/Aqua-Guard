@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthController } from './auth/auth.controller';
+import { AuthService } from './auth/auth.service';
+import { SessionGuard } from './auth/session.guard';
 import { HealthController } from './health.controller';
 import { InfluxService } from './infrastructure/influx.service';
 import { PostgresService } from './infrastructure/postgres.service';
 
 @Module({
-  controllers: [HealthController],
-  providers: [PostgresService, InfluxService],
+  controllers: [HealthController, AuthController],
+  providers: [PostgresService, InfluxService, AuthService,
+    { provide: APP_GUARD, useClass: SessionGuard }],
 })
 export class AppModule {}

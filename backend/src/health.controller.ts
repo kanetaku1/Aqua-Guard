@@ -1,7 +1,9 @@
 import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { InfluxService } from './infrastructure/influx.service';
 import { PostgresService } from './infrastructure/postgres.service';
+import { Public } from './auth/session.guard';
 
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(

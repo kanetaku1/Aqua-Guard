@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { RequestMethod } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { ProblemFilter } from './http/problem';
 
 async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT ?? '8000');
@@ -10,6 +11,8 @@ async function bootstrap(): Promise<void> {
   }
 
   const app = await NestFactory.create(AppModule);
+  app.enableCsrfProtection();
+  app.useGlobalFilters(new ProblemFilter());
   app.setGlobalPrefix('api/v1', {
     exclude: [
       { path: 'health', method: RequestMethod.GET },
