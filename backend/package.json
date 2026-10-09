@@ -7,8 +7,8 @@
     "build": "tsc -p tsconfig.build.json",
     "db:migrate": "node dist/tools/migrate.js",
     "test:unit": "node --test test/telemetry.test.cjs",
-    "test:db:local": "node --env-file=.env.example --test test/migrations.test.cjs",
-    "test:influx:local": "node --env-file=.env.example --test test/influx.integration.test.cjs",
+    "test:db:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/migrations.test.cjs",
+    "test:influx:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/influx.integration.test.cjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "start": "node dist/main.js",
     "start:dev": "node --env-file=.env.example --env-file-if-exists=.env --watch -r ts-node/register src/main.ts"
