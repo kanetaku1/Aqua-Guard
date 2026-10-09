@@ -1,6 +1,6 @@
 # AquaGuard Backend
 
-NestJS / TypeScript によるバックエンドの土台です。現在は PostgreSQL の初期 Migration と InfluxDB への時系列書き込みを実装しています。画面向け API はまだ実装していません。
+NestJS / TypeScript によるバックエンドです。PostgreSQL の初期 Migration、InfluxDB の時系列書き込み、認証と一部の管理APIを実装しています。
 
 ## 開発用の起動
 
@@ -48,12 +48,25 @@ npm run build
 node --env-file=.env.example --env-file-if-exists=.env dist/tools/migrate.js
 npm run test:db:local
 npm run test:influx:local
+npm run test:auth:local
+npm run test:admin:local
+npm run test:bootstrap:local
 ```
 
 Migration は SQL ファイル順に適用され、適用済みファイルのチェックサムを照合します。ローカル連携テストも `.env.example` を読み、存在すれば `.env` の設定で上書きします。
 
+## 認証と管理API（第4段階の実装済み範囲）
+
+現在の画面向け API は `POST /auth/login`、`POST /auth/logout`、`GET/PATCH /auth/me` と、SA専用の `GET/POST /admin/farms`、`GET/PATCH /admin/farms/{farmId}`、`GET/POST /admin/farms/{farmId}/ponds`、`PATCH /admin/ponds/{pondId}` です。すべて `/api/v1` 配下です。応答は[フロントエンドのOpenAPI](../frontend/app/api/openapi.frontend.yaml)の該当スキーマに合わせています。
+
+ログインには DB 内の管理者が必要です。初回だけ、Migration 後に `BOOTSTRAP_COMPANY_ID`、`BOOTSTRAP_COMPANY_NAME`、`BOOTSTRAP_ADMIN_ID`、`BOOTSTRAP_ADMIN_NAME`、`BOOTSTRAP_ADMIN_EMAIL`、`BOOTSTRAP_ADMIN_PASSWORD` を環境変数に設定して `npm run admin:bootstrap` を実行します。パスワードをリポジトリ内のファイルに書かないでください。既に管理者がいる DB ではこのコマンドは拒否します。
+
+認証はドラフト契約の `aquaguard_session` Cookie を使用し、無操作12時間で失効します。Cookie は HttpOnly / SameSite=Lax とし、本番では Secure を付けます。ローカルHTTPでは Secure を付けず、必要なら `COOKIE_SECURE=true` で指定できます。NestJS のCSRF防御を有効にしています。フロントエンド開発サーバーは `/api` をバックエンドへ同一Originでプロキシします。別Originからの利用には、Origin・Cookie・CORSを含めた配置設計が必要です。
+
+招待・パスワード再設定、Admin User・Device・Settings、業務画面向けのFarm/Pond状態APIは未実装です。第4段階の残りの作業として追加します。
+
 ## API の基準
 
-画面向け API は `/api/v1` に配置します。パス、メソッド、入出力、命名、エラーはフロントエンドの[必要 API 定義](../frontend/app/api/openapi.frontend.yaml)と[変更要求](../frontend/app/api/OPENAPI_CHANGES.md)を優先し、[統合 OpenAPI](../docs/api/openapi.yaml)に従って実装します。現段階では画面向け API の実装はありません。
+画面向け API は `/api/v1` に配置します。パス、メソッド、入出力、命名、エラーはフロントエンドの[必要 API 定義](../frontend/app/api/openapi.frontend.yaml)と[変更要求](../frontend/app/api/OPENAPI_CHANGES.md)を優先し、[統合 OpenAPI](../docs/api/openapi.yaml)に従って実装します。
 
-PostgreSQL のテーブルと InfluxDB の論理系列は実装済みです。MQTT の Payload と受信処理、画面向け API は後続段階で追加します。
+PostgreSQL の初期テーブルと InfluxDB の論理系列は実装済みです。MQTT の Payload と受信処理、残りの画面向け API は後続段階で追加します。
