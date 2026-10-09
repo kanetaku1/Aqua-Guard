@@ -9,6 +9,7 @@
     "test:unit": "node --test test/telemetry.test.cjs",
     "test:db:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/migrations.test.cjs",
     "test:auth:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/auth.integration.test.cjs",
+    "test:admin:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/admin.integration.test.cjs",
     "test:influx:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/influx.integration.test.cjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "start": "node dist/main.js",
