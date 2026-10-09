@@ -32,12 +32,15 @@ docker compose --env-file .env.example ps
 | PostgreSQL 17 | `127.0.0.1:5433` | `postgres:5432` | `postgres-data` Volume |
 | InfluxDB OSS 2.9 | `127.0.0.1:8086` | `influxdb:8086` | `influxdb-data` と `influxdb-config` Volume |
 | Eclipse Mosquitto 2 | `127.0.0.1:1883` | `mqtt:1883` | `mosquitto-data` Volume |
+| Mailpit | SMTP `127.0.0.1:1025`、受信画面 `http://127.0.0.1:8025` | `mailpit:1025` | 開発用の一時保存 |
 
 接続ポートは `.env.example` の値で変更できます。InfluxDB の開発用 Organization は `aquaguard`、Bucket は `sensor_raw` です。`sensor_readings`、`device_heartbeats`、`actuator_feedback` の保存形式と現在の実装範囲は[ストレージ実装資料](./docs/storage_implementation.md)を参照してください。保持期間はまだ確定していないため、開発用 Bucket は初期設定のまま使用します。
 
 停止するときは `docker compose --env-file .env.example stop` を実行します。Volume に保存されたデータは残ります。初期パスワードや Token は初回起動時に設定されるため、Volume を保持したまま環境変数だけ変更しても既存ユーザーの認証情報は変わりません。
 
 Mosquitto はローカル開発用に匿名接続を許可しています。ホストへの公開ポートは `127.0.0.1` に限定しています。実機接続や本番配置の前に、機器認証・Topic・QoS を確定します。
+
+Mailpit は開発用のメール受信箱です。招待・パスワード再設定メールは外部へ配送されず、受信画面でリンクを確認できます。API をホスト上で起動するときの `SMTP_HOST` は `127.0.0.1`、Compose 内で起動するときは `mailpit` にします。実際のメール配送を使う環境では `SMTP_HOST`、`SMTP_PORT`、必要なら `SMTP_USER`／`SMTP_PASSWORD` と `SMTP_SECURE`、`MAIL_FROM`、`WEB_APP_ORIGIN` を環境別に設定します。
 
 ## 初期 Migration と検証
 
@@ -50,6 +53,8 @@ npm run test:db:local
 npm run test:influx:local
 npm run test:auth:local
 npm run test:admin:local
+npm run test:admin-users:local
+npm run test:password-links:local
 npm run test:bootstrap:local
 ```
 
@@ -57,13 +62,19 @@ Migration は SQL ファイル順に適用され、適用済みファイルの�
 
 ## 認証と管理API（第4段階の実装済み範囲）
 
-現在の画面向け API は `POST /auth/login`、`POST /auth/logout`、`GET/PATCH /auth/me` と、SA専用の `GET/POST /admin/farms`、`GET/PATCH /admin/farms/{farmId}`、`GET/POST /admin/farms/{farmId}/ponds`、`PATCH /admin/ponds/{pondId}` です。すべて `/api/v1` 配下です。応答は[フロントエンドのOpenAPI](../frontend/app/api/openapi.frontend.yaml)の該当スキーマに合わせています。
+現在の画面向け API は `POST /auth/login`、`POST /auth/logout`、`GET/PATCH /auth/me`、`POST /auth/password/forgot`、`GET /auth/password/tokens/{token}`、`POST /auth/password/set` と、SA専用のUser・Farm・Pond管理APIです。User管理は一覧・詳細・招待・変更・再送・再設定依頼・無効化／再有効化、Farm／Pond管理は一覧・詳細・作成・変更を実装しています。すべて `/api/v1` 配下で、[フロントエンドのOpenAPI](../frontend/app/api/openapi.frontend.yaml)の該当パスと応答を基準にします。
 
 ログインには DB 内の管理者が必要です。初回だけ、Migration 後に `BOOTSTRAP_COMPANY_ID`、`BOOTSTRAP_COMPANY_NAME`、`BOOTSTRAP_ADMIN_ID`、`BOOTSTRAP_ADMIN_NAME`、`BOOTSTRAP_ADMIN_EMAIL`、`BOOTSTRAP_ADMIN_PASSWORD` を環境変数に設定して `npm run admin:bootstrap` を実行します。パスワードをリポジトリ内のファイルに書かないでください。既に管理者がいる DB ではこのコマンドは拒否します。
 
 認証はドラフト契約の `aquaguard_session` Cookie を使用し、無操作12時間で失効します。Cookie は HttpOnly / SameSite=Lax とし、本番では Secure を付けます。ローカルHTTPでは Secure を付けず、必要なら `COOKIE_SECURE=true` で指定できます。NestJS のCSRF防御を有効にしています。フロントエンド開発サーバーは `/api` をバックエンドへ同一Originでプロキシします。別Originからの利用には、Origin・Cookie・CORSを含めた配置設計が必要です。
 
-招待・パスワード再設定、Admin User・Device・Settings、業務画面向けのFarm/Pond状態APIは未実装です。第4段階の残りの作業として追加します。
+招待リンクは72時間、再設定リンクは1時間有効で、使用は1回だけです。リンクのToken原文はDBに保存せず、ハッシュを保存します。招待でパスワードを設定した場合はセッションCookieを発行し、再設定では既存セッションを失効させます。忘れたパスワードはメールアドレスの存在にかかわらず202を返します。
+
+フロントエンドの現行 `useSetPassword` は、再設定成功時にも返却された `Me` を画面内キャッシュに保存します。再設定後はログイン画面へ遷移する契約であり、バックエンドはCookieを発行しません。ログイン前に業務画面へ移動すると、画面内キャッシュと実セッションが一時的に食い違う可能性があります。フロントエンドを編集できる段階で、再設定時は `Me` キャッシュをクリアする調整が必要です。
+
+SMTP送信はDBへの招待・Token保存後に行います。送信に失敗した場合、管理者の招待操作は503になりますが、Invitedユーザーは残ります。メールサービスを復旧してから管理画面の「招待を再送」を使ってください。ローカルの連携テストはMailpitでメールを受信し、テストメールを削除します。
+
+Admin Device・Settingsと、業務画面向けのFarm/Pond状態APIは未実装です。第4段階の残りの作業として追加します。
 
 ## API の基準
 
