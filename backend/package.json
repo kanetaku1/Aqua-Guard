@@ -5,19 +5,24 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "db:migrate": "node dist/tools/migrate.js",
+    "test:db:local": "node --env-file=.env.example --test test/migrations.test.cjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "start": "node dist/main.js",
     "start:dev": "node --watch -r ts-node/register src/main.ts"
   },
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.35.0",
     "@nestjs/common": "^12.1.2",
     "@nestjs/core": "^12.1.2",
     "@nestjs/platform-express": "^12.1.2",
+    "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@types/pg": "^8.23.1",
     "ts-node": "^10.9.2",
     "typescript": "~5.9.3"
   },
