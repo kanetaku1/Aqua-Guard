@@ -14,6 +14,11 @@ export class AdminUsersController {
     return this.users.list(adminScope(request), query);
   }
 
+  @Post()
+  invite(@Req() request: AuthRequest, @Body() body: unknown): Promise<AdminUser> {
+    return this.users.invite(adminScope(request), body);
+  }
+
   @Get(':userId')
   get(@Req() request: AuthRequest, @Param('userId') userId: string): Promise<AdminUser> {
     return this.users.get(adminScope(request), userId);
@@ -24,6 +29,18 @@ export class AdminUsersController {
     @Req() request: AuthRequest, @Param('userId') userId: string, @Body() body: unknown,
   ): Promise<AdminUser> {
     return this.users.update(adminScope(request), userId, body);
+  }
+
+  @Post(':userId/resend-invitation')
+  @HttpCode(202)
+  resendInvitation(@Req() request: AuthRequest, @Param('userId') userId: string): Promise<void> {
+    return this.users.resendInvitation(adminScope(request), userId);
+  }
+
+  @Post(':userId/send-password-reset')
+  @HttpCode(202)
+  sendPasswordReset(@Req() request: AuthRequest, @Param('userId') userId: string): Promise<void> {
+    return this.users.sendPasswordReset(adminScope(request), userId);
   }
 
   @Post(':userId/deactivate')

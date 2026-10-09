@@ -7,13 +7,16 @@ import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
 import { AdminUsersController } from './admin/admin-users.controller';
 import { AdminUsersService } from './admin/admin-users.service';
+import { MailService } from './auth/mail.service';
+import { PasswordLinksService } from './auth/password-links.service';
 import { HealthController } from './health.controller';
 import { InfluxService } from './infrastructure/influx.service';
 import { PostgresService } from './infrastructure/postgres.service';
 
 @Module({
   controllers: [HealthController, AuthController, AdminController, AdminUsersController],
-  providers: [PostgresService, InfluxService, AuthService, AdminService, AdminUsersService,
+  providers: [PostgresService, InfluxService, AuthService, MailService, PasswordLinksService,
+    AdminService, AdminUsersService,
     { provide: APP_GUARD, useClass: SessionGuard }],
 })
 export class AppModule {}

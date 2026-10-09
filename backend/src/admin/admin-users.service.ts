@@ -1,8 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import type { PoolClient } from 'pg';
 import { PostgresService } from '../infrastructure/postgres.service';
 import { ApiProblem } from '../http/problem';
 import { inputObject, invalid, optionalEnum } from './admin-input';
+import { PasswordLinksService } from '../auth/password-links.service';
 
 type Role = 'system_administrator' | 'farms_manager' | 'technical_manager';
 type Status = 'invited' | 'active' | 'deactivated';
@@ -103,7 +105,128 @@ function userOrder(left: UserRow, right: UserRow, actorId: string): number {
 
 @Injectable()
 export class AdminUsersService {
-  constructor(private readonly postgres: PostgresService) {}
+  constructor(
+    private readonly postgres: PostgresService,
+    private readonly links: PasswordLinksService,
+  ) {}
+
+  async invite(scope: UserScope, body: unknown): Promise<AdminUser> {
+    const data = inputObject(body);
+    if (typeof data.name !== 'string' || !data.name.trim()) throw invalid('name', 'Enter a name');
+    if (typeof data.email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      throw invalid('email', 'Enter a valid email address');
+    }
+    if (typeof data.role !== 'string' || !ROLES.includes(data.role as Role)) {
+      throw invalid('role', 'Choose a Role');
+    }
+    const role = data.role as Role;
+    const language = optionalEnum(data.language, 'language', ['en', 'id'], 'en');
+    if (role === 'technical_manager' && (typeof data.farmId !== 'string' || !data.farmId)) {
+      throw invalid('farmId', 'A Technical Manager needs an assigned Farm');
+    }
+    if (role !== 'technical_manager' && data.farmId !== undefined && data.farmId !== null) {
+      throw invalid('farmId', 'Only a Technical Manager can have an assigned Farm');
+    }
+    const email = data.email.trim().toLowerCase();
+    const publicId = `user-${randomUUID()}`;
+    const client = await this.postgres.pool.connect();
+    let token: string;
+    try {
+      await client.query('BEGIN');
+      await this.lockCompany(client, scope.companyId);
+      let farmUuid: string | null = null;
+      if (role === 'technical_manager') {
+        const farm = await client.query<{ id: string }>(
+          'SELECT id FROM farms WHERE company_id = $1 AND public_id = $2',
+          [scope.companyId, data.farmId],
+        );
+        if (!farm.rows[0]) throw invalid('farmId', 'Farm does not belong to this Company');
+        farmUuid = farm.rows[0].id;
+      }
+      const inserted = await client.query<{ id: string }>(
+        `INSERT INTO users (public_id, company_id, name, email, role, status,
+          language, invited_at, invited_by_user_id)
+         VALUES ($1, $2, $3, $4, $5, 'invited', $6, now(), $7) RETURNING id`,
+        [publicId, scope.companyId, data.name.trim(), email, role, language, scope.actorId],
+      );
+      if (farmUuid) {
+        await client.query(
+          'INSERT INTO user_farm_assignments (user_id, farm_id, assigned_at) VALUES ($1, $2, now())',
+          [inserted.rows[0].id, farmUuid],
+        );
+      }
+      token = await this.links.issue(client, inserted.rows[0].id, 'invite');
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
+        throw new ApiProblem(409, 'email_taken', 'A user with this email already exists', {
+          fieldErrors: [{ field: 'email', message: 'Already in use' }],
+        });
+      }
+      throw error;
+    } finally { client.release(); }
+    await this.deliver(email, 'invite', token);
+    return this.get(scope, publicId);
+  }
+
+  async resendInvitation(scope: UserScope, userId: string): Promise<void> {
+    const client = await this.postgres.pool.connect();
+    let delivery: { email: string; token: string };
+    try {
+      await client.query('BEGIN');
+      await this.lockCompany(client, scope.companyId);
+      const target = await client.query<{ id: string; email: string; status: Status }>(
+        'SELECT id, email, status FROM users WHERE company_id = $1 AND public_id = $2 FOR UPDATE',
+        [scope.companyId, userId],
+      );
+      const user = target.rows[0];
+      if (!user) throw new ApiProblem(404, 'not_found', 'User not found');
+      if (user.status !== 'invited') {
+        throw new ApiProblem(409, 'not_invited', 'Only invited users can be sent an invitation');
+      }
+      await client.query('UPDATE users SET invited_at = now(), updated_at = now() WHERE id = $1',
+        [user.id]);
+      delivery = { email: user.email, token: await this.links.issue(client, user.id, 'invite') };
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally { client.release(); }
+    await this.deliver(delivery.email, 'invite', delivery.token);
+  }
+
+  async sendPasswordReset(scope: UserScope, userId: string): Promise<void> {
+    const client = await this.postgres.pool.connect();
+    let delivery: { email: string; token: string };
+    try {
+      await client.query('BEGIN');
+      await this.lockCompany(client, scope.companyId);
+      const target = await client.query<{ id: string; email: string; status: Status }>(
+        'SELECT id, email, status FROM users WHERE company_id = $1 AND public_id = $2 FOR UPDATE',
+        [scope.companyId, userId],
+      );
+      const user = target.rows[0];
+      if (!user) throw new ApiProblem(404, 'not_found', 'User not found');
+      if (user.status !== 'active') {
+        throw new ApiProblem(409, 'not_active', 'Only active users can reset a password');
+      }
+      delivery = { email: user.email, token: await this.links.issue(client, user.id, 'reset') };
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally { client.release(); }
+    await this.deliver(delivery.email, 'reset', delivery.token);
+  }
+
+  private async deliver(email: string, purpose: 'invite' | 'reset', token: string): Promise<void> {
+    try {
+      await this.links.deliver(email, purpose, token);
+    } catch {
+      throw new ApiProblem(503, 'mail_unavailable', 'Mail delivery failed');
+    }
+  }
 
   async list(scope: UserScope, search: Search): Promise<{
     items: AdminUser[]; page: number; pageSize: number; total: number;

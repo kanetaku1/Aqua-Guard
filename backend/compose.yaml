@@ -56,6 +56,13 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  mailpit:
+    image: axllent/mailpit:v1.27.4
+    ports:
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+      - "127.0.0.1:${SMTP_PORT:-1025}:1025"
+    restart: unless-stopped
+
 volumes:
   postgres-data:
   influxdb-data:

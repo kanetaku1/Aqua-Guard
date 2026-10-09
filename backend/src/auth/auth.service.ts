@@ -1,9 +1,9 @@
-import { createHash, randomBytes } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import type { PoolClient } from 'pg';
 import { PostgresService } from '../infrastructure/postgres.service';
 import { ApiProblem } from '../http/problem';
 import { hashPassword, verifyPassword } from './password';
+import { hashToken, newToken } from './token';
 
 const SESSION_HOURS = 12;
 const DUMMY_HASH = hashPassword('dummy-password-123');
@@ -42,10 +42,6 @@ export interface Me {
   company: string;
   scopeLabel: string;
   farm: { id: string; name: string } | null;
-}
-
-function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
 }
 
 function initials(name: string): string {
@@ -199,8 +195,8 @@ export class AuthService {
     };
   }
 
-  private async createSession(client: PoolClient, userId: string): Promise<string> {
-    const token = randomBytes(32).toString('hex');
+  async createSession(client: PoolClient, userId: string): Promise<string> {
+    const token = newToken();
     await client.query(
       `INSERT INTO auth_sessions (user_id, token_hash, expires_at)
        VALUES ($1, $2, now() + interval '${SESSION_HOURS} hours')`,

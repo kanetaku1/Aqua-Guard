@@ -1,9 +1,10 @@
 import {
-  Body, Controller, Get, HttpCode, Patch, Post, Req, Res,
+  Body, Controller, Get, HttpCode, Param, Patch, Post, Req, Res,
 } from '@nestjs/common';
 import { AuthRequest, Public, preferredLanguage, requirePrincipal } from './session.guard';
 import { AuthService, Me } from './auth.service';
 import { ApiProblem } from '../http/problem';
+import { PasswordLinksService, PasswordTokenInfo } from './password-links.service';
 
 interface CookieResponse {
   cookie(name: string, value: string, options: Record<string, unknown>): void;
@@ -27,7 +28,10 @@ function bodyRecord(value: unknown): Record<string, unknown> {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly links: PasswordLinksService,
+  ) {}
 
   @Public()
   @Post('login')
@@ -77,5 +81,45 @@ export class AuthController {
       await this.auth.updateLanguage(requirePrincipal(request).userId, data.language);
     }
     return this.auth.getMe(requirePrincipal(request).userId, preferredLanguage(request));
+  }
+
+  @Public()
+  @Post('password/forgot')
+  @HttpCode(202)
+  async requestPasswordReset(@Body() body: unknown): Promise<void> {
+    const data = bodyRecord(body);
+    if (typeof data.email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      throw new ApiProblem(422, 'validation_error', 'Invalid email', {
+        fieldErrors: [{ field: 'email', message: 'Valid email is required' }],
+      });
+    }
+    await this.links.requestReset(data.email);
+  }
+
+  @Public()
+  @Get('password/tokens/:token')
+  getPasswordToken(@Param('token') token: string): Promise<PasswordTokenInfo> {
+    return this.links.getToken(token);
+  }
+
+  @Public()
+  @Post('password/set')
+  @HttpCode(200)
+  async setPassword(
+    @Body() body: unknown, @Res({ passthrough: true }) response: CookieResponse,
+  ): Promise<Me> {
+    const data = bodyRecord(body);
+    if (typeof data.token !== 'string') {
+      throw new ApiProblem(410, 'token_expired', 'Link expired');
+    }
+    const result = await this.links.setPassword(data.token, data.password);
+    if (result.sessionToken) {
+      response.cookie(COOKIE_NAME, result.sessionToken, {
+        ...cookieOptions(), maxAge: 12 * 60 * 60 * 1000,
+      });
+    } else {
+      response.clearCookie(COOKIE_NAME, cookieOptions());
+    }
+    return result.me;
   }
 }

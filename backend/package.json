@@ -12,6 +12,7 @@
     "test:auth:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/auth.integration.test.cjs",
     "test:admin:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/admin.integration.test.cjs",
     "test:admin-users:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/admin-users.integration.test.cjs",
+    "test:password-links:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/password-links.integration.test.cjs",
     "test:bootstrap:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/bootstrap.integration.test.cjs",
     "test:influx:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/influx.integration.test.cjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
@@ -23,12 +24,14 @@
     "@nestjs/common": "^12.1.2",
     "@nestjs/core": "^12.1.2",
     "@nestjs/platform-express": "^12.1.2",
+    "nodemailer": "^10.0.16",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.23.1",
     "ts-node": "^10.9.2",
     "typescript": "~5.9.3"
