@@ -86,7 +86,7 @@ Device の接続状態と最終受信時刻は InfluxDB の記録から算出し
 
 `GET /ponds/{pondId}/sensors/history` は保存済みの有効な計測値を5分単位の行にまとめ、6項目の値・重大度とページ情報を返します。同じ5分枠に同じ項目が複数ある場合は最新値を使い、欠測項目は `value: null` とします。現行 OpenAPI の `HistoryValue.severity` は必須で null や `no_data` を許さないため、欠測項目の severity はフロントエンド Mock と同じ `normal` を返します。表示側では `value: null` を欠測として扱います。期間未指定時は直近24時間、指定できる範囲は最大31日です。検証は `npm run test:sensor-history:local` で行えます。
 
-Sensor Current／Series／History／Anomalies は TM と担当 Farm の Pond に限定します。`GET /ponds/{pondId}/sensors/anomalies` は PostgreSQL に保存した異常区間を現行 OpenAPI の `SensorAnomaly` 形式で返し、関連 Alert があれば `alertId` を含めます。期間未指定時は直近7日と重なる区間を返します。現在は区間の保存先と参照 API まで実装済みで、受信時 Critical 判定・5分処理からの異常区間の自動生成は未実装です。増加・減少傾向の発報条件も既存資料では未確定のため、推測した条件で行を生成しません。参照 API の検証は `npm run test:sensor-anomalies:local` で行えます。
+Sensor Current／Series／History／Anomalies は TM と担当 Farm の Pond に限定します。`GET /ponds/{pondId}/sensors/anomalies` は PostgreSQL に保存した異常区間を現行 OpenAPI の `SensorAnomaly` 形式で返し、関連 Alert があれば `alertId` を含めます。期間未指定時は直近7日と重なる区間を返します。受信時 Critical 判定で閾値逸脱区間は作成します。5分処理による Warning／Attention・回復区間の補完は未実装です。増加・減少傾向の発報条件も既存資料では未確定のため、推測した条件で行を生成しません。参照 API の検証は `npm run test:sensor-anomalies:local` で行えます。
 
 `GET/POST /ponds/{pondId}/mortalities` と `PATCH /mortalities/{recordId}` は TM の担当 Farm に限定した死亡記録 API です。入力と返却の `date`・`count`・`weightKg`・`observation` はフロントエンド OpenAPI に合わせています。一覧は日付範囲・ページ指定と直近7日の合計に対応し、修正前後の値は監査テーブルに残します。放養サイクルが登録されている場合は記録日に該当するサイクルへ結び付けます。放養の作成 API は現行契約になく、サイクル登録経路はまだありません。
 
@@ -100,4 +100,6 @@ Sampling API は Pond の一覧・登録・修正と Farm の日付別一覧・�
 
 画面向け API は `/api/v1` に配置します。パス、メソッド、入出力、命名、エラーはフロントエンドの[必要 API 定義](../frontend/app/api/openapi.frontend.yaml)と[変更要求](../frontend/app/api/OPENAPI_CHANGES.md)を優先し、[統合 OpenAPI](../docs/api/openapi.yaml)に従って実装します。
 
-PostgreSQL の初期テーブルと InfluxDB の論理系列は実装済みです。`SensorIngestionService` は単一 Sensor Event の項目・計測時刻・機器割当を検証し、Receipt を先に記録してから InfluxDB に保存します。同一 Event の再送は重複保存せず、別 Event が同じ計測点を占有しようとした場合は Receipt を隔離します。起動時には `pending` の Receipt と InfluxDB の保存済み点を照合し、保存が確認できたものだけ `stored` に復旧します。InfluxDB に点がない Receipt は `pending` のままにし、再送を待ちます。保存済み Receipt の Critical 判定状態は `pending` のままであり、Alert・通知の完了を意味しません。MQTT の Topic／Payload と機器認証、Broker 接続、Critical 判定、残りの画面向け API は後続段階で追加します。Web 向けの受信 API は追加していません。
+PostgreSQL の初期テーブルと InfluxDB の論理系列は実装済みです。`SensorIngestionService` は単一 Sensor Event の項目・計測時刻・機器割当を検証し、Receipt を先に記録してから InfluxDB に保存します。同一 Event の再送は重複保存せず、別 Event が同じ計測点を占有しようとした場合は Receipt を隔離します。起動時には `pending` の Receipt と InfluxDB の保存済み点を照合し、保存が確認できたものだけ `stored` に復旧します。InfluxDB に点がない Receipt は `pending` のままにし、再送を待ちます。Web 向けの受信 API は追加していません。
+
+保存済みの新規 Sensor Event は受信直後に、その計測時刻に有効な Farm 別／共通閾値で Critical 判定します。Critical の初回発生では Alert・異常区間・通知 Outbox・Receipt の判定完了を同じ PostgreSQL Transaction で保存し、継続点や再送で重複させません。現在の即時判定では、計測値が未来、または運用ルールの Offline 判定分数より古い場合と、同じ機器の後続点より古い場合は即時発報を見送り、理由を Receipt に残します。これは遅延点を現在の危険として通知しないための暫定条件で、専用の許容経過時間は実機条件に合わせて確定が必要です。保存後の判定が失敗した Receipt は `stored` に残り、再送、起動時、および稼働中の定期回収で再試行します。`npm run test:critical:local` で実 DB／InfluxDB を使った検証ができます。通知 Outbox の利用者別配信、MQTT Broker 接続、Warning／Attention・回復の5分処理、Alert／Issue の画面 API は後続作業です。Outbox に行があるだけでは利用者への通知完了を意味しません。
