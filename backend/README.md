@@ -90,6 +90,8 @@ Device の接続状態と最終受信時刻は InfluxDB の記録から算出し
 
 業務画面向け Farm/Pond 状態APIは未実装です。運用開始前に対象IoT機器からの受信を確認し、再起動時は保存済みの有効な計測値と未処理判定から状態を復元する方針です。最初の5分を無条件に `normal` とせず、鮮度切れや必要項目の欠落も正常扱いしません。運用開始時に確認する機器・項目・鮮度の具体的条件、および未放養・Sampling未実施時に [フロントエンドOpenAPI](../frontend/app/api/openapi.frontend.yaml) の必須日付をどう扱うかは引き続き確定が必要です。バックエンド側で契約を独自変更せず、[DB設計の未決事項](./docs/database_design.md)に記録しています。
 
+Sampling API は Pond の一覧・登録・修正と Farm の日付別一覧・一括保存に対応します。DOC、ABW、ADG、目標比、成長判定、Laboratory の閾値判定は保存済み記録と現行の管理設定から計算します。一括保存は同一 Farm 内の指定 Pond だけを同一トランザクションで更新し、途中で失敗した場合は全件を戻します。記録日を含む `production_cycles` が必要で、未登録の場合は 422 を返します。現行 OpenAPI に放養登録 API がないため、運用開始時のサイクル登録経路は今後の設計課題です。ローカル検証は `npm run test:sampling:local` で行えます。
+
 ## API の基準
 
 画面向け API は `/api/v1` に配置します。パス、メソッド、入出力、命名、エラーはフロントエンドの[必要 API 定義](../frontend/app/api/openapi.frontend.yaml)と[変更要求](../frontend/app/api/OPENAPI_CHANGES.md)を優先し、[統合 OpenAPI](../docs/api/openapi.yaml)に従って実装します。

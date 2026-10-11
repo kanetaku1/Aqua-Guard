@@ -111,11 +111,13 @@ ThresholdのFarm別取得では、現在のFarm版にあるParameterはその値
 | --- | --- | --- |
 | `feeding_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `record_date date`, `round_no integer`, `feed_type text`, `amount_kg numeric`, `tray_check text NULL`, `note text NULL`, `recorded_by uuid FK`, `created_at`, `updated_at`, `row_version bigint` | フロントエンドの`FeedingInput`を正とする。`round_no >= 1`、`amount_kg > 0`。同日複数回を許し、同じPond・日付・回は一意 |
 | `mortality_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `record_date date`, `count integer`, `weight_kg numeric NOT NULL`, `observation text NULL`, `note text NULL`, `recorded_by uuid FK`, `created_at`, `updated_at`, `row_version bigint` | フロントエンドの`MortalityInput`を正とし、必須の`weightKg`と`observation` enumを保存する。`count >= 0`、`weight_kg >= 0` |
-| `sampling_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `sample_date date`, `sample_count integer NULL`, `sample_weight_g numeric NULL`, `tan numeric NULL`, `no2 numeric NULL`, `vibrio numeric NULL`, `alkalinity numeric NULL`, `recorded_by uuid FK`, `created_at`, `updated_at` | `SamplingInput`。`UNIQUE (pond_id, sample_date)`、`sample_count > 0`（非NULL時）、測定値は非負 |
+| `sampling_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NOT NULL`, `sample_date date`, `sample_count integer NULL`, `sample_weight_g numeric NULL`, `tan numeric NULL`, `no2 numeric NULL`, `vibrio numeric NULL`, `alkalinity numeric NULL`, `note text NULL`, `recorded_by uuid FK`, `created_at`, `updated_at`, `row_version bigint` | `SamplingInput`。`UNIQUE (pond_id, sample_date)`、`sample_count > 0`（非NULL時）、測定値は非負。記録日を含むサイクルがなければ422 |
 
-`feeding_records.tray_check`はフロントエンドの`TrayCheck` enumをそのまま保存する。`sampling_records`の4検査項目は後着を許す。`sample_count`と`sample_weight_g`は両方そろった場合にABWを計算し、片方のみの保存は422とする。OpenAPIでは両方とも任意／nullなので、検査値だけの記録は許す。Laboratoryの`labPending`は未着・未確認状態から導出する。必要なら`lab_confirmed_at`／`lab_confirmed_by`を内部列として持つ。VibrioはAPIの`×10³ CFU/mL`の数値をそのまま保存し、単位の異なる生値を混在させない。
+`feeding_records.tray_check`はフロントエンドの`TrayCheck` enumをそのまま保存する。`sampling_records`の4検査項目は後着を許す。`sample_count`と`sample_weight_g`は両方そろった場合にABWを計算し、片方のみの保存は422とする。OpenAPIでは両方とも任意／nullなので、検査値だけの記録は許す。Laboratoryの`labPending`は4項目のいずれかが未入力の場合にtrueとする。検査結果の確認作業を別途追跡する場合は`lab_confirmed_at`／`lab_confirmed_by`を内部列として追加する。VibrioはAPIの`×10³ CFU/mL`の数値をそのまま保存し、単位の異なる生値を混在させない。
 
 一括Samplingは`(pond_id, sample_date)`でUpsertし、指定された`entries`だけを1Transactionで処理する。権限外Pondや異なるFarmのPondが1件でもあれば全件拒否し、途中まで保存しない。通常のPOSTで同一Pond・日付が重複した場合の409と、訂正のPATCHは既存APIの状態に従う。`recorded_by`は初回登録者、`updated_at`と監査で訂正履歴を追う。記録日の未来日可否は既存APIに記載された個別規則を優先する。
+
+現行実装のSamplingは未来日を422とし、記録日を含む`production_cycles`がない場合も422とする。DOCはサイクルの`started_on`から計算する。目標曲線の定義点間は直線補間し、定義範囲外は外挿せず`targetAbwG`・`vsTargetPct`・`growth`をnullにする。一括入力は測定項目だけを置き換え、既存の`note`と初回の`recorded_by`を保つ。
 
 ### 6.3 KPI結果
 

@@ -171,6 +171,7 @@ AlertはReport提出とは独立して判定する。IoT Sensor 6項目のCritic
 | GET | `/ponds/{pondId}/samplings` | `items: SamplingRecord[]`, `growthCurve` | 200 |
 | POST | `/ponds/{pondId}/samplings` | `SamplingInput` → `SamplingRecord` | 201 |
 | PATCH | `/samplings/{recordId}` | `SamplingInput` → `SamplingRecord` | 200 |
+| GET | `/farms/{farmId}/samplings` | `date` → `items: SamplingRecord[]`, `growthCurve`, `onTrackBandPct` | 200 |
 | POST | `/farms/{farmId}/samplings/batch` | `date`, `entries[]` → `items: SamplingRecord[]` | 200 |
 
 `FeedingInput`の必須項目は`date`、`round`、`feedType`、`amountKg`で、`trayCheck`と`note`は任意。`MortalityInput`は`date`、`count`、`weightKg`が必須で、`observation`と`note`は任意。これらの項目名と必須条件はフロントエンドOpenAPIを正とする。`SamplingInput`は`date`が必須で、`sampleCount`、`sampleWeightG`、`tan`、`no2`、`vibrio`、`alkalinity`は任意またはnullを許す。検査値は後着のためPATCHで追記でき、未着中は`labPending`を返す。ABW、ADG、DOC、目標比はバックエンドが計算して`SamplingRecord`に付ける。未来日の給餌は422。入力の負値は各schemaの`minimum`に従って拒否する。
