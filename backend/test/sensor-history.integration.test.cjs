@@ -19,6 +19,7 @@ test('history reads stored values, groups five-minute rows and enforces pond sco
   let bucketId;
   let companyId;
   let userId;
+  let managerId;
   let farmId;
   const pondIds = [];
   let app;
@@ -56,6 +57,13 @@ test('history reads stored values, groups five-minute rows and enforces pond sco
     )).rows[0].id;
     await pool.query(`INSERT INTO user_farm_assignments (user_id, farm_id, assigned_at)
       VALUES ($1, $2, now())`, [userId, farmId]);
+    const managerEmail = `farms_manager-${suffix}@example.test`;
+    managerId = (await pool.query(
+      `INSERT INTO users (public_id, company_id, name, email, password_hash, role, status)
+       VALUES ($1, $2, 'FM', $3, $4, 'farms_manager', 'active') RETURNING id`,
+      [`farms_manager-${suffix}`, companyId, managerEmail,
+        await hashPassword('SafePassword123')],
+    )).rows[0].id;
     const influx = new InfluxService();
     const now = Math.floor((Date.now() - 600000) / 300000) * 300000;
     const at = (offset) => new Date(now + offset).toISOString();
@@ -85,9 +93,20 @@ test('history reads stored values, groups five-minute rows and enforces pond sco
     });
     assert.equal(login.status, 200);
     const cookie = login.headers.get('set-cookie').split(';')[0];
+    const managerLogin = await fetch(`${base}/auth/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: managerEmail, password: 'SafePassword123' }),
+    });
+    assert.equal(managerLogin.status, 200);
+    const managerCookie = managerLogin.headers.get('set-cookie').split(';')[0];
     const url = `${base}/ponds/pond-a-${suffix}/sensors/history`;
     const get = (path) => fetch(path, { headers: { Cookie: cookie } });
     const range = `from=${encodeURIComponent(at(0))}&to=${encodeURIComponent(at(600000))}`;
+    for (const suffixPath of ['history', 'current', 'series']) {
+      const forbidden = await fetch(`${base}/ponds/pond-a-${suffix}/sensors/${suffixPath}?${range}`,
+        { headers: { Cookie: managerCookie } });
+      assert.equal(forbidden.status, 403);
+    }
     const first = await get(`${url}?${range}&page=1&pageSize=1`);
     assert.equal(first.status, 200);
     const page1 = await first.json();
@@ -114,6 +133,12 @@ test('history reads stored values, groups five-minute rows and enforces pond sco
       await pool.query('DELETE FROM user_farm_assignments WHERE user_id=$1', [userId]);
       await pool.query('DELETE FROM users WHERE id=$1', [userId]);
     }
+    if (managerId) {
+      await pool.query('DELETE FROM auth_sessions WHERE user_id=$1', [managerId]);
+      await pool.query('DELETE FROM users WHERE id=$1', [managerId]);
+    }
+    if (companyId) await pool.query('DELETE FROM auth_attempts WHERE email_key=ANY($1)',
+      [[`technical_manager-${suffix}@example.test`, `farms_manager-${suffix}@example.test`]]);
     for (const pondId of pondIds) await pool.query('DELETE FROM ponds WHERE id=$1', [pondId]);
     if (farmId) await pool.query('DELETE FROM farms WHERE id=$1', [farmId]);
     if (companyId) await pool.query('DELETE FROM companies WHERE id=$1', [companyId]);

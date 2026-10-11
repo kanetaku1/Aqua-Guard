@@ -46,6 +46,9 @@ export class SensorHistoryService {
   ) {}
 
   async get(principal: Principal, pondId: string, query: Record<string, unknown>) {
+    if (principal.role !== 'technical_manager') {
+      throw new ApiProblem(403, 'forbidden', 'Technical manager access required');
+    }
     const pond = await this.scope.requirePond(principal, pondId);
     const to = query.to === undefined ? new Date() : instant(query.to, 'to');
     const from = query.from === undefined ? new Date(to.getTime() - 86400000)

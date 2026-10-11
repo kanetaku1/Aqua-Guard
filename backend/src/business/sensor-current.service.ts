@@ -37,6 +37,9 @@ export class SensorCurrentService {
   ) {}
 
   async get(principal: Principal, pondId: string) {
+    if (principal.role !== 'technical_manager') {
+      throw new ApiProblem(403, 'forbidden', 'Technical manager access required');
+    }
     const pond = await this.scope.requirePond(principal, pondId);
     const [devices, rules] = await Promise.all([
       this.postgres.pool.query<{ device_id: string; parameter: SensorParameter }>(
