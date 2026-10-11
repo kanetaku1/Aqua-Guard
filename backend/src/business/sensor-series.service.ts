@@ -72,10 +72,14 @@ export class SensorSeriesService {
         `from(bucket: ${JSON.stringify(this.influx.bucket)})
          |> range(start: time(v: ${JSON.stringify(from.toISOString())}),
            stop: time(v: ${JSON.stringify(to.toISOString())}))
-         |> filter(fn: (r) => r._measurement == "sensor_readings" and r._field == "value"
+         |> filter(fn: (r) => r._measurement == "sensor_readings"
+           and (r._field == "value" or r._field == "validity")
            and r.farm_id == ${JSON.stringify(pond.farmId)}
            and r.pond_id == ${JSON.stringify(pond.pondId)}
            and r.parameter == ${JSON.stringify(parameter)})
+         |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+         |> filter(fn: (r) => r.validity == "valid")
+         |> map(fn: (r) => ({ r with _value: r.value }))
          |> keep(columns: ["_time", "_value"])`,
       );
     } catch {

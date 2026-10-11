@@ -37,9 +37,12 @@ export class SyncStatusService {
       rows = await this.influx.client.getQueryApi(this.influx.org).collectRows<{ _time?: string }>(
         `from(bucket: ${JSON.stringify(this.influx.bucket)})
          |> range(start: 0)
-         |> filter(fn: (r) => r._measurement == "sensor_readings" and r._field == "value"
+         |> filter(fn: (r) => r._measurement == "sensor_readings"
+           and (r._field == "value" or r._field == "validity")
            and contains(value: r.farm_id, set: ${JSON.stringify(farmIds)}))
-         |> group(columns: ["farm_id"]) |> last()`,
+         |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+         |> filter(fn: (r) => r.validity == "valid")
+         |> group(columns: ["farm_id"]) |> last(column: "_time")`,
       );
     } catch {
       throw new ApiProblem(503, 'storage_unavailable', 'Sensor data is unavailable');

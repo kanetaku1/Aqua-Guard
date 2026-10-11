@@ -82,6 +82,8 @@ Device の接続状態と最終受信時刻は InfluxDB の記録から算出し
 
 `GET /ponds/{pondId}/sensors/series` は担当権限を PostgreSQL で確認した後、InfluxDB の実測値を指定間隔に集計します。欠損区間の `avg`・`min`・`max` は `null` で、表示する `threshold` は Farm 別上書きを優先します。現行フロントエンドの24時間・7日・30日表示に対応します。MQTT 受信が未実装のため、現時点の実測値は直接書き込みテストのデータだけです。
 
+`GET /ponds/{pondId}/sensors/current` は担当 Pond に割り当てられた有効な6種類のセンサーについて、InfluxDB の保存済み最新値をリクエスト時に読み、Farm 別閾値と運用ルールから `severity`・`quality` を計算します。API 再起動後も同じ保存値を読み直します。必要な機器・有効値が欠ける、または計測値がオフライン判定時間を超える場合は `503 telemetry_not_ready` を返し、架空の値や `normal` を返しません。`series` と `sync-status` も無効な計測点を判定対象から外します。
+
 業務画面向け Farm/Pond 状態APIは未実装です。運用開始前に対象IoT機器からの受信を確認し、再起動時は保存済みの有効な計測値と未処理判定から状態を復元する方針です。最初の5分を無条件に `normal` とせず、鮮度切れや必要項目の欠落も正常扱いしません。運用開始時に確認する機器・項目・鮮度の具体的条件、および未放養・Sampling未実施時に [フロントエンドOpenAPI](../frontend/app/api/openapi.frontend.yaml) の必須日付をどう扱うかは引き続き確定が必要です。バックエンド側で契約を独自変更せず、[DB設計の未決事項](./docs/database_design.md)に記録しています。
 
 ## API の基準

@@ -21,6 +21,7 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
   let companyId;
   const farmUuids = [];
   const pondUuids = [];
+  const deviceUuids = [];
   const userUuids = [];
   const emails = [];
   let app;
@@ -159,6 +160,42 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     const seriesWithOverride = await fetch(seriesUrl, { headers: { Cookie: tmCookie } });
     assert.equal(seriesWithOverride.status, 200);
     assert.equal((await seriesWithOverride.json()).threshold.warningLow, 4);
+    const currentUrl = `${base}/ponds/pond-a-${suffix}/sensors/current`;
+    assert.equal((await fetch(currentUrl, { headers: { Cookie: tmCookie } })).status, 503);
+    const parameters = ['do', 'ph', 'temperature', 'tds', 'turbidity', 'water_level'];
+    for (const parameter of parameters) {
+      const deviceId = `current-${parameter}-${suffix}`;
+      const deviceUuid = (await pool.query(
+        `INSERT INTO devices (device_id, type, parameter)
+         VALUES ($1, 'sensor', $2) RETURNING id`, [deviceId, parameter],
+      )).rows[0].id;
+      deviceUuids.push(deviceUuid);
+      await pool.query(
+        `INSERT INTO device_assignments (device_id, pond_id, assigned_at)
+         VALUES ($1, $2, now())`, [deviceUuid, pondUuids[0]],
+      );
+    }
+    const influxCurrent = app.get(InfluxService);
+    await influxCurrent.writeSensorReadings(parameters.map((parameter) => ({
+      farmId: `farm-a-${suffix}`, pondId: `pond-a-${suffix}`,
+      deviceId: `current-${parameter}-${suffix}`, parameter,
+      value: parameter === 'do' ? 3 : parameter === 'ph' ? 8 : 130,
+      measuredAt: new Date(Date.now() - (parameter === 'ph' ? 30 : 2) * 60000),
+      receivedAt: new Date(), validity: 'valid',
+    })));
+    const currentResponse = await fetch(currentUrl, { headers: { Cookie: tmCookie } });
+    assert.equal(currentResponse.status, 200);
+    const current = await currentResponse.json();
+    assert.equal(current.items.length, 6);
+    assert.equal(current.items.find((item) => item.parameter === 'do').severity, 'critical');
+    assert.equal(current.items.find((item) => item.parameter === 'do').threshold.warningLow, 4);
+    assert.equal(current.items.find((item) => item.parameter === 'ph').severity, 'normal');
+    assert.equal(current.items.find((item) => item.parameter === 'ph').quality, 'delayed');
+    assert.ok(current.items.filter((item) => item.parameter !== 'ph')
+      .every((item) => item.quality === 'live'));
+    assert.equal((await fetch(currentUrl, { headers: { Cookie: saCookie } })).status, 403);
+    assert.equal((await fetch(`${base}/ponds/pond-b-${suffix}/sensors/current`,
+      { headers: { Cookie: tmCookie } })).status, 404);
     const checkpoint = await pool.query(
       'SELECT last_success_at, processed_through FROM sensor_sync_checkpoints WHERE scope_key = $1',
       [`header:user:${userUuids[1]}`],
@@ -189,6 +226,30 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     const saved = await restartedSeries.json();
     assert.equal(saved.threshold.warningLow, 4);
     assert.ok(saved.points.some((point) => point.avg === 4.1));
+    const restoredCurrent = await fetch(
+      `${restartedBase}/ponds/pond-a-${suffix}/sensors/current`,
+      { headers: { Cookie: tmCookie } },
+    );
+    assert.equal(restoredCurrent.status, 200);
+    assert.equal((await restoredCurrent.json()).items.find((item) => item.parameter === 'do').severity,
+      'critical');
+    await app.get(InfluxService).writeSensorReadings([{
+      farmId: `farm-a-${suffix}`, pondId: `pond-a-${suffix}`,
+      deviceId: `current-do-${suffix}`, parameter: 'do', value: 2.5,
+      measuredAt: new Date(Date.now() - 60000), receivedAt: new Date(), validity: 'invalid',
+    }]);
+    const invalidCurrent = await fetch(
+      `${restartedBase}/ponds/pond-a-${suffix}/sensors/current`,
+      { headers: { Cookie: tmCookie } },
+    );
+    assert.equal(invalidCurrent.status, 503);
+    assert.equal((await invalidCurrent.json()).code, 'telemetry_not_ready');
+    const cleanSeries = await fetch(
+      `${restartedBase}/ponds/pond-a-${suffix}/sensors/series?${range}`,
+      { headers: { Cookie: tmCookie } },
+    );
+    assert.equal(cleanSeries.status, 200);
+    assert.ok(!(await cleanSeries.json()).points.some((point) => point.min === 2.5));
   } finally {
     if (app) await app.close();
     if (companyId) {
@@ -205,6 +266,10 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     }
     if (emails.length) await pool.query('DELETE FROM auth_attempts WHERE email_key = ANY($1)',
       [emails]);
+    for (const deviceId of deviceUuids) {
+      await pool.query('DELETE FROM device_assignments WHERE device_id = $1', [deviceId]);
+      await pool.query('DELETE FROM devices WHERE id = $1', [deviceId]);
+    }
     for (const pondId of pondUuids) await pool.query('DELETE FROM ponds WHERE id = $1', [pondId]);
     for (const farmId of farmUuids) await pool.query('DELETE FROM farms WHERE id = $1', [farmId]);
     if (companyId) await pool.query('DELETE FROM companies WHERE id = $1', [companyId]);
