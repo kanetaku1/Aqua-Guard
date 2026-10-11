@@ -53,6 +53,7 @@ npm run test:db:local
 npm run test:influx:local
 npm run test:auth:local
 npm run test:admin:local
+npm run test:admin-settings:local
 npm run test:admin-users:local
 npm run test:password-links:local
 npm run test:bootstrap:local
@@ -74,7 +75,7 @@ Migration は SQL ファイル順に適用され、適用済みファイルの�
 
 SMTP送信はDBへの招待・Token保存後に行います。送信に失敗した場合、管理者の招待操作は503になりますが、Invitedユーザーは残ります。メールサービスを復旧してから管理画面の「招待を再送」を使ってください。ローカルの連携テストはMailpitでメールを受信し、テストメールを削除します。
 
-Device の接続状態と最終受信時刻は InfluxDB の記録から算出します。初回受信前は `offline` と `lastSeenAt: null` を返し、Offline 件数には含めません。現在の接続判定は最終受信から60分で Offline です。Settings API と、業務画面向けのFarm/Pond状態APIは未実装です。第4段階の残りの作業として追加します。
+Device の接続状態と最終受信時刻は InfluxDB の記録から算出します。初回受信前は `offline` と `lastSeenAt: null` を返し、Offline 件数には含めません。現在の接続判定は最終受信から60分で Offline です。Settings の Growth Targets と Rules は会社単位の版として保存し、変更前の版も残します。初期値はフロントエンドの開発用設定と一致させています。Thresholds と、業務画面向けのFarm/Pond状態APIは未実装です。第4段階の残りの作業として追加します。
 
 ## API の基準
 

@@ -9,6 +9,8 @@ import { AdminUsersController } from './admin/admin-users.controller';
 import { AdminUsersService } from './admin/admin-users.service';
 import { AdminDevicesController } from './admin/admin-devices.controller';
 import { AdminDevicesService } from './admin/admin-devices.service';
+import { AdminSettingsController } from './admin/admin-settings.controller';
+import { AdminSettingsService } from './admin/admin-settings.service';
 import { MailService } from './auth/mail.service';
 import { PasswordLinksService } from './auth/password-links.service';
 import { HealthController } from './health.controller';
@@ -17,9 +19,9 @@ import { PostgresService } from './infrastructure/postgres.service';
 
 @Module({
   controllers: [HealthController, AuthController, AdminController, AdminUsersController,
-    AdminDevicesController],
+    AdminDevicesController, AdminSettingsController],
   providers: [PostgresService, InfluxService, AuthService, MailService, PasswordLinksService,
-    AdminService, AdminUsersService, AdminDevicesService,
+    AdminService, AdminUsersService, AdminDevicesService, AdminSettingsService,
     { provide: APP_GUARD, useClass: SessionGuard }],
 })
 export class AppModule {}
