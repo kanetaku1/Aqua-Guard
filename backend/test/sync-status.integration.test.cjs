@@ -9,7 +9,7 @@ const { ProblemFilter } = require('../dist/http/problem');
 const { InfluxService } = require('../dist/infrastructure/influx.service');
 const { createPostgresPool } = require('../dist/infrastructure/postgres');
 
-test('sync status uses FM/TM scope and reports no data, offline, delayed and live', async () => {
+test('scoped telemetry survives API restart and reports no data, offline, delayed and live', async () => {
   const pool = createPostgresPool();
   const suffix = randomUUID().slice(0, 8);
   const password = 'SafePassword123';
@@ -165,6 +165,30 @@ test('sync status uses FM/TM scope and reports no data, offline, delayed and liv
     );
     assert.ok(checkpoint.rows[0].last_success_at);
     assert.ok(checkpoint.rows[0].processed_through);
+
+    await app.close();
+    app = await NestFactory.create(AppModule, { logger: false });
+    app.enableCsrfProtection();
+    app.useGlobalFilters(new ProblemFilter());
+    app.setGlobalPrefix('api/v1', { exclude: [
+      { path: 'health', method: RequestMethod.GET },
+      { path: 'health/ready', method: RequestMethod.GET },
+    ] });
+    await app.listen(0, '127.0.0.1');
+    const restartedBase = `http://127.0.0.1:${app.getHttpServer().address().port}/api/v1`;
+    const afterRestart = await fetch(`${restartedBase}/sync-status`, {
+      headers: { Cookie: tmCookie },
+    });
+    assert.equal(afterRestart.status, 200);
+    assert.equal((await afterRestart.json()).quality, 'live');
+    const restartedSeries = await fetch(
+      `${restartedBase}/ponds/pond-a-${suffix}/sensors/series?${range}`,
+      { headers: { Cookie: tmCookie } },
+    );
+    assert.equal(restartedSeries.status, 200);
+    const saved = await restartedSeries.json();
+    assert.equal(saved.threshold.warningLow, 4);
+    assert.ok(saved.points.some((point) => point.avg === 4.1));
   } finally {
     if (app) await app.close();
     if (companyId) {

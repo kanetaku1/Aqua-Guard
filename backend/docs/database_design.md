@@ -301,7 +301,7 @@ InfluxDB書込とPostgreSQLのReceipt／Checkpoint更新は原子的にCommitで
 | Device通知 | センサー以外のHeartbeat・Actuator実状態・ACKのPayload。なければ`connection`や実状態の信頼性が下がる |
 | Generator | `OperationalStatus.generator`の構造化された状態・試験時刻の入力源が現行OpenAPIにない。Reportの自由文`environment.generator`から正確に導出できない |
 | 初回Actuator状態 | フィードバック未着時の`Actuator.state`はOpenAPIに未知値がない。誤って`off`／`fault`を返さない表現が必要 |
-| 初回Sensor・生産状態 | 未受信時も`SensorValue.severity`、放養・Samplingがない場合も`PondProduction.doc`・`CompanyProduction.latestSamplingDate`・`FarmProduction.samplingDate`はOpenAPI上必須。ダミーのNormal、DOC、日付を返さないため、未取得時の契約確認が必要 |
+| 初回Sensor・生産状態 | 運用開始前にIoT受信を確認し、再起動時はInfluxDBの保存済み有効データと未処理Receipt・Alertから状態を復元する。受信履歴があるだけでNormalとはせず、対象機器・必要項目・鮮度の受入条件を確定する。未放養・Sampling未実施でも`PondProduction.doc`・`CompanyProduction.latestSamplingDate`・`FarmProduction.samplingDate`が必須となる契約上の課題は残る |
 | Issueの傾向 | 初回発生で比較対象がない場合も`Issue.trend`は必須。`stable`を無根拠に返さないため、初回の表現を確認する |
 | 養殖サイクル | 再放養の終了・開始手順と放養記録APIの採用。現行OpenAPIには放養更新APIがない |
 | KPI | 不明減耗、初期Biomass、Size Uniformityの元データと正式式。未算出時はNULLにする |
