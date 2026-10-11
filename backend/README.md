@@ -84,6 +84,8 @@ Device の接続状態と最終受信時刻は InfluxDB の記録から算出し
 
 `GET /ponds/{pondId}/sensors/current` は担当 Pond に割り当てられた有効な6種類のセンサーについて、InfluxDB の保存済み最新値をリクエスト時に読み、Farm 別閾値と運用ルールから `severity`・`quality` を計算します。API 再起動後も同じ保存値を読み直します。必要な機器・有効値が欠ける、または計測値がオフライン判定時間を超える場合は `503 telemetry_not_ready` を返し、架空の値や `normal` を返しません。`series` と `sync-status` も無効な計測点を判定対象から外します。
 
+`GET /ponds/{pondId}/sensors/history` は保存済みの有効な計測値を5分単位の行にまとめ、6項目の値・重大度とページ情報を返します。同じ5分枠に同じ項目が複数ある場合は最新値を使い、欠測項目は `value: null` とします。現行 OpenAPI の `HistoryValue.severity` は必須で null や `no_data` を許さないため、欠測項目の severity はフロントエンド Mock と同じ `normal` を返します。表示側では `value: null` を欠測として扱います。期間未指定時は直近24時間、指定できる範囲は最大31日です。検証は `npm run test:sensor-history:local` で行えます。
+
 `GET/POST /ponds/{pondId}/mortalities` と `PATCH /mortalities/{recordId}` は TM の担当 Farm に限定した死亡記録 API です。入力と返却の `date`・`count`・`weightKg`・`observation` はフロントエンド OpenAPI に合わせています。一覧は日付範囲・ページ指定と直近7日の合計に対応し、修正前後の値は監査テーブルに残します。放養サイクルが登録されている場合は記録日に該当するサイクルへ結び付けます。放養の作成 API は現行契約になく、サイクル登録経路はまだありません。
 
 `GET/POST /ponds/{pondId}/feedings` と `PATCH /feedings/{recordId}` も担当 TM のみ利用できます。`round`・`feedType`・`amountKg`・`trayCheck` はフロントエンド OpenAPI の名前と enum を使用します。同一 Pond・日付・回の重複登録は `409`、未来日の登録は `422` とし、一覧に直近2日の `dailyTotals` を返します。返却する `time` は初回記録時刻を WIB の `HH:mm` で表示します。修正前後の値を監査テーブルに残します。
