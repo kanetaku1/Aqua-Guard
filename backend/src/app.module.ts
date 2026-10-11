@@ -23,13 +23,15 @@ import { MailService } from './auth/mail.service';
 import { PasswordLinksService } from './auth/password-links.service';
 import { HealthController } from './health.controller';
 import { InfluxService } from './infrastructure/influx.service';
+import { SensorIngestionService } from './infrastructure/sensor-ingestion.service';
 import { PostgresService } from './infrastructure/postgres.service';
 
 @Module({
   controllers: [HealthController, AuthController, AdminController, AdminUsersController,
     AdminDevicesController, AdminSettingsController, SyncStatusController,
     SensorSeriesController, SensorCurrentController],
-  providers: [PostgresService, InfluxService, AuthService, MailService, PasswordLinksService,
+  providers: [PostgresService, InfluxService, SensorIngestionService,
+    AuthService, MailService, PasswordLinksService,
     AdminService, AdminUsersService, AdminDevicesService, AdminSettingsService,
     AdminThresholdsService, BusinessScopeService, SyncStatusService, SensorSeriesService,
     SensorCurrentService,

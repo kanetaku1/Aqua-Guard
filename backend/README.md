@@ -80,7 +80,7 @@ Device の接続状態と最終受信時刻は InfluxDB の記録から算出し
 
 `GET /sync-status` は FM に会社の全 Farm、TM に担当 Farm のセンサー記録を対象として InfluxDB を参照し、Rules の遅延・Offline 分数で品質を判定します。参照成功時刻は `syncedAt` として返し、ユーザー別の参照Checkpointを保存します。データがなければ `quality: no_data` です。次回参照時刻は画面の5分再取得間隔から算出します。
 
-`GET /ponds/{pondId}/sensors/series` は担当権限を PostgreSQL で確認した後、InfluxDB の実測値を指定間隔に集計します。欠損区間の `avg`・`min`・`max` は `null` で、表示する `threshold` は Farm 別上書きを優先します。現行フロントエンドの24時間・7日・30日表示に対応します。MQTT 受信が未実装のため、現時点の実測値は直接書き込みテストのデータだけです。
+`GET /ponds/{pondId}/sensors/series` は担当権限を PostgreSQL で確認した後、InfluxDB の実測値を指定間隔に集計します。欠損区間の `avg`・`min`・`max` は `null` で、表示する `threshold` は Farm 別上書きを優先します。現行フロントエンドの24時間・7日・30日表示に対応します。MQTT 接続は未実装のため、現時点の実測値は直接書き込みテストと受信保存サービスの結合テストのデータだけです。
 
 `GET /ponds/{pondId}/sensors/current` は担当 Pond に割り当てられた有効な6種類のセンサーについて、InfluxDB の保存済み最新値をリクエスト時に読み、Farm 別閾値と運用ルールから `severity`・`quality` を計算します。API 再起動後も同じ保存値を読み直します。必要な機器・有効値が欠ける、または計測値がオフライン判定時間を超える場合は `503 telemetry_not_ready` を返し、架空の値や `normal` を返しません。`series` と `sync-status` も無効な計測点を判定対象から外します。
 
@@ -90,4 +90,4 @@ Device の接続状態と最終受信時刻は InfluxDB の記録から算出し
 
 画面向け API は `/api/v1` に配置します。パス、メソッド、入出力、命名、エラーはフロントエンドの[必要 API 定義](../frontend/app/api/openapi.frontend.yaml)と[変更要求](../frontend/app/api/OPENAPI_CHANGES.md)を優先し、[統合 OpenAPI](../docs/api/openapi.yaml)に従って実装します。
 
-PostgreSQL の初期テーブルと InfluxDB の論理系列は実装済みです。MQTT の Payload と受信処理、残りの画面向け API は後続段階で追加します。
+PostgreSQL の初期テーブルと InfluxDB の論理系列は実装済みです。`SensorIngestionService` は単一 Sensor Event の項目・計測時刻・機器割当を検証し、Receipt を先に記録してから InfluxDB に保存します。同一 Event の再送は重複保存せず、別 Event が同じ計測点を占有しようとした場合は Receipt を隔離します。InfluxDB 保存後に Receipt が `pending` のまま残った場合は保存済み点を照合して復旧できます。保存済み Receipt の Critical 判定状態は `pending` のままであり、Alert・通知の完了を意味しません。MQTT の Topic／Payload と機器認証、Broker 接続、Critical 判定、残りの画面向け API は後続段階で追加します。Web 向けの受信 API は追加していません。
