@@ -86,6 +86,8 @@ Device の接続状態と最終受信時刻は InfluxDB の記録から算出し
 
 `GET /ponds/{pondId}/sensors/history` は保存済みの有効な計測値を5分単位の行にまとめ、6項目の値・重大度とページ情報を返します。同じ5分枠に同じ項目が複数ある場合は最新値を使い、欠測項目は `value: null` とします。現行 OpenAPI の `HistoryValue.severity` は必須で null や `no_data` を許さないため、欠測項目の severity はフロントエンド Mock と同じ `normal` を返します。表示側では `value: null` を欠測として扱います。期間未指定時は直近24時間、指定できる範囲は最大31日です。検証は `npm run test:sensor-history:local` で行えます。
 
+Sensor Current／Series／History／Anomalies は TM と担当 Farm の Pond に限定します。`GET /ponds/{pondId}/sensors/anomalies` は PostgreSQL に保存した異常区間を現行 OpenAPI の `SensorAnomaly` 形式で返し、関連 Alert があれば `alertId` を含めます。期間未指定時は直近7日と重なる区間を返します。現在は区間の保存先と参照 API まで実装済みで、受信時 Critical 判定・5分処理からの異常区間の自動生成は未実装です。増加・減少傾向の発報条件も既存資料では未確定のため、推測した条件で行を生成しません。参照 API の検証は `npm run test:sensor-anomalies:local` で行えます。
+
 `GET/POST /ponds/{pondId}/mortalities` と `PATCH /mortalities/{recordId}` は TM の担当 Farm に限定した死亡記録 API です。入力と返却の `date`・`count`・`weightKg`・`observation` はフロントエンド OpenAPI に合わせています。一覧は日付範囲・ページ指定と直近7日の合計に対応し、修正前後の値は監査テーブルに残します。放養サイクルが登録されている場合は記録日に該当するサイクルへ結び付けます。放養の作成 API は現行契約になく、サイクル登録経路はまだありません。
 
 `GET/POST /ponds/{pondId}/feedings` と `PATCH /feedings/{recordId}` も担当 TM のみ利用できます。`round`・`feedType`・`amountKg`・`trayCheck` はフロントエンド OpenAPI の名前と enum を使用します。同一 Pond・日付・回の重複登録は `409`、未来日の登録は `422` とし、一覧に直近2日の `dailyTotals` を返します。返却する `time` は初回記録時刻を WIB の `HH:mm` で表示します。修正前後の値を監査テーブルに残します。
