@@ -21,6 +21,8 @@ import { SensorCurrentController } from './business/sensor-current.controller';
 import { SensorCurrentService } from './business/sensor-current.service';
 import { SensorHistoryController } from './business/sensor-history.controller';
 import { SensorHistoryService } from './business/sensor-history.service';
+import { SensorAnomaliesController } from './business/sensor-anomalies.controller';
+import { SensorAnomaliesService } from './business/sensor-anomalies.service';
 import { MortalityController } from './business/mortality.controller';
 import { MortalityService } from './business/mortality.service';
 import { FeedingController } from './business/feeding.controller';
@@ -38,13 +40,15 @@ import { PostgresService } from './infrastructure/postgres.service';
   controllers: [HealthController, AuthController, AdminController, AdminUsersController,
     AdminDevicesController, AdminSettingsController, SyncStatusController,
     SensorSeriesController, SensorCurrentController, SensorHistoryController,
+    SensorAnomaliesController,
     MortalityController, FeedingController,
     SamplingController],
   providers: [PostgresService, InfluxService, SensorIngestionService,
     AuthService, MailService, PasswordLinksService,
     AdminService, AdminUsersService, AdminDevicesService, AdminSettingsService,
     AdminThresholdsService, BusinessScopeService, SyncStatusService, SensorSeriesService,
-    SensorCurrentService, SensorHistoryService, MortalityService, FeedingService, SamplingService,
+    SensorCurrentService, SensorHistoryService, SensorAnomaliesService,
+    MortalityService, FeedingService, SamplingService,
     { provide: APP_GUARD, useClass: SessionGuard }],
 })
 export class AppModule {}
