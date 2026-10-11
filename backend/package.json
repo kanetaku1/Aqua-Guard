@@ -16,6 +16,7 @@
     "test:sensor-history:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/sensor-history.integration.test.cjs",
     "test:sensor-anomalies:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/sensor-anomalies.integration.test.cjs",
     "test:ingestion:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/sensor-ingestion.integration.test.cjs",
+    "test:critical:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/critical-evaluation.integration.test.cjs",
     "test:mortality:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/mortality.integration.test.cjs",
     "test:feeding:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/feeding.integration.test.cjs",
     "test:sampling:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/sampling.integration.test.cjs",

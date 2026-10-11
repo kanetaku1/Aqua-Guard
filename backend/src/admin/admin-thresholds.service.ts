@@ -139,6 +139,24 @@ export class AdminThresholdsService {
     return result.rows[0] ? fromRow(result.rows[0]) : fallback;
   }
 
+  async thresholdAt(companyId: string, farmUuid: string, parameter: string, at: Date): Promise<{
+    threshold: Threshold; setId: string | null;
+  }> {
+    const fallback = BY_PARAMETER.get(parameter);
+    if (!fallback) throw new Error(`Unknown threshold parameter ${parameter}`);
+    const result = await this.postgres.pool.query<ValueRow & { set_id: string }>(
+      `SELECT v.*, s.id AS set_id FROM threshold_values v
+       JOIN threshold_sets s ON s.id = v.set_id
+       WHERE s.company_id = $1 AND (s.farm_id = $2 OR s.farm_id IS NULL)
+         AND v.parameter = $3 AND s.effective_from <= $4
+         AND (s.effective_to IS NULL OR s.effective_to > $4)
+       ORDER BY (s.farm_id IS NOT NULL) DESC, s.effective_from DESC LIMIT 1`,
+      [companyId, farmUuid, parameter, at],
+    );
+    return result.rows[0] ? { threshold: fromRow(result.rows[0]), setId: result.rows[0].set_id }
+      : { threshold: fallback, setId: null };
+  }
+
   async get(actor: UserScope, farmId?: string): Promise<{
     farmId: string | null; items: Threshold[];
     farms: { farm: { id: string; name: string }; parameters: string[] }[];

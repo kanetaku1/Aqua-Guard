@@ -4,6 +4,7 @@ import { ApiProblem } from '../http/problem';
 import { InfluxService } from './influx.service';
 import { PostgresService } from './postgres.service';
 import { SensorParameter, SensorReading } from './sensor-reading';
+import { CriticalEvaluationService } from './critical-evaluation.service';
 
 const PARAMETERS = new Set<SensorParameter>([
   'do', 'ph', 'temperature', 'tds', 'turbidity', 'water_level',
@@ -68,6 +69,7 @@ export class SensorIngestionService {
   constructor(
     private readonly postgres: PostgresService,
     private readonly influx: InfluxService,
+    private readonly critical: CriticalEvaluationService,
   ) {}
 
   async recoverPendingFromStorage(): Promise<{ recovered: number; missing: number; quarantined: number }> {
@@ -189,6 +191,7 @@ export class SensorIngestionService {
       if (saved.status === 'stored' || saved.status === 'completed') {
         await client.query('COMMIT');
         inTransaction = false;
+        await this.critical.evaluateReceipt(saved.id);
         return { receiptId: saved.id, stored: true, duplicate: true };
       }
       if (saved.status === 'quarantined') {
@@ -223,6 +226,7 @@ export class SensorIngestionService {
       );
       await client.query('COMMIT');
       inTransaction = false;
+      await this.critical.evaluateReceipt(saved.id);
       return { receiptId: saved.id, stored: true, duplicate: existing.length > 0 };
     } catch (error) {
       if (inTransaction) await client.query('ROLLBACK');

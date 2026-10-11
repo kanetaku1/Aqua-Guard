@@ -4,6 +4,8 @@ const { test } = require('node:test');
 const { createPostgresPool } = require('../dist/infrastructure/postgres');
 const { InfluxService } = require('../dist/infrastructure/influx.service');
 const { SensorIngestionService } = require('../dist/infrastructure/sensor-ingestion.service');
+const { CriticalEvaluationService } = require('../dist/infrastructure/critical-evaluation.service');
+const { AdminThresholdsService } = require('../dist/admin/admin-thresholds.service');
 
 test('sensor storage validates assignment, deduplicates retries and quarantines collisions', async () => {
   const pool = createPostgresPool();
@@ -32,7 +34,9 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
     bucketId = (await created.json()).id;
     process.env.INFLUXDB_BUCKET = bucketName;
     const influx = new InfluxService();
-    const ingestion = new SensorIngestionService({ pool }, influx);
+    const critical = new CriticalEvaluationService({ pool }, influx,
+      new AdminThresholdsService({ pool }));
+    const ingestion = new SensorIngestionService({ pool }, influx, critical);
 
     companyId = (await pool.query(
       `INSERT INTO companies (public_id, name, status)
@@ -69,8 +73,8 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
       `SELECT status, critical_evaluation_status, observation_refs
        FROM ingestion_receipts WHERE id = $1`, [first.receiptId],
     );
-    assert.equal(receipt.rows[0].status, 'stored');
-    assert.equal(receipt.rows[0].critical_evaluation_status, 'pending');
+    assert.equal(receipt.rows[0].status, 'completed');
+    assert.equal(receipt.rows[0].critical_evaluation_status, 'evaluated');
     assert.equal(receipt.rows[0].observation_refs[0].pondId, `pond-${suffix}`);
     const again = await ingestion.ingest(event);
     assert.equal(again.receiptId, first.receiptId);
@@ -118,6 +122,7 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
     assert.deepEqual(concurrent.map((result) => result.duplicate).sort(), [false, true]);
   } finally {
     if (deviceId) {
+      await pool.query('DELETE FROM alert_detection_states WHERE device_id = $1', [deviceId]);
       await pool.query('DELETE FROM ingestion_receipts WHERE device_id = $1', [deviceId]);
       await pool.query('DELETE FROM device_assignments WHERE device_id = $1', [deviceId]);
       await pool.query('DELETE FROM devices WHERE id = $1', [deviceId]);

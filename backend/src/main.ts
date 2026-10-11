@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ProblemFilter } from './http/problem';
 import { SensorIngestionService } from './infrastructure/sensor-ingestion.service';
+import { CriticalEvaluationService } from './infrastructure/critical-evaluation.service';
 
 async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT ?? '8000');
@@ -28,7 +29,29 @@ async function bootstrap(): Promise<void> {
   } catch (error) {
     new Logger('SensorRecovery').error('Pending receipt recovery failed', error);
   }
+  try {
+    const result = await app.get(CriticalEvaluationService).recoverUnevaluated();
+    if (result.evaluated || result.skipped || result.failed) {
+      new Logger('CriticalRecovery').log(JSON.stringify(result));
+    }
+  } catch (error) {
+    new Logger('CriticalRecovery').error('Critical receipt recovery failed', error);
+  }
   await app.listen(port, '0.0.0.0');
+  let recoveryRunning = false;
+  const recoveryTimer = setInterval(async () => {
+    if (recoveryRunning) return;
+    recoveryRunning = true;
+    try {
+      const result = await app.get(CriticalEvaluationService).recoverUnevaluated();
+      if (result.evaluated || result.skipped || result.failed) {
+        new Logger('CriticalRecovery').log(JSON.stringify(result));
+      }
+    } catch (error) {
+      new Logger('CriticalRecovery').error('Critical retry failed', error);
+    } finally { recoveryRunning = false; }
+  }, 60_000);
+  recoveryTimer.unref();
 }
 
 void bootstrap();
