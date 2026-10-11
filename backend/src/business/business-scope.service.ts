@@ -29,4 +29,23 @@ export class BusinessScopeService {
     }
     return result.rows.map((row) => row.public_id);
   }
+
+  async requirePond(principal: Principal, pondId: string): Promise<{
+    pondUuid: string; pondId: string; farmUuid: string; farmId: string;
+  }> {
+    const farmIds = await this.visibleFarmIds(principal);
+    const result = await this.postgres.pool.query<{
+      pond_uuid: string; pond_id: string; farm_uuid: string; farm_id: string;
+    }>(
+      `SELECT p.id AS pond_uuid, p.public_id AS pond_id,
+         f.id AS farm_uuid, f.public_id AS farm_id
+       FROM ponds p JOIN farms f ON f.id = p.farm_id
+       WHERE p.public_id = $1 AND f.company_id = $2 AND f.public_id = ANY($3)`,
+      [pondId, principal.companyId, farmIds],
+    );
+    const row = result.rows[0];
+    if (!row) throw new ApiProblem(404, 'not_found', 'Pond not found');
+    return { pondUuid: row.pond_uuid, pondId: row.pond_id,
+      farmUuid: row.farm_uuid, farmId: row.farm_id };
+  }
 }

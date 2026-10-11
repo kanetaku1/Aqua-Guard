@@ -11,7 +11,7 @@ const BOUNDARIES = [
 ] as const;
 type Boundary = typeof BOUNDARIES[number];
 type Sides = 'low' | 'high' | 'both';
-interface Threshold {
+export interface Threshold {
   parameter: string; unit: string; sides: Sides; inherited?: boolean;
   criticalLow: number | null; warningLow: number | null; attentionLow: number | null;
   attentionHigh: number | null; warningHigh: number | null; criticalHigh: number | null;
@@ -125,6 +125,19 @@ function parseItems(body: unknown): Threshold[] {
 @Injectable()
 export class AdminThresholdsService {
   constructor(private readonly postgres: PostgresService) {}
+
+  async effectiveThreshold(companyId: string, farmUuid: string, parameter: string): Promise<Threshold> {
+    const fallback = BY_PARAMETER.get(parameter);
+    if (!fallback) throw new Error(`Unknown threshold parameter ${parameter}`);
+    const result = await this.postgres.pool.query<ValueRow>(
+      `SELECT v.* FROM threshold_values v JOIN threshold_sets s ON s.id = v.set_id
+       WHERE s.company_id = $1 AND s.effective_to IS NULL
+         AND (s.farm_id = $2 OR s.farm_id IS NULL) AND v.parameter = $3
+       ORDER BY (s.farm_id IS NOT NULL) DESC LIMIT 1`,
+      [companyId, farmUuid, parameter],
+    );
+    return result.rows[0] ? fromRow(result.rows[0]) : fallback;
+  }
 
   async get(actor: UserScope, farmId?: string): Promise<{
     farmId: string | null; items: Threshold[];

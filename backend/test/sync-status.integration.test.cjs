@@ -20,6 +20,7 @@ test('sync status uses FM/TM scope and reports no data, offline, delayed and liv
   let bucketId;
   let companyId;
   const farmUuids = [];
+  const pondUuids = [];
   const userUuids = [];
   const emails = [];
   let app;
@@ -51,6 +52,12 @@ test('sync status uses FM/TM scope and reports no data, offline, delayed and liv
         [`farm-${letter}-${suffix}`, companyId, `Farm ${letter.toUpperCase()}`],
       )).rows[0].id;
       farmUuids.push(farm);
+      const pond = (await pool.query(
+        `INSERT INTO ponds (public_id, farm_id, name, area_ha, status)
+         VALUES ($1, $2, $3, 0.8, 'in_operation') RETURNING id`,
+        [`pond-${letter}-${suffix}`, farm, `Pond ${letter.toUpperCase()}`],
+      )).rows[0].id;
+      pondUuids.push(pond);
     }
     const hash = await hashPassword(password);
     for (const role of ['farms_manager', 'technical_manager', 'system_administrator']) {
@@ -98,20 +105,60 @@ test('sync status uses FM/TM scope and reports no data, offline, delayed and liv
     assert.ok(Date.parse(noData.nextSyncAt));
 
     const influx = app.get(InfluxService);
-    const write = async (farmId, minutesAgo, value) => influx.writeSensorReadings([{
-      farmId, pondId: `pond-${suffix}`, deviceId: `sensor-${suffix}`, parameter: 'do', value,
+    const write = async (letter, minutesAgo, value) => influx.writeSensorReadings([{
+      farmId: `farm-${letter}-${suffix}`, pondId: `pond-${letter}-${suffix}`,
+      deviceId: `sensor-${suffix}`, parameter: 'do', value,
       measuredAt: new Date(Date.now() - minutesAgo * 60 * 1000), receivedAt: new Date(),
       validity: 'valid',
     }]);
-    await write(`farm-b-${suffix}`, 0, 5.2);
+    await write('b', 0, 5.2);
     assert.equal((await (await get(fmCookie)).json()).quality, 'live');
     assert.equal((await (await get(tmCookie)).json()).quality, 'no_data');
-    await write(`farm-a-${suffix}`, 70, 4.1);
+    await write('a', 70, 4.1);
     assert.equal((await (await get(tmCookie)).json()).quality, 'offline');
-    await write(`farm-a-${suffix}`, 30, 4.4);
+    await write('a', 30, 4.4);
     assert.equal((await (await get(tmCookie)).json()).quality, 'delayed');
-    await write(`farm-a-${suffix}`, 0, 5.1);
+    await write('a', 0, 5.1);
     assert.equal((await (await get(tmCookie)).json()).quality, 'live');
+    const range = new URLSearchParams({ parameter: 'do',
+      from: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      to: new Date(Date.now() + 2 * 60 * 1000).toISOString(), interval: '5m' });
+    const seriesUrl = `${base}/ponds/pond-a-${suffix}/sensors/series?${range}`;
+    const seriesResponse = await fetch(seriesUrl, { headers: { Cookie: tmCookie } });
+    assert.equal(seriesResponse.status, 200);
+    const series = await seriesResponse.json();
+    assert.equal(series.parameter, 'do');
+    assert.equal(series.unit, 'mg/L');
+    assert.equal(series.interval, '5m');
+    assert.equal(series.threshold.warningLow, 4.5);
+    assert.ok(series.points.some((point) => point.avg === 4.1));
+    assert.ok(series.points.some((point) => point.avg === null));
+    assert.ok(!series.points.some((point) => point.avg === 5.2));
+    const deniedPond = await fetch(
+      `${base}/ponds/pond-b-${suffix}/sensors/series?${range}`,
+      { headers: { Cookie: tmCookie } },
+    );
+    assert.equal(deniedPond.status, 404);
+    assert.equal((await fetch(seriesUrl, { headers: { Cookie: saCookie } })).status, 403);
+    const badRange = new URLSearchParams(range);
+    badRange.set('interval', 'toString');
+    assert.equal((await fetch(
+      `${base}/ponds/pond-a-${suffix}/sensors/series?${badRange}`,
+      { headers: { Cookie: tmCookie } },
+    )).status, 422);
+
+    const thresholdUrl = `${base}/admin/settings/thresholds?farmId=farm-a-${suffix}`;
+    const thresholdBefore = await fetch(thresholdUrl, { headers: { Cookie: saCookie } });
+    assert.equal(thresholdBefore.status, 200);
+    const doThreshold = (await thresholdBefore.json()).items[0];
+    const thresholdSaved = await fetch(thresholdUrl, {
+      method: 'PUT', headers: { Cookie: saCookie, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: [{ ...doThreshold, warningLow: 4, attentionLow: 4.5 }] }),
+    });
+    assert.equal(thresholdSaved.status, 200);
+    const seriesWithOverride = await fetch(seriesUrl, { headers: { Cookie: tmCookie } });
+    assert.equal(seriesWithOverride.status, 200);
+    assert.equal((await seriesWithOverride.json()).threshold.warningLow, 4);
     const checkpoint = await pool.query(
       'SELECT last_success_at, processed_through FROM sensor_sync_checkpoints WHERE scope_key = $1',
       [`header:user:${userUuids[1]}`],
@@ -120,6 +167,11 @@ test('sync status uses FM/TM scope and reports no data, offline, delayed and liv
     assert.ok(checkpoint.rows[0].processed_through);
   } finally {
     if (app) await app.close();
+    if (companyId) {
+      await pool.query(`DELETE FROM threshold_values WHERE set_id IN
+        (SELECT id FROM threshold_sets WHERE company_id = $1)`, [companyId]);
+      await pool.query('DELETE FROM threshold_sets WHERE company_id = $1', [companyId]);
+    }
     for (const userId of userUuids) {
       await pool.query('DELETE FROM sensor_sync_checkpoints WHERE scope_key = $1',
         [`header:user:${userId}`]);
@@ -129,6 +181,7 @@ test('sync status uses FM/TM scope and reports no data, offline, delayed and liv
     }
     if (emails.length) await pool.query('DELETE FROM auth_attempts WHERE email_key = ANY($1)',
       [emails]);
+    for (const pondId of pondUuids) await pool.query('DELETE FROM ponds WHERE id = $1', [pondId]);
     for (const farmId of farmUuids) await pool.query('DELETE FROM farms WHERE id = $1', [farmId]);
     if (companyId) await pool.query('DELETE FROM companies WHERE id = $1', [companyId]);
     await pool.end();
