@@ -22,7 +22,21 @@ interface ReceiptRow {
   id: string; payload_hash: string; status: string; received_at: Date;
 }
 interface StoredPoint {
-  value?: number; event_id?: string;
+  value?: number; event_id?: string; validity?: string;
+}
+interface ObservationRef {
+  farmId: string; pondId: string; deviceId: string;
+  parameter: SensorParameter; measuredAt: string;
+}
+
+function isObservationRef(value: unknown): value is ObservationRef {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const ref = value as Record<string, unknown>;
+  return typeof ref.farmId === 'string' && typeof ref.pondId === 'string'
+    && typeof ref.deviceId === 'string' && typeof ref.parameter === 'string'
+    && PARAMETERS.has(ref.parameter as SensorParameter)
+    && typeof ref.measuredAt === 'string'
+    && Number.isFinite(Date.parse(ref.measuredAt));
 }
 
 function parseEvent(raw: unknown): SensorEvent {
@@ -55,6 +69,82 @@ export class SensorIngestionService {
     private readonly postgres: PostgresService,
     private readonly influx: InfluxService,
   ) {}
+
+  async recoverPendingFromStorage(): Promise<{ recovered: number; missing: number; quarantined: number }> {
+    let cursor = '00000000-0000-0000-0000-000000000000';
+    const summary = { recovered: 0, missing: 0, quarantined: 0 };
+    while (true) {
+      const batch = await this.postgres.pool.query<{
+        id: string; event_id: string; observation_refs: unknown;
+      }>(
+        `SELECT id, event_id, observation_refs FROM ingestion_receipts
+         WHERE status = 'pending' AND id > $1 ORDER BY id LIMIT 100`, [cursor],
+      );
+      if (!batch.rows.length) return summary;
+      for (const receipt of batch.rows) {
+        cursor = receipt.id;
+        const refs = receipt.observation_refs;
+        if (!Array.isArray(refs) || refs.length !== 1 || !isObservationRef(refs[0])) {
+          summary.missing += 1;
+          continue;
+        }
+        const client = await this.postgres.pool.connect();
+        try {
+          await client.query('BEGIN');
+          const locked = await client.query<{ status: string }>(
+            'SELECT status FROM ingestion_receipts WHERE id = $1 FOR UPDATE', [receipt.id],
+          );
+          if (locked.rows[0]?.status !== 'pending') {
+            await client.query('COMMIT');
+            continue;
+          }
+          const points = await this.storedPoints(refs[0]);
+          if (points.length === 0) {
+            summary.missing += 1;
+          } else if (points.length === 1 && points[0].event_id === receipt.event_id
+            && typeof points[0].value === 'number' && Number.isFinite(points[0].value)
+            && points[0].validity === 'valid') {
+            await client.query(
+              `UPDATE ingestion_receipts SET status = 'stored', stored_at = now()
+               WHERE id = $1`, [receipt.id],
+            );
+            summary.recovered += 1;
+          } else {
+            await client.query(
+              `UPDATE ingestion_receipts SET status = 'quarantined',
+                 evaluation_metadata = '{"reason":"observation_conflict"}'::jsonb
+               WHERE id = $1`, [receipt.id],
+            );
+            summary.quarantined += 1;
+          }
+          await client.query('COMMIT');
+        } catch (error) {
+          await client.query('ROLLBACK');
+          throw error;
+        } finally { client.release(); }
+      }
+    }
+  }
+
+  private async storedPoints(ref: ObservationRef): Promise<StoredPoint[]> {
+    const at = new Date(ref.measuredAt);
+    try {
+      return await this.influx.client.getQueryApi(this.influx.org).collectRows<StoredPoint>(
+        `from(bucket: ${JSON.stringify(this.influx.bucket)})
+         |> range(start: time(v: ${JSON.stringify(ref.measuredAt)}),
+           stop: time(v: ${JSON.stringify(new Date(at.getTime() + 1).toISOString())}))
+         |> filter(fn: (r) => r._measurement == "sensor_readings"
+           and r.farm_id == ${JSON.stringify(ref.farmId)}
+           and r.pond_id == ${JSON.stringify(ref.pondId)}
+           and r.device_id == ${JSON.stringify(ref.deviceId)}
+           and r.parameter == ${JSON.stringify(ref.parameter)}
+           and (r._field == "value" or r._field == "event_id" or r._field == "validity"))
+         |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")`,
+      );
+    } catch {
+      throw new ApiProblem(503, 'storage_unavailable', 'Sensor storage is unavailable');
+    }
+  }
 
   async ingest(raw: unknown): Promise<{ receiptId: string; stored: boolean; duplicate: boolean }> {
     const event = parseEvent(raw);
@@ -104,25 +194,10 @@ export class SensorIngestionService {
       if (saved.status === 'quarantined') {
         throw new ApiProblem(409, 'observation_conflict', 'Observation is quarantined');
       }
-      let existing: StoredPoint[];
-      try {
-        existing = await this.influx.client.getQueryApi(this.influx.org).collectRows<StoredPoint>(
-          `from(bucket: ${JSON.stringify(this.influx.bucket)})
-           |> range(start: time(v: ${JSON.stringify(event.measuredAt)}),
-             stop: time(v: ${JSON.stringify(new Date(at.getTime() + 1).toISOString())}))
-           |> filter(fn: (r) => r._measurement == "sensor_readings"
-             and r.farm_id == ${JSON.stringify(target.farm_id)}
-             and r.pond_id == ${JSON.stringify(target.pond_id)}
-             and r.device_id == ${JSON.stringify(event.deviceId)}
-             and r.parameter == ${JSON.stringify(event.parameter)}
-             and (r._field == "value" or r._field == "event_id"))
-           |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")`,
-        );
-      } catch {
-        throw new ApiProblem(503, 'storage_unavailable', 'Sensor storage is unavailable');
-      }
+      const existing = await this.storedPoints(refs[0]);
       if (existing.length && (existing.length !== 1
-        || existing[0].event_id !== event.eventId || existing[0].value !== event.value)) {
+        || existing[0].event_id !== event.eventId || existing[0].value !== event.value
+        || existing[0].validity !== 'valid')) {
         await client.query(
           `UPDATE ingestion_receipts SET status = 'quarantined',
              evaluation_metadata = '{"reason":"observation_conflict"}'::jsonb

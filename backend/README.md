@@ -90,4 +90,4 @@ Device の接続状態と最終受信時刻は InfluxDB の記録から算出し
 
 画面向け API は `/api/v1` に配置します。パス、メソッド、入出力、命名、エラーはフロントエンドの[必要 API 定義](../frontend/app/api/openapi.frontend.yaml)と[変更要求](../frontend/app/api/OPENAPI_CHANGES.md)を優先し、[統合 OpenAPI](../docs/api/openapi.yaml)に従って実装します。
 
-PostgreSQL の初期テーブルと InfluxDB の論理系列は実装済みです。`SensorIngestionService` は単一 Sensor Event の項目・計測時刻・機器割当を検証し、Receipt を先に記録してから InfluxDB に保存します。同一 Event の再送は重複保存せず、別 Event が同じ計測点を占有しようとした場合は Receipt を隔離します。InfluxDB 保存後に Receipt が `pending` のまま残った場合は保存済み点を照合して復旧できます。保存済み Receipt の Critical 判定状態は `pending` のままであり、Alert・通知の完了を意味しません。MQTT の Topic／Payload と機器認証、Broker 接続、Critical 判定、残りの画面向け API は後続段階で追加します。Web 向けの受信 API は追加していません。
+PostgreSQL の初期テーブルと InfluxDB の論理系列は実装済みです。`SensorIngestionService` は単一 Sensor Event の項目・計測時刻・機器割当を検証し、Receipt を先に記録してから InfluxDB に保存します。同一 Event の再送は重複保存せず、別 Event が同じ計測点を占有しようとした場合は Receipt を隔離します。起動時には `pending` の Receipt と InfluxDB の保存済み点を照合し、保存が確認できたものだけ `stored` に復旧します。InfluxDB に点がない Receipt は `pending` のままにし、再送を待ちます。保存済み Receipt の Critical 判定状態は `pending` のままであり、Alert・通知の完了を意味しません。MQTT の Topic／Payload と機器認証、Broker 接続、Critical 判定、残りの画面向け API は後続段階で追加します。Web 向けの受信 API は追加していません。

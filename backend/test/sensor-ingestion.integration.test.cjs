@@ -87,6 +87,20 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
 
     await pool.query(`UPDATE ingestion_receipts SET status = 'pending', stored_at = NULL
       WHERE id = $1`, [first.receiptId]);
+    await pool.query(
+      `INSERT INTO ingestion_receipts
+         (device_id, event_id, payload_hash, observation_refs, received_at)
+       VALUES ($1, $2, $3, $4, now())`,
+      [deviceId, `missing-${suffix}`, 'missing-point', JSON.stringify([{
+        farmId: `farm-${suffix}`, pondId: `pond-${suffix}`,
+        deviceId: `device-${suffix}`, parameter: 'do',
+        measuredAt: new Date(Date.now() - 15000).toISOString(),
+      }])],
+    );
+    const recovery = await ingestion.recoverPendingFromStorage();
+    assert.equal(recovery.recovered, 1);
+    assert.equal(recovery.missing, 1);
+    assert.equal(recovery.quarantined, 0);
     const recovered = await ingestion.ingest(event);
     assert.equal(recovered.duplicate, true);
     const points = await influx.client.getQueryApi(influx.org).collectRows(
