@@ -13,6 +13,7 @@
     "test:admin:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/admin.integration.test.cjs",
     "test:admin-settings:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/admin-settings.integration.test.cjs",
     "test:sync-status:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/sync-status.integration.test.cjs",
+    "test:sensor-history:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/sensor-history.integration.test.cjs",
     "test:ingestion:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/sensor-ingestion.integration.test.cjs",
     "test:mortality:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/mortality.integration.test.cjs",
     "test:feeding:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/feeding.integration.test.cjs",
