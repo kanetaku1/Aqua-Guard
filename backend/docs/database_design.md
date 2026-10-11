@@ -109,11 +109,11 @@ ThresholdのFarm別取得では、現在のFarm版にあるParameterはその値
 
 | テーブル | 主な列 | 制約・対応API |
 | --- | --- | --- |
-| `feeding_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `record_date date`, `amount_kg numeric`, `rounds integer`, `feed_type text`, `appetite text NULL`, `tray text NULL`, `note text NULL`, `recorded_by uuid FK`, `created_at`, `updated_at` | `FeedingInput`。`amount_kg >= 0`、`rounds >= 0`。同日複数記録可 |
+| `feeding_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `record_date date`, `round_no integer`, `feed_type text`, `amount_kg numeric`, `tray_check text NULL`, `note text NULL`, `recorded_by uuid FK`, `created_at`, `updated_at`, `row_version bigint` | フロントエンドの`FeedingInput`を正とする。`round_no >= 1`、`amount_kg > 0`。同日複数回を許し、同じPond・日付・回は一意 |
 | `mortality_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `record_date date`, `count integer`, `weight_kg numeric NOT NULL`, `observation text NULL`, `note text NULL`, `recorded_by uuid FK`, `created_at`, `updated_at`, `row_version bigint` | フロントエンドの`MortalityInput`を正とし、必須の`weightKg`と`observation` enumを保存する。`count >= 0`、`weight_kg >= 0` |
 | `sampling_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `sample_date date`, `sample_count integer NULL`, `sample_weight_g numeric NULL`, `tan numeric NULL`, `no2 numeric NULL`, `vibrio numeric NULL`, `alkalinity numeric NULL`, `recorded_by uuid FK`, `created_at`, `updated_at` | `SamplingInput`。`UNIQUE (pond_id, sample_date)`、`sample_count > 0`（非NULL時）、測定値は非負 |
 
-`feeding_records.appetite`は`good`／`reduced`／`poor`、`tray`は`clean`／`leftover`。`sampling_records`の4検査項目は後着を許す。`sample_count`と`sample_weight_g`は両方そろった場合にABWを計算し、片方のみの保存は422とする。OpenAPIでは両方とも任意／nullなので、検査値だけの記録は許す。Laboratoryの`labPending`は未着・未確認状態から導出する。必要なら`lab_confirmed_at`／`lab_confirmed_by`を内部列として持つ。VibrioはAPIの`×10³ CFU/mL`の数値をそのまま保存し、単位の異なる生値を混在させない。
+`feeding_records.tray_check`はフロントエンドの`TrayCheck` enumをそのまま保存する。`sampling_records`の4検査項目は後着を許す。`sample_count`と`sample_weight_g`は両方そろった場合にABWを計算し、片方のみの保存は422とする。OpenAPIでは両方とも任意／nullなので、検査値だけの記録は許す。Laboratoryの`labPending`は未着・未確認状態から導出する。必要なら`lab_confirmed_at`／`lab_confirmed_by`を内部列として持つ。VibrioはAPIの`×10³ CFU/mL`の数値をそのまま保存し、単位の異なる生値を混在させない。
 
 一括Samplingは`(pond_id, sample_date)`でUpsertし、指定された`entries`だけを1Transactionで処理する。権限外Pondや異なるFarmのPondが1件でもあれば全件拒否し、途中まで保存しない。通常のPOSTで同一Pond・日付が重複した場合の409と、訂正のPATCHは既存APIの状態に従う。`recorded_by`は初回登録者、`updated_at`と監査で訂正履歴を追う。記録日の未来日可否は既存APIに記載された個別規則を優先する。
 
@@ -197,7 +197,7 @@ DailyとWeeklyは共通の`reports`でID・Farm・状態を管理する。これ
 
 `reports`にはDailyの`UNIQUE (farm_id, report_date) WHERE type='daily'`とWeeklyの`UNIQUE (farm_id, week_start) WHERE type='weekly'`を置く。`week_start`はWIBの月曜、`week_end`は同週の日曜。Reportの`overdue`は`/farms/{farmId}/report-status`用の導出状態で、`reports.status`へは保存しない。`due_at`は設定版とWIB境界から作成時に計算し、期日変更をどのDraftへ適用するかは運用ルール確定時に決める。
 
-Daily DraftのGETでは、給餌・死亡・設備・Alert・対応を元データから再構成し、TMの入力は上記入力テーブルから重ねる。給餌の`amountKg`、死亡の`count`等をDaily入力テーブルで編集しない。Pond別の`appetite`／`tray`はDailyのTM入力があればそれを表示し、なければFeeding記録を参照する。`manualActions`置換、`excludedAlertIds`、Pond観察は1Transactionで保存する。Weekly Draftの再構成タイミングはOpenAPI未定義なので、提出時には少なくとも現在の元データとInfluxDB集計を確定させる。
+Daily DraftのGETでは、給餌・死亡・設備・Alert・対応を元データから再構成し、TMの入力は上記入力テーブルから重ねる。給餌の`amountKg`、死亡の`count`等をDaily入力テーブルで編集しない。Pond別の`appetite`／`tray`はDailyのTM入力を表示する。Feeding記録の`trayCheck`からDailyの`tray`への変換規則は未確定であり、自動変換しない。`manualActions`置換、`excludedAlertIds`、Pond観察は1Transactionで保存する。Weekly Draftの再構成タイミングはOpenAPI未定義なので、提出時には少なくとも現在の元データとInfluxDB集計を確定させる。
 
 Submittedへの遷移時はReport行をロックし、必須入力・担当権限・状態を確認してスナップショットと`submitted_at`を同一PostgreSQL Transactionで保存する。PostgreSQLの元記録は同一Transaction内の一貫した読取スナップショットで集める。週次の水質はInfluxDBからPondごとのDO最小、pH最小・最大、水温最大、範囲外日数、Alert件数等を集計してからSnapshotへ入れ、集計完了時刻を残す。両DB間に単一Transactionはないため、提出Snapshotは「保存した集計結果とその取得時点」を正本とする。これは週次**派生結果**であり、測定点の複製ではない。提出後のGETはSnapshotを返し、元記録の訂正・閾値変更・遅延IoTデータで提出内容を暗黙に変えない。提出後RevisionのAPIは未定義なので、新たな訂正操作を勝手に設けない。`ReportAction.source`は`alert_handling`／`actuator_log`／`manual`、`Source` enum全体はAPI側の定義に従う。
 
@@ -265,7 +265,7 @@ Raw Dataと集計Dataの保持期間は必要なSensor History検索期間とBac
 | User | `UNIQUE (lower(email))`、Role／StatusのCHECK、`user_farm_assignments(user_id) WHERE unassigned_at IS NULL`の一意索引 |
 | Master | `farms(company_id)`、`ponds(farm_id)`、`devices(device_id)`一意、Device割当・設定版の有効期間非重複 |
 | Setting | Scopeごとの現行`threshold_sets`一意、`threshold_values(set_id, parameter)`一意、Growth点のDOC一意 |
-| Records | `feeding_records(pond_id, record_date)`、`mortality_records(pond_id, record_date)`、`sampling_records(pond_id, sample_date)`一意 |
+| Records | `feeding_records(pond_id, record_date, round_no)`は一意。`mortality_records(pond_id, record_date)`は検索用索引、`sampling_records(pond_id, sample_date)`は一意 |
 | Alert／Issue | `alerts(pond_id, state, occurred_at DESC)`、`alerts(detection_state_id, episode_no)`部分一意、`alert_detection_states(pond_id, device_id, parameter, direction)`一意、`issues(farm_id, state, severity, since)`、`issues(source_type, source_id)`一意 |
 | 通知 | Outbox `(alert_id, event_kind)`一意、`(status, next_attempt_at)`検索。利用者通知 `(outbox_id, user_id)`・`(user_id, stream_sequence)`一意、未読 `(user_id, created_at DESC) WHERE read_at IS NULL`。SSE配送 `(notification_id, channel, delivery_key)`一意・`(status, next_attempt_at)`検索 |
 | Report | Daily `(farm_id, report_date)`、Weekly `(farm_id, week_start)`の部分一意索引、`reports(farm_id, type, status, submitted_at DESC)` |

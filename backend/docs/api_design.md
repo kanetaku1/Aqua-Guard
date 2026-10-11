@@ -173,7 +173,7 @@ AlertはReport提出とは独立して判定する。IoT Sensor 6項目のCritic
 | PATCH | `/samplings/{recordId}` | `SamplingInput` → `SamplingRecord` | 200 |
 | POST | `/farms/{farmId}/samplings/batch` | `date`, `entries[]` → `items: SamplingRecord[]` | 200 |
 
-`FeedingInput`の必須項目は`date`、`amountKg`、`rounds`、`feedType`。`MortalityInput`は`date`、`count`が必須で、`weightKg`、`abnormal`、`note`は任意。`SamplingInput`は`date`が必須で、`sampleCount`、`sampleWeightG`、`tan`、`no2`、`vibrio`、`alkalinity`は任意またはnullを許す。検査値は後着のためPATCHで追記でき、未着中は`labPending`を返す。ABW、ADG、DOC、目標比はバックエンドが計算して`SamplingRecord`に付ける。未来日の給餌は422。入力の負値は各schemaの`minimum`に従って拒否する。
+`FeedingInput`の必須項目は`date`、`round`、`feedType`、`amountKg`で、`trayCheck`と`note`は任意。`MortalityInput`は`date`、`count`、`weightKg`が必須で、`observation`と`note`は任意。これらの項目名と必須条件はフロントエンドOpenAPIを正とする。`SamplingInput`は`date`が必須で、`sampleCount`、`sampleWeightG`、`tan`、`no2`、`vibrio`、`alkalinity`は任意またはnullを許す。検査値は後着のためPATCHで追記でき、未着中は`labPending`を返す。ABW、ADG、DOC、目標比はバックエンドが計算して`SamplingRecord`に付ける。未来日の給餌は422。入力の負値は各schemaの`minimum`に従って拒否する。
 
 PATCHの名前であっても、`/feedings/{recordId}`と`/mortalities/{recordId}`のリクエストschemaは各Inputを参照し、**作成時と同じ必須項目を要求する**。`/samplings/{recordId}`も`date`が必須。部分更新の一般的な解釈で必須項目を省略可能にしない。一括Samplingでは測定しないPondを`entries`に含めず、同じPond・同じ日付の記録は更新する。記録の所有Pondが担当Farmに属することをIDから再検証する。
 

@@ -86,6 +86,8 @@ Device の接続状態と最終受信時刻は InfluxDB の記録から算出し
 
 `GET/POST /ponds/{pondId}/mortalities` と `PATCH /mortalities/{recordId}` は TM の担当 Farm に限定した死亡記録 API です。入力と返却の `date`・`count`・`weightKg`・`observation` はフロントエンド OpenAPI に合わせています。一覧は日付範囲・ページ指定と直近7日の合計に対応し、修正前後の値は監査テーブルに残します。放養サイクルが登録されている場合は記録日に該当するサイクルへ結び付けます。放養の作成 API は現行契約になく、サイクル登録経路はまだありません。
 
+`GET/POST /ponds/{pondId}/feedings` と `PATCH /feedings/{recordId}` も担当 TM のみ利用できます。`round`・`feedType`・`amountKg`・`trayCheck` はフロントエンド OpenAPI の名前と enum を使用します。同一 Pond・日付・回の重複登録は `409`、未来日の登録は `422` とし、一覧に直近2日の `dailyTotals` を返します。返却する `time` は初回記録時刻を WIB の `HH:mm` で表示します。修正前後の値を監査テーブルに残します。
+
 業務画面向け Farm/Pond 状態APIは未実装です。運用開始前に対象IoT機器からの受信を確認し、再起動時は保存済みの有効な計測値と未処理判定から状態を復元する方針です。最初の5分を無条件に `normal` とせず、鮮度切れや必要項目の欠落も正常扱いしません。運用開始時に確認する機器・項目・鮮度の具体的条件、および未放養・Sampling未実施時に [フロントエンドOpenAPI](../frontend/app/api/openapi.frontend.yaml) の必須日付をどう扱うかは引き続き確定が必要です。バックエンド側で契約を独自変更せず、[DB設計の未決事項](./docs/database_design.md)に記録しています。
 
 ## API の基準
