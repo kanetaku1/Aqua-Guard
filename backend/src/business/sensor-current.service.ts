@@ -16,12 +16,14 @@ interface LatestRow {
 }
 
 export function severityFor(value: number, threshold: Threshold): Severity {
-  if ((threshold.criticalLow !== null && value <= threshold.criticalLow)
-    || (threshold.criticalHigh !== null && value >= threshold.criticalHigh)) return 'critical';
-  if ((threshold.warningLow !== null && value <= threshold.warningLow)
-    || (threshold.warningHigh !== null && value >= threshold.warningHigh)) return 'warning';
-  if ((threshold.attentionLow !== null && value <= threshold.attentionLow)
-    || (threshold.attentionHigh !== null && value >= threshold.attentionHigh)) return 'attention';
+  const above = (limit: number | null) => limit !== null
+    && (threshold.parameter === 'vibrio' ? value >= limit : value > limit);
+  if ((threshold.criticalLow !== null && value < threshold.criticalLow)
+    || above(threshold.criticalHigh)) return 'critical';
+  if ((threshold.warningLow !== null && value < threshold.warningLow)
+    || above(threshold.warningHigh)) return 'warning';
+  if ((threshold.attentionLow !== null && value < threshold.attentionLow)
+    || above(threshold.attentionHigh)) return 'attention';
   return 'normal';
 }
 

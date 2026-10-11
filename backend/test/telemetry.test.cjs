@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { toSensorPoint } = require('../dist/infrastructure/sensor-reading');
+const { severityFor } = require('../dist/business/sensor-current.service');
 const {
   toHeartbeatPoint,
   toActuatorFeedbackPoint,
@@ -53,4 +54,21 @@ test('invalid sensor input is rejected before writing', () => {
   assert.throws(() => toSensorPoint({
     ...ids, parameter: 'do', value: Number.NaN, measuredAt, receivedAt, validity: 'valid',
   }), /Sensor value must be finite/);
+});
+
+test('severity uses frontend boundary rules for low, high and Vibrio values', () => {
+  const doThreshold = { parameter: 'do', criticalLow: 3.5, warningLow: 4.5,
+    attentionLow: 5, attentionHigh: null, warningHigh: null, criticalHigh: null };
+  const tanThreshold = { parameter: 'tan', criticalLow: null, warningLow: null,
+    attentionLow: null, attentionHigh: 1, warningHigh: 2, criticalHigh: null };
+  const vibrioThreshold = { ...tanThreshold, parameter: 'vibrio',
+    attentionHigh: 5, warningHigh: 10 };
+  assert.equal(severityFor(5, doThreshold), 'normal');
+  assert.equal(severityFor(4.5, doThreshold), 'attention');
+  assert.equal(severityFor(3.5, doThreshold), 'warning');
+  assert.equal(severityFor(3.49, doThreshold), 'critical');
+  assert.equal(severityFor(1, tanThreshold), 'normal');
+  assert.equal(severityFor(2, tanThreshold), 'attention');
+  assert.equal(severityFor(5, vibrioThreshold), 'attention');
+  assert.equal(severityFor(10, vibrioThreshold), 'warning');
 });
