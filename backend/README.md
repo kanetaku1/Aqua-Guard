@@ -62,7 +62,7 @@ Migration は SQL ファイル順に適用され、適用済みファイルの�
 
 ## 認証と管理API（第4段階の実装済み範囲）
 
-現在の画面向け API は `POST /auth/login`、`POST /auth/logout`、`GET/PATCH /auth/me`、`POST /auth/password/forgot`、`GET /auth/password/tokens/{token}`、`POST /auth/password/set` と、SA専用のUser・Farm・Pond管理APIです。User管理は一覧・詳細・招待・変更・再送・再設定依頼・無効化／再有効化、Farm／Pond管理は一覧・詳細・作成・変更を実装しています。すべて `/api/v1` 配下で、[フロントエンドのOpenAPI](../frontend/app/api/openapi.frontend.yaml)の該当パスと応答を基準にします。
+現在の画面向け API は `POST /auth/login`、`POST /auth/logout`、`GET/PATCH /auth/me`、`POST /auth/password/forgot`、`GET /auth/password/tokens/{token}`、`POST /auth/password/set` と、SA専用のUser・Farm・Pond・Device管理APIです。User管理は一覧・詳細・招待・変更・再送・再設定依頼・無効化／再有効化、Farm／Pond管理は一覧・詳細・作成・変更、Device管理は一覧・登録・割当変更を実装しています。すべて `/api/v1` 配下で、[フロントエンドのOpenAPI](../frontend/app/api/openapi.frontend.yaml)の該当パスと応答を基準にします。
 
 ログインには DB 内の管理者が必要です。初回だけ、Migration 後に `BOOTSTRAP_COMPANY_ID`、`BOOTSTRAP_COMPANY_NAME`、`BOOTSTRAP_ADMIN_ID`、`BOOTSTRAP_ADMIN_NAME`、`BOOTSTRAP_ADMIN_EMAIL`、`BOOTSTRAP_ADMIN_PASSWORD` を環境変数に設定して `npm run admin:bootstrap` を実行します。パスワードをリポジトリ内のファイルに書かないでください。既に管理者がいる DB ではこのコマンドは拒否します。
 
@@ -74,7 +74,7 @@ Migration は SQL ファイル順に適用され、適用済みファイルの�
 
 SMTP送信はDBへの招待・Token保存後に行います。送信に失敗した場合、管理者の招待操作は503になりますが、Invitedユーザーは残ります。メールサービスを復旧してから管理画面の「招待を再送」を使ってください。ローカルの連携テストはMailpitでメールを受信し、テストメールを削除します。
 
-Admin Device・Settingsと、業務画面向けのFarm/Pond状態APIは未実装です。第4段階の残りの作業として追加します。
+Device の接続状態と最終受信時刻は InfluxDB の記録から算出します。初回受信前は `offline` と `lastSeenAt: null` を返し、Offline 件数には含めません。現在の接続判定は最終受信から60分で Offline です。Settings API と、業務画面向けのFarm/Pond状態APIは未実装です。第4段階の残りの作業として追加します。
 
 ## API の基準
 

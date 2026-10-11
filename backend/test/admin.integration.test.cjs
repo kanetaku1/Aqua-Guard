@@ -20,7 +20,9 @@ test('SA manages company farms and ponds with frontend response fields', async (
   let tmUuid;
   let farmUuid;
   let pondUuid;
+  let secondPondUuid;
   let deviceUuid;
+  let createdDeviceUuid;
   let bucketId;
   const priorBucket = process.env.INFLUXDB_BUCKET;
   const influxUrl = process.env.INFLUXDB_URL
@@ -156,6 +158,90 @@ test('SA manages company farms and ponds with frontend response fields', async (
     const listedPond = (await ponds.json()).items[0];
     assert.equal(listedPond.id, pond.id);
     assert.equal(listedPond.sensorCount, 1);
+    const devicesBefore = await fetch(`${base}/admin/farms/${farm.id}/devices`, {
+      headers: { Cookie: cookie },
+    });
+    assert.equal(devicesBefore.status, 200);
+    const before = await devicesBefore.json();
+    assert.equal(before.total, 1);
+    assert.deepEqual(before.counts, { total: 1, sensors: 1, actuators: 0, offline: 0 });
+    assert.equal(before.items[0].deviceId, deviceId);
+    assert.equal(before.items[0].connection, 'online');
+    assert.ok(Date.parse(before.items[0].lastSeenAt));
+
+    const newDeviceId = `aerator-${suffix}`.toUpperCase();
+    const createDevice = () => fetch(`${base}/admin/farms/${farm.id}/devices`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ deviceId: newDeviceId.toLowerCase(), type: 'aerator',
+        pondId: pond.id, spec: 'Paddlewheel 2 HP' }),
+    });
+    const deviceCreated = await createDevice();
+    assert.equal(deviceCreated.status, 201);
+    const device = await deviceCreated.json();
+    assert.deepEqual(device, {
+      deviceId: newDeviceId, type: 'aerator', pondId: pond.id,
+      parameter: null, spec: 'Paddlewheel 2 HP',
+      pond: { id: pond.id, name: 'Pond 01' }, connection: 'offline', lastSeenAt: null,
+    });
+    createdDeviceUuid = (await pool.query('SELECT id FROM devices WHERE device_id = $1',
+      [newDeviceId])).rows[0].id;
+    const deviceDuplicate = await createDevice();
+    assert.equal(deviceDuplicate.status, 409);
+    assert.equal((await deviceDuplicate.json()).code, 'device_id_taken');
+
+    const deviceList = await fetch(`${base}/admin/farms/${farm.id}/devices?page=1&pageSize=1`, {
+      headers: { Cookie: cookie },
+    });
+    assert.equal(deviceList.status, 200);
+    const page = await deviceList.json();
+    assert.equal(page.total, 2);
+    assert.equal(page.items.length, 1);
+    assert.deepEqual(page.counts, { total: 2, sensors: 1, actuators: 1, offline: 0 });
+    const offlineList = await fetch(`${base}/admin/farms/${farm.id}/devices?connection=offline`, {
+      headers: { Cookie: cookie },
+    });
+    assert.equal(offlineList.status, 200);
+    assert.deepEqual((await offlineList.json()).items.map((d) => d.deviceId), [newDeviceId]);
+
+    const invalidDevice = await fetch(`${base}/admin/devices/${newDeviceId}`, {
+      method: 'PATCH', headers, body: JSON.stringify({ type: 'sensor' }),
+    });
+    assert.equal(invalidDevice.status, 422);
+    const deviceUpdated = await fetch(`${base}/admin/devices/${newDeviceId}`, {
+      method: 'PATCH', headers,
+      body: JSON.stringify({ type: 'sensor', parameter: 'temperature', spec: null }),
+    });
+    assert.equal(deviceUpdated.status, 200);
+    assert.equal((await deviceUpdated.json()).parameter, 'temperature');
+    const configs = await pool.query(
+      `SELECT type, parameter, effective_to FROM device_config_versions
+       WHERE device_id = $1 ORDER BY effective_from`, [createdDeviceUuid],
+    );
+    assert.equal(configs.rows.length, 2);
+    assert.ok(configs.rows[0].effective_to);
+    assert.equal(configs.rows[1].type, 'sensor');
+    assert.equal(configs.rows[1].parameter, 'temperature');
+    assert.equal(configs.rows[1].effective_to, null);
+    const secondPondCreated = await fetch(`${base}/admin/farms/${farm.id}/ponds`, {
+      method: 'POST', headers, body: JSON.stringify({ name: 'Pond 02', areaHa: 1.2 }),
+    });
+    assert.equal(secondPondCreated.status, 201);
+    const secondPond = await secondPondCreated.json();
+    secondPondUuid = (await pool.query('SELECT id FROM ponds WHERE public_id = $1',
+      [secondPond.id])).rows[0].id;
+    const reassigned = await fetch(`${base}/admin/devices/${newDeviceId}`, {
+      method: 'PATCH', headers, body: JSON.stringify({ pondId: secondPond.id }),
+    });
+    assert.equal(reassigned.status, 200);
+    assert.equal((await reassigned.json()).pondId, secondPond.id);
+    const assignments = await pool.query(
+      `SELECT pond_id, unassigned_at FROM device_assignments
+       WHERE device_id = $1 ORDER BY assigned_at`, [createdDeviceUuid],
+    );
+    assert.equal(assignments.rows.length, 2);
+    assert.ok(assignments.rows[0].unassigned_at);
+    assert.equal(assignments.rows[1].pond_id, secondPondUuid);
+    assert.equal(assignments.rows[1].unassigned_at, null);
     const tmLogin = await fetch(`${base}/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: tmEmail, password }),
@@ -164,6 +250,10 @@ test('SA manages company farms and ponds with frontend response fields', async (
     const tmCookie = tmLogin.headers.get('set-cookie').split(';')[0];
     const forbidden = await fetch(`${base}/admin/farms`, { headers: { Cookie: tmCookie } });
     assert.equal(forbidden.status, 403);
+    const deviceForbidden = await fetch(`${base}/admin/farms/${farm.id}/devices`, {
+      headers: { Cookie: tmCookie },
+    });
+    assert.equal(deviceForbidden.status, 403);
     const absent = await fetch(`${base}/admin/farms/nonexistent`, { headers: { Cookie: cookie } });
     assert.equal(absent.status, 404);
   } finally {
@@ -172,7 +262,13 @@ test('SA manages company farms and ponds with frontend response fields', async (
       await pool.query('DELETE FROM device_assignments WHERE device_id = $1', [deviceUuid]);
       await pool.query('DELETE FROM devices WHERE id = $1', [deviceUuid]);
     }
+    if (createdDeviceUuid) {
+      await pool.query('DELETE FROM device_config_versions WHERE device_id = $1', [createdDeviceUuid]);
+      await pool.query('DELETE FROM device_assignments WHERE device_id = $1', [createdDeviceUuid]);
+      await pool.query('DELETE FROM devices WHERE id = $1', [createdDeviceUuid]);
+    }
     if (pondUuid) await pool.query('DELETE FROM ponds WHERE id = $1', [pondUuid]);
+    if (secondPondUuid) await pool.query('DELETE FROM ponds WHERE id = $1', [secondPondUuid]);
     if (tmUuid) await pool.query('DELETE FROM user_farm_assignments WHERE user_id = $1', [tmUuid]);
     if (farmUuid) await pool.query('DELETE FROM farms WHERE id = $1', [farmUuid]);
     for (const userUuid of [adminUuid, tmUuid]) {
