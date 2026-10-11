@@ -23,6 +23,8 @@ import { MortalityController } from './business/mortality.controller';
 import { MortalityService } from './business/mortality.service';
 import { FeedingController } from './business/feeding.controller';
 import { FeedingService } from './business/feeding.service';
+import { SamplingController } from './business/sampling.controller';
+import { SamplingService } from './business/sampling.service';
 import { MailService } from './auth/mail.service';
 import { PasswordLinksService } from './auth/password-links.service';
 import { HealthController } from './health.controller';
@@ -33,12 +35,13 @@ import { PostgresService } from './infrastructure/postgres.service';
 @Module({
   controllers: [HealthController, AuthController, AdminController, AdminUsersController,
     AdminDevicesController, AdminSettingsController, SyncStatusController,
-    SensorSeriesController, SensorCurrentController, MortalityController, FeedingController],
+    SensorSeriesController, SensorCurrentController, MortalityController, FeedingController,
+    SamplingController],
   providers: [PostgresService, InfluxService, SensorIngestionService,
     AuthService, MailService, PasswordLinksService,
     AdminService, AdminUsersService, AdminDevicesService, AdminSettingsService,
     AdminThresholdsService, BusinessScopeService, SyncStatusService, SensorSeriesService,
-    SensorCurrentService, MortalityService, FeedingService,
+    SensorCurrentService, MortalityService, FeedingService, SamplingService,
     { provide: APP_GUARD, useClass: SessionGuard }],
 })
 export class AppModule {}

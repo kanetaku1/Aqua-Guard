@@ -16,6 +16,7 @@
     "test:ingestion:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/sensor-ingestion.integration.test.cjs",
     "test:mortality:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/mortality.integration.test.cjs",
     "test:feeding:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/feeding.integration.test.cjs",
+    "test:sampling:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/sampling.integration.test.cjs",
     "test:admin-users:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/admin-users.integration.test.cjs",
     "test:password-links:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/password-links.integration.test.cjs",
     "test:bootstrap:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/bootstrap.integration.test.cjs",
