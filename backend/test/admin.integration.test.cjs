@@ -121,14 +121,30 @@ test('SA manages company farms and ponds with frontend response fields', async (
       `INSERT INTO device_assignments (device_id, pond_id, assigned_at)
        VALUES ($1, $2, now())`, [deviceUuid, pondUuid],
     );
+    const seventyMinutesAgo = new Date(Date.now() - 70 * 60 * 1000);
     await app.get(InfluxService).writeDeviceHeartbeats([{
       farmId: farm.id, pondId: pond.id, deviceId,
-      sentAt: new Date(), receivedAt: new Date(), onlineHint: true,
+      sentAt: seventyMinutesAgo, receivedAt: new Date(), onlineHint: true,
     }]);
     await pool.query(
       'INSERT INTO user_farm_assignments (user_id, farm_id, assigned_at) VALUES ($1, $2, now())',
       [tmUuid, farmUuid],
     );
+    const beforeRule = await fetch(`${base}/admin/farms/${farm.id}/devices`, {
+      headers: { Cookie: cookie },
+    });
+    assert.equal(beforeRule.status, 200);
+    assert.equal((await beforeRule.json()).items[0].connection, 'offline');
+    const defaultsResponse = await fetch(`${base}/admin/settings/rules`, {
+      headers: { Cookie: cookie },
+    });
+    assert.equal(defaultsResponse.status, 200);
+    const defaults = await defaultsResponse.json();
+    const extendedRule = await fetch(`${base}/admin/settings/rules`, {
+      method: 'PUT', headers,
+      body: JSON.stringify({ ...defaults, sensorOfflineAfterMinutes: 90 }),
+    });
+    assert.equal(extendedRule.status, 200);
     const listed = await fetch(`${base}/admin/farms`, { headers: { Cookie: cookie } });
     assert.equal(listed.status, 200);
     const items = (await listed.json()).items;
@@ -270,6 +286,7 @@ test('SA manages company farms and ponds with frontend response fields', async (
     if (pondUuid) await pool.query('DELETE FROM ponds WHERE id = $1', [pondUuid]);
     if (secondPondUuid) await pool.query('DELETE FROM ponds WHERE id = $1', [secondPondUuid]);
     if (tmUuid) await pool.query('DELETE FROM user_farm_assignments WHERE user_id = $1', [tmUuid]);
+    if (companyUuid) await pool.query('DELETE FROM operational_rule_versions WHERE company_id = $1', [companyUuid]);
     if (farmUuid) await pool.query('DELETE FROM farms WHERE id = $1', [farmUuid]);
     for (const userUuid of [adminUuid, tmUuid]) {
       if (userUuid) {

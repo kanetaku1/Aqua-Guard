@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { PostgresService } from '../infrastructure/postgres.service';
-import { InfluxService } from '../infrastructure/influx.service';
 import { ApiProblem } from '../http/problem';
 import { inputObject, invalid, optionalEnum, positiveNumber, requiredText } from './admin-input';
+import { AdminDevicesService } from './admin-devices.service';
 
 type FarmStatus = 'active' | 'inactive';
 type PondStatus = 'in_operation' | 'fallow';
@@ -58,7 +58,7 @@ function duplicate(error: unknown, code: string): never {
 export class AdminService {
   constructor(
     private readonly postgres: PostgresService,
-    private readonly influx: InfluxService,
+    private readonly devices: AdminDevicesService,
   ) {}
 
   async listFarms(companyId: string): Promise<{ items: AdminFarm[] }> {
@@ -98,7 +98,8 @@ export class AdminService {
        WHERE p.farm_id = $1 AND a.unassigned_at IS NULL AND d.enabled`, [farm.id],
     );
     const activeIds = new Set(devices.rows.map((row) => row.device_id));
-    const onlineIds = activeIds.size ? await this.onlineDeviceIds(farm.public_id) : new Set<string>();
+    const onlineIds = activeIds.size
+      ? await this.devices.onlineDeviceIds(companyId, farm.public_id) : new Set<string>();
     return {
       id: farm.public_id, name: farm.name, location: farm.location,
       timeZone: farm.time_zone, status: farm.status,
@@ -245,25 +246,4 @@ export class AdminService {
     return result.rows[0].id;
   }
 
-  private async onlineDeviceIds(farmId: string): Promise<Set<string>> {
-    const measurements = [
-      { name: 'sensor_readings', field: 'value', onlineOnly: false },
-      { name: 'device_heartbeats', field: 'online_hint', onlineOnly: true },
-      { name: 'actuator_feedback', field: 'state', onlineOnly: false },
-    ];
-    const queryApi = this.influx.client.getQueryApi(this.influx.org);
-    const rows = await Promise.all(measurements.map((measurement) => queryApi.collectRows<{ _value?: unknown }>(
-      `from(bucket: ${JSON.stringify(this.influx.bucket)})
-       |> range(start: -15m)
-       |> filter(fn: (r) => r._measurement == ${JSON.stringify(measurement.name)}
-         and r._field == ${JSON.stringify(measurement.field)}
-         and r.farm_id == ${JSON.stringify(farmId)})
-       ${measurement.onlineOnly ? '|> filter(fn: (r) => r._value == true)' : ''}
-       |> keep(columns: ["device_id"])
-       |> distinct(column: "device_id")`,
-    )));
-    return new Set(rows.flat().map((row) => row._value).filter(
-      (value): value is string => typeof value === 'string' && value.length > 0,
-    ));
-  }
 }

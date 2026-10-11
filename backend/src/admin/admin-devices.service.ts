@@ -10,7 +10,6 @@ type Parameter = 'do' | 'ph' | 'temperature' | 'tds' | 'turbidity' | 'water_leve
 type Connection = 'online' | 'offline';
 const PARAMETERS: Parameter[] = ['do', 'ph', 'temperature', 'tds', 'turbidity', 'water_level'];
 const TYPES: DeviceType[] = ['sensor', 'aerator', 'pump'];
-const OFFLINE_AFTER_MS = 60 * 60 * 1000;
 
 interface DeviceRow {
   id: string; device_id: string; type: DeviceType; parameter: Parameter | null;
@@ -87,8 +86,10 @@ export class AdminDevicesService {
          CASE d.parameter WHEN 'do' THEN 0 WHEN 'ph' THEN 1 WHEN 'temperature' THEN 2
            WHEN 'tds' THEN 3 WHEN 'turbidity' THEN 4 ELSE 5 END, d.device_id`, [farm],
     );
-    const seen = await this.lastSeen(farmId);
-    const all = result.rows.map((row) => this.response(row, seen.get(row.device_id)));
+    const [seen, offlineMs] = await Promise.all([
+      this.lastSeen(farmId), this.offlineAfterMs(companyId),
+    ]);
+    const all = result.rows.map((row) => this.response(row, seen.get(row.device_id), offlineMs));
     const filtered = all.filter((device) =>
       (query.pondId === undefined || device.pondId === query.pondId)
       && (query.type === undefined || device.type === query.type)
@@ -216,18 +217,40 @@ export class AdminDevicesService {
     );
     const row = result.rows[0];
     if (!row) throw new ApiProblem(404, 'not_found', 'Device not found');
-    return this.response(row, (await this.lastSeen(row.farm_id)).get(row.device_id));
+    const [seen, offlineMs] = await Promise.all([
+      this.lastSeen(row.farm_id), this.offlineAfterMs(companyId),
+    ]);
+    return this.response(row, seen.get(row.device_id), offlineMs);
   }
 
-  private response(row: DeviceRow, seen?: LastSeen): AdminDevice {
-    const online = seen && Date.now() - seen.at.getTime() <= OFFLINE_AFTER_MS
-      && seen.onlineHint !== false;
+  async onlineDeviceIds(companyId: string, farmId: string): Promise<Set<string>> {
+    const [seen, offlineMs] = await Promise.all([
+      this.lastSeen(farmId), this.offlineAfterMs(companyId),
+    ]);
+    return new Set([...seen].filter(([, item]) => this.isOnline(item, offlineMs))
+      .map(([deviceId]) => deviceId));
+  }
+
+  private response(row: DeviceRow, seen: LastSeen | undefined, offlineMs: number): AdminDevice {
+    const online = this.isOnline(seen, offlineMs);
     return {
       deviceId: row.device_id, type: row.type, pondId: row.pond_id,
       parameter: row.parameter, spec: row.spec,
       pond: { id: row.pond_id, name: row.pond_name },
       connection: online ? 'online' : 'offline', lastSeenAt: seen?.at.toISOString() ?? null,
     };
+  }
+
+  private isOnline(seen: LastSeen | undefined, offlineMs: number): boolean {
+    return !!seen && Date.now() - seen.at.getTime() <= offlineMs && seen.onlineHint !== false;
+  }
+
+  private async offlineAfterMs(companyId: string): Promise<number> {
+    const rules = await this.postgres.pool.query<{ sensor_offline_after_minutes: number }>(
+      `SELECT sensor_offline_after_minutes FROM operational_rule_versions
+       WHERE company_id = $1 AND effective_to IS NULL`, [companyId],
+    );
+    return (rules.rows[0]?.sensor_offline_after_minutes ?? 60) * 60 * 1000;
   }
 
   private async lastSeen(farmId: string): Promise<Map<string, LastSeen>> {
