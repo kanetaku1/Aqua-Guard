@@ -54,6 +54,7 @@ npm run test:influx:local
 npm run test:auth:local
 npm run test:admin:local
 npm run test:admin-settings:local
+npm run test:sync-status:local
 npm run test:admin-users:local
 npm run test:password-links:local
 npm run test:bootstrap:local
@@ -63,7 +64,7 @@ Migration は SQL ファイル順に適用され、適用済みファイルの�
 
 ## 認証と管理API（第4段階の実装済み範囲）
 
-現在の画面向け API は `POST /auth/login`、`POST /auth/logout`、`GET/PATCH /auth/me`、`POST /auth/password/forgot`、`GET /auth/password/tokens/{token}`、`POST /auth/password/set` と、SA専用のUser・Farm・Pond・Device管理APIです。User管理は一覧・詳細・招待・変更・再送・再設定依頼・無効化／再有効化、Farm／Pond管理は一覧・詳細・作成・変更、Device管理は一覧・登録・割当変更を実装しています。すべて `/api/v1` 配下で、[フロントエンドのOpenAPI](../frontend/app/api/openapi.frontend.yaml)の該当パスと応答を基準にします。
+現在の画面向け API は `POST /auth/login`、`POST /auth/logout`、`GET/PATCH /auth/me`、`POST /auth/password/forgot`、`GET /auth/password/tokens/{token}`、`POST /auth/password/set`、`GET /sync-status` と、SA専用のUser・Farm・Pond・Device管理APIです。User管理は一覧・詳細・招待・変更・再送・再設定依頼・無効化／再有効化、Farm／Pond管理は一覧・詳細・作成・変更、Device管理は一覧・登録・割当変更を実装しています。すべて `/api/v1` 配下で、[フロントエンドのOpenAPI](../frontend/app/api/openapi.frontend.yaml)の該当パスと応答を基準にします。
 
 ログインには DB 内の管理者が必要です。初回だけ、Migration 後に `BOOTSTRAP_COMPANY_ID`、`BOOTSTRAP_COMPANY_NAME`、`BOOTSTRAP_ADMIN_ID`、`BOOTSTRAP_ADMIN_NAME`、`BOOTSTRAP_ADMIN_EMAIL`、`BOOTSTRAP_ADMIN_PASSWORD` を環境変数に設定して `npm run admin:bootstrap` を実行します。パスワードをリポジトリ内のファイルに書かないでください。既に管理者がいる DB ではこのコマンドは拒否します。
 
@@ -75,7 +76,11 @@ Migration は SQL ファイル順に適用され、適用済みファイルの�
 
 SMTP送信はDBへの招待・Token保存後に行います。送信に失敗した場合、管理者の招待操作は503になりますが、Invitedユーザーは残ります。メールサービスを復旧してから管理画面の「招待を再送」を使ってください。ローカルの連携テストはMailpitでメールを受信し、テストメールを削除します。
 
-Device の接続状態と最終受信時刻は InfluxDB の記録から算出します。初回受信前は `offline` と `lastSeenAt: null` を返し、Offline 件数には含めません。Offline 判定には会社の Rules に設定した `sensorOfflineAfterMinutes` を使い、設定前の初期値は60分です。Settings の Thresholds・Growth Targets・Rules は会社単位の版として保存し、変更前の版も残します。Thresholds は Farm 別の上書きと共通値の継承に対応します。初期値はフロントエンドの開発用設定と一致させています。業務画面向けのFarm/Pond状態APIは未実装です。第4段階の残りの作業として追加します。
+Device の接続状態と最終受信時刻は InfluxDB の記録から算出します。初回受信前は `offline` と `lastSeenAt: null` を返し、Offline 件数には含めません。Offline 判定には会社の Rules に設定した `sensorOfflineAfterMinutes` を使い、設定前の初期値は60分です。Settings の Thresholds・Growth Targets・Rules は会社単位の版として保存し、変更前の版も残します。Thresholds は Farm 別の上書きと共通値の継承に対応します。初期値はフロントエンドの開発用設定と一致させています。
+
+`GET /sync-status` は FM に会社の全 Farm、TM に担当 Farm のセンサー記録を対象として InfluxDB を参照し、Rules の遅延・Offline 分数で品質を判定します。参照成功時刻は `syncedAt` として返し、ユーザー別の参照Checkpointを保存します。データがなければ `quality: no_data` です。次回参照時刻は画面の5分再取得間隔から算出します。
+
+業務画面向け Farm/Pond 状態APIは未実装です。現行の [フロントエンドOpenAPI](../frontend/app/api/openapi.frontend.yaml) は未受信・未放養でも `Severity` や一部の日付を必須にしています。ダミーの `normal` や日付を返さないため、未取得時の表現をフロントエンド担当と確定する必要があります。バックエンド側で契約を独自変更せず、[DB設計の未決事項](./docs/database_design.md)に記録しています。
 
 ## API の基準
 

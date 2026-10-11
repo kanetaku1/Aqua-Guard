@@ -12,6 +12,9 @@ import { AdminDevicesService } from './admin/admin-devices.service';
 import { AdminSettingsController } from './admin/admin-settings.controller';
 import { AdminSettingsService } from './admin/admin-settings.service';
 import { AdminThresholdsService } from './admin/admin-thresholds.service';
+import { BusinessScopeService } from './business/business-scope.service';
+import { SyncStatusController } from './business/sync-status.controller';
+import { SyncStatusService } from './business/sync-status.service';
 import { MailService } from './auth/mail.service';
 import { PasswordLinksService } from './auth/password-links.service';
 import { HealthController } from './health.controller';
@@ -20,10 +23,10 @@ import { PostgresService } from './infrastructure/postgres.service';
 
 @Module({
   controllers: [HealthController, AuthController, AdminController, AdminUsersController,
-    AdminDevicesController, AdminSettingsController],
+    AdminDevicesController, AdminSettingsController, SyncStatusController],
   providers: [PostgresService, InfluxService, AuthService, MailService, PasswordLinksService,
     AdminService, AdminUsersService, AdminDevicesService, AdminSettingsService,
-    AdminThresholdsService,
+    AdminThresholdsService, BusinessScopeService, SyncStatusService,
     { provide: APP_GUARD, useClass: SessionGuard }],
 })
 export class AppModule {}
