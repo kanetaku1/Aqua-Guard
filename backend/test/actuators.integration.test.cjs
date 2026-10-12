@@ -4,6 +4,7 @@ const { test } = require('node:test');
 const { createPostgresPool } = require('../dist/infrastructure/postgres');
 const { BusinessScopeService } = require('../dist/business/business-scope.service');
 const { ActuatorsService } = require('../dist/business/actuators.service');
+const { InfluxService } = require('../dist/infrastructure/influx.service');
 
 test('Actuator view uses observed state and commands remain safety blocked', async () => {
   const pool = createPostgresPool();
@@ -73,6 +74,21 @@ test('Actuator view uses observed state and commands remain safety blocked', asy
     assert.equal(view.items[0].mode, 'manual');
     assert.equal(view.items[0].blockedCommands.length, 4);
     assert.equal(view.autoControl.status, 'stopped');
+    const realInflux = new InfluxService();
+    const observed = new Date();
+    await realInflux.writeActuatorFeedback([{
+      farmId, pondId, deviceId, receivedAt: observed, occurredAt: observed,
+      state: 'on', mode: 'auto',
+    }]);
+    await realInflux.writeDeviceHeartbeats([{
+      farmId, pondId, deviceId, receivedAt: observed, sentAt: observed,
+      onlineHint: true,
+    }]);
+    const observedView = await new ActuatorsService(postgres, realInflux,
+      new BusinessScopeService(postgres)).list(tm, pondId,
+      new Date(observed.getTime() + 1_000));
+    assert.equal(observedView.items[0].state, 'on');
+    assert.equal(observedView.items[0].mode, 'auto');
     await assert.rejects(() => service.command(tm, deviceId,
       { command: 'turn_on' }), (error) => error.getStatus() === 409
         && error.getResponse().code === 'safety_blocked');

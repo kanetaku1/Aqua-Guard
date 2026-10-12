@@ -62,7 +62,7 @@ export class ActuatorsService {
            |> pivot(rowKey: ["_time","pond_id","device_id"],
              columnKey: ["_field"], valueColumn: "_value")
            |> group(columns: ["pond_id","device_id"])
-           |> sort(columns: ["_time"], desc: true) |> first()`),
+           |> sort(columns: ["_time"], desc: true) |> limit(n: 1)`),
         this.influx.client.getQueryApi(this.influx.org).collectRows<HeartbeatRow>(
           `${prefix}
            |> filter(fn: (r) => r._measurement == "device_heartbeats"
