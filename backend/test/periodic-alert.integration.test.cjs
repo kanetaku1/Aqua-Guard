@@ -20,6 +20,7 @@ test('periodic scan creates attention and warning, closes recovery, and shares c
   let farmId;
   let pondId;
   let deviceId;
+  const extraDevices = [];
   let userId;
   try {
     const org = process.env.INFLUXDB_ORG ?? 'aquaguard';
@@ -135,6 +136,51 @@ test('periodic scan creates attention and warning, closes recovery, and shares c
       [`periodic:farm:${farmId}`]);
     assert.ok(checkpoint.rows[0].last_success_at);
     assert.ok(checkpoint.rows[0].processed_through);
+
+    for (const [name, parameter] of [['offline', 'ph'], ['never-seen', 'temperature']]) {
+      const id = (await pool.query(`INSERT INTO devices (device_id,type,parameter)
+        VALUES ($1,'sensor',$2) RETURNING id`, [`${name}-${suffix}`, parameter])).rows[0].id;
+      extraDevices.push(id);
+      await pool.query(`INSERT INTO device_assignments (device_id,pond_id,assigned_at)
+        VALUES ($1,$2,now()-interval '1 day')`, [id, pondId]);
+    }
+    await ingestion.ingest({ eventId: `old-ph-${suffix}`,
+      deviceId: `offline-${suffix}`, parameter: 'ph', value: 7.8,
+      measuredAt: new Date(Date.now() - 70 * 60_000).toISOString() });
+    await periodic.runOnce();
+    const offline = await pool.query(`SELECT id,severity,parameter,observed_value,
+      threshold_value,direction,telemetry_from,telemetry_to,state
+      FROM alerts WHERE device_id=$1`, [extraDevices[0]]);
+    assert.equal(offline.rows.length, 1);
+    assert.equal(offline.rows[0].severity, 'attention');
+    assert.equal(offline.rows[0].parameter, 'sensor_offline');
+    assert.equal(offline.rows[0].observed_value, null);
+    assert.equal(offline.rows[0].threshold_value, null);
+    assert.equal(offline.rows[0].direction, null);
+    assert.equal(offline.rows[0].telemetry_to, null);
+    assert.equal((await pool.query('SELECT issue_type,trend FROM issues WHERE source_id=$1',
+      [offline.rows[0].id])).rows[0].issue_type, 'sensor');
+    assert.equal((await pool.query('SELECT count(*)::integer AS n FROM alerts WHERE device_id=$1',
+      [extraDevices[1]])).rows[0].n, 0);
+    await periodic.runOnce();
+    assert.equal((await pool.query('SELECT count(*)::integer AS n FROM alerts WHERE device_id=$1',
+      [extraDevices[0]])).rows[0].n, 1);
+    await ingestion.ingest({ eventId: `fresh-ph-${suffix}`,
+      deviceId: `offline-${suffix}`, parameter: 'ph', value: 7.8,
+      measuredAt: new Date(Date.now() - 30_000).toISOString() });
+    await periodic.runOnce();
+    const recovered = await pool.query('SELECT telemetry_to,state FROM alerts WHERE id=$1',
+      [offline.rows[0].id]);
+    assert.ok(recovered.rows[0].telemetry_to);
+    assert.equal(recovered.rows[0].state, 'unacknowledged');
+    await periodic.runOnce(new Date(Date.now() + 61 * 60_000));
+    const repeated = await pool.query(`SELECT count(*)::integer AS n
+      FROM alerts WHERE device_id=$1 AND parameter='sensor_offline'`, [extraDevices[0]]);
+    assert.equal(repeated.rows[0].n, 2);
+    const offlineState = await pool.query(`SELECT episode_no,offline_active
+      FROM sensor_offline_states WHERE pond_id=$1 AND device_id=$2`, [pondId, extraDevices[0]]);
+    assert.equal(Number(offlineState.rows[0].episode_no), 2);
+    assert.equal(offlineState.rows[0].offline_active, true);
   } finally {
     if (pondId) {
       await pool.query('UPDATE alert_detection_states SET current_alert_id=NULL WHERE pond_id=$1',
@@ -143,6 +189,7 @@ test('periodic scan creates attention and warning, closes recovery, and shares c
         (SELECT id FROM alerts WHERE pond_id=$1)`, [pondId]);
       await pool.query('DELETE FROM issues WHERE pond_id=$1', [pondId]);
       await pool.query('DELETE FROM sensor_anomaly_intervals WHERE pond_id=$1', [pondId]);
+      await pool.query('DELETE FROM sensor_offline_states WHERE pond_id=$1', [pondId]);
       await pool.query('DELETE FROM alerts WHERE pond_id=$1', [pondId]);
       await pool.query('DELETE FROM alert_detection_states WHERE pond_id=$1', [pondId]);
     }
@@ -150,6 +197,11 @@ test('periodic scan creates attention and warning, closes recovery, and shares c
       await pool.query('DELETE FROM ingestion_receipts WHERE device_id=$1', [deviceId]);
       await pool.query('DELETE FROM device_assignments WHERE device_id=$1', [deviceId]);
       await pool.query('DELETE FROM devices WHERE id=$1', [deviceId]);
+    }
+    for (const id of extraDevices) {
+      await pool.query('DELETE FROM ingestion_receipts WHERE device_id=$1', [id]);
+      await pool.query('DELETE FROM device_assignments WHERE device_id=$1', [id]);
+      await pool.query('DELETE FROM devices WHERE id=$1', [id]);
     }
     if (farmId) await pool.query('DELETE FROM sensor_sync_checkpoints WHERE scope_key=$1',
       [`periodic:farm:${farmId}`]);

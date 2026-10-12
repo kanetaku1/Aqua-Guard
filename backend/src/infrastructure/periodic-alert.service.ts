@@ -21,6 +21,13 @@ interface Device {
 interface Point {
   _time?: string; value?: number; validity?: string; event_id?: string;
 }
+interface LastValid {
+  _time?: string; pond_id?: string; device_id?: string;
+}
+interface OfflineState {
+  id: string; current_alert_id: string | null; episode_no: string;
+  offline_active: boolean;
+}
 interface State {
   id: string; direction: Direction; episode_no: string;
   current_alert_id: string | null; live_measured_through: Date | null;
@@ -79,6 +86,7 @@ export class PeriodicAlertService {
         : Math.max(device.assigned_at.getTime(), now.getTime() - INITIAL_LOOKBACK_MS);
       batches.push({ device, points: await this.readPoints(farm, device, new Date(start), now) });
     }
+    const latestValid = await this.readLatestValid(farm);
     const client = await this.postgres.pool.connect();
     try {
       await client.query('BEGIN');
@@ -137,6 +145,12 @@ export class PeriodicAlertService {
           processed += 1;
         }
       }
+      for (const device of devices.rows) {
+        const last = latestValid.get(`${device.pond_public_id}:${device.device_id}`);
+        if (last && last >= device.assigned_at && last <= now) {
+          await this.processOffline(client, farm, device, last, now);
+        }
+      }
       const positions = await client.query<{ processed_through: Date | null }>(
         `SELECT CASE WHEN count(*)=count(periodic_measured_through)
            THEN min(periodic_measured_through) ELSE NULL END AS processed_through
@@ -177,6 +191,79 @@ export class PeriodicAlertService {
     );
     return rows.filter((row) => row._time && Number.isFinite(Date.parse(row._time)))
       .sort((a, b) => Date.parse(a._time!) - Date.parse(b._time!));
+  }
+
+  private async readLatestValid(farm: Farm): Promise<Map<string, Date>> {
+    const rows = await this.influx.client.getQueryApi(this.influx.org).collectRows<LastValid>(
+      `from(bucket: ${JSON.stringify(this.influx.bucket)})
+       |> range(start: 0)
+       |> filter(fn: (r) => r._measurement == "sensor_readings"
+         and r.farm_id == ${JSON.stringify(farm.public_id)}
+         and r._field == "validity" and r._value == "valid")
+       |> group(columns: ["pond_id", "device_id"]) |> last()`,
+    );
+    const result = new Map<string, Date>();
+    for (const row of rows) {
+      if (!row.pond_id || !row.device_id || !row._time) continue;
+      const at = new Date(row._time);
+      if (!Number.isFinite(at.getTime())) continue;
+      const key = `${row.pond_id}:${row.device_id}`;
+      if (!result.has(key) || result.get(key)! < at) result.set(key, at);
+    }
+    return result;
+  }
+
+  private async processOffline(client: PoolClient, farm: Farm, device: Device,
+    last: Date, now: Date): Promise<void> {
+    await client.query(
+      `INSERT INTO sensor_offline_states (pond_id,device_id)
+       VALUES ($1,$2) ON CONFLICT DO NOTHING`, [device.pond_id, device.id],
+    );
+    const locked = await client.query<OfflineState>(
+      `SELECT id,current_alert_id,episode_no,offline_active
+       FROM sensor_offline_states WHERE pond_id=$1 AND device_id=$2 FOR UPDATE`,
+      [device.pond_id, device.id],
+    );
+    const state = locked.rows[0];
+    const offlineMs = (farm.sensor_offline_after_minutes ?? 60) * 60_000;
+    if (now.getTime() - last.getTime() > offlineMs && !state.offline_active) {
+      const occurred = new Date(last.getTime() + offlineMs);
+      const inserted = await client.query<{ id: string }>(
+        `INSERT INTO alerts
+           (public_id,pond_id,device_id,parameter,severity,occurred_at,telemetry_from,
+            detection_source)
+         VALUES ($1,$2,$3,'sensor_offline','attention',$4,$4,'periodic') RETURNING id`,
+        [`ALT-${randomUUID()}`, device.pond_id, device.id, occurred],
+      );
+      const alertId = inserted.rows[0].id;
+      await client.query(
+        `INSERT INTO issues
+           (public_id,farm_id,pond_id,issue_type,parameter,severity,trend,
+            state,source_type,source_id,since)
+         VALUES ($1,$2,$3,'sensor','sensor_offline','attention','stable',
+           'ongoing','alert',$4,$5)`,
+        [`ISS-${randomUUID()}`, farm.id, device.pond_id, alertId, occurred],
+      );
+      await client.query(
+        `UPDATE sensor_offline_states SET current_alert_id=$2,episode_no=episode_no+1,
+           offline_active=true,last_seen_at=$3,last_checked_at=$4 WHERE id=$1`,
+        [state.id, alertId, last, now],
+      );
+    } else if (now.getTime() - last.getTime() <= offlineMs && state.offline_active) {
+      await client.query(
+        `UPDATE alerts SET telemetry_to=$2 WHERE id=$1 AND telemetry_to IS NULL`,
+        [state.current_alert_id, last],
+      );
+      await client.query(
+        `UPDATE sensor_offline_states SET current_alert_id=NULL,offline_active=false,
+           last_seen_at=$2,last_checked_at=$3 WHERE id=$1`, [state.id, last, now],
+      );
+    } else {
+      await client.query(
+        `UPDATE sensor_offline_states SET last_seen_at=$2,last_checked_at=$3 WHERE id=$1`,
+        [state.id, last, now],
+      );
+    }
   }
 
   private async ensureStates(client: PoolClient, device: Device): Promise<void> {
