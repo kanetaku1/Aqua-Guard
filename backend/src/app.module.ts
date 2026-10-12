@@ -43,6 +43,7 @@ import { DailyReportCreateService } from './business/daily-report-create.service
 import { DailyReportUpdateService } from './business/daily-report-update.service';
 import { DailyReportSubmitService } from './business/daily-report-submit.service';
 import { WeeklyReportTotalsService } from './business/weekly-report-totals.service';
+import { WeeklySamplingCoverageService } from './business/weekly-sampling-coverage.service';
 import { SensorHistoryController } from './business/sensor-history.controller';
 import { SensorHistoryService } from './business/sensor-history.service';
 import { SensorAnomaliesController } from './business/sensor-anomalies.controller';
@@ -95,7 +96,7 @@ import { PostgresService } from './infrastructure/postgres.service';
     ReportsService, DailyReportRecordsService, DailyReportPondsService,
     DailyReportActivityService, DailyReportEquipmentService, DailyReportViewService,
     DailyReportCreateService, DailyReportUpdateService, DailyReportSubmitService,
-    WeeklyReportTotalsService,
+    WeeklyReportTotalsService, WeeklySamplingCoverageService,
     SensorHistoryService,
     SensorAnomaliesService,
     AlertsService,
