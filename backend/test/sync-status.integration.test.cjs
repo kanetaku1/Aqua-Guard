@@ -220,7 +220,7 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.ok(current.items.filter((item) => item.parameter !== 'ph')
       .every((item) => item.quality === 'live'));
     const today = jakartaDate();
-    const stockedOn = new Date(Date.parse(`${today}T00:00:00Z`) - 10 * 86400000)
+    const stockedOn = new Date(Date.parse(`${today}T00:00:00Z`) - 30 * 86400000)
       .toISOString().slice(0, 10);
     planningCycleId = (await pool.query(`INSERT INTO production_cycles
       (pond_id,started_on,status) VALUES ($1,$2,'active') RETURNING id`,
@@ -241,7 +241,7 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.equal(detail.status, 'critical');
     assert.equal(detail.areaHa, 0.8);
     assert.equal(detail.stockedOn, stockedOn);
-    assert.equal(detail.doc, 10);
+    assert.equal(detail.doc, 30);
     assert.equal(detail.stockedPl, 10000);
     assert.equal(detail.abwG, null);
     assert.equal(detail.openAlerts, 0);
@@ -254,6 +254,34 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     [`SMP-detail-${suffix}`, pondUuids[0], planningCycleId, today, userUuids[1]]);
     assert.equal((await (await fetch(detailUrl,
       { headers: { Cookie: tmCookie } })).json()).abwG, 25);
+    await pool.query(`INSERT INTO feeding_records
+      (public_id,pond_id,cycle_id,record_date,round_no,feed_type,amount_kg,recorded_by)
+      VALUES ($1,$2,$3,$4,1,'Grower',12,$5)`,
+    [`FED-list-${suffix}`, pondUuids[0], planningCycleId, today, userUuids[1]]);
+    await pool.query(`INSERT INTO mortality_records
+      (public_id,pond_id,cycle_id,record_date,count,weight_kg,recorded_by)
+      VALUES ($1,$2,$3,$4,2,0.1,$5)`,
+    [`MOR-list-${suffix}`, pondUuids[0], planningCycleId, today, userUuids[1]]);
+    const pondListUrl = `${base}/farms/farm-a-${suffix}/ponds`;
+    assert.equal((await fetch(pondListUrl, { headers: { Cookie: fmCookie } })).status, 403);
+    assert.equal((await fetch(`${base}/farms/farm-b-${suffix}/ponds`,
+      { headers: { Cookie: tmCookie } })).status, 404);
+    assert.equal((await fetch(`${pondListUrl}?status=broken`,
+      { headers: { Cookie: tmCookie } })).status, 422);
+    const initialList = await fetch(pondListUrl, { headers: { Cookie: tmCookie } });
+    assert.equal(initialList.status, 200);
+    const listed = await initialList.json();
+    assert.equal(listed.latestSamplingDate, today);
+    assert.equal(listed.items.length, 1);
+    assert.equal(listed.items[0].status, 'critical');
+    assert.equal(listed.items[0].abwG, 25);
+    assert.ok(listed.items[0].vsTargetPct > 0);
+    assert.equal(listed.items[0].growth, 'ahead');
+    assert.equal(listed.items[0].feedTodayKg, 12);
+    assert.equal(listed.items[0].feedRoundsToday, 1);
+    assert.equal(listed.items[0].feedRoundsPlanned, 2);
+    assert.equal(listed.items[0].mortalityTodayPcs, 2);
+    assert.deepEqual(listed.items[0].aerators, { on: 0, total: 0 });
     const waterUrl = `${base}/farms/farm-a-${suffix}/ponds/water-quality`;
     assert.equal((await fetch(waterUrl, { headers: { Cookie: fmCookie } })).status, 403);
     assert.equal((await fetch(`${base}/farms/farm-b-${suffix}/ponds/water-quality`,
@@ -302,6 +330,7 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.equal(missingFeedback.sensors.offline[0].deviceId, `old-ph-${suffix}`);
     assert.equal(missingFeedback.aerators.unknown, 1);
     assert.equal(missingFeedback.aerators.on, 0);
+    assert.equal((await fetch(pondListUrl, { headers: { Cookie: tmCookie } })).status, 503);
     await influxCurrent.writeActuatorFeedback(['aerator', 'pump'].map((name) => ({
       farmId: `farm-a-${suffix}`, pondId: `pond-a-${suffix}`,
       deviceId: `${name}-${suffix}`, state: name === 'aerator' ? 'on' : 'fault',
@@ -311,6 +340,20 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
       `farm-a-${suffix}`);
     assert.equal(withFeedback.aerators.on, 1);
     assert.deepEqual(withFeedback.equipmentFaults, [`pump-${suffix}`]);
+    const activeList = await fetch(`${pondListUrl}?status=critical&alertState=unacknowledged`,
+      { headers: { Cookie: tmCookie } });
+    assert.equal(activeList.status, 200);
+    assert.deepEqual((await activeList.json()).items[0].aerators, { on: 1, total: 1 });
+    assert.equal((await (await fetch(`${pondListUrl}?status=normal`,
+      { headers: { Cookie: tmCookie } })).json()).items.length, 0);
+    await influxCurrent.writeActuatorFeedback([{
+      farmId: `farm-a-${suffix}`, pondId: `pond-a-${suffix}`,
+      deviceId: `aerator-${suffix}`, state: 'fault',
+      occurredAt: new Date(), receivedAt: new Date(),
+    }]);
+    assert.deepEqual((await (await fetch(pondListUrl,
+      { headers: { Cookie: tmCookie } })).json()).items[0].aerators,
+    { on: 0, total: 1 });
     await influxCurrent.writeDeviceHeartbeats([{
       farmId: `farm-a-${suffix}`, pondId: `pond-a-${suffix}`,
       deviceId: `aerator-${suffix}`, sentAt: new Date(), receivedAt: new Date(),
@@ -320,6 +363,7 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
       `farm-a-${suffix}`);
     assert.deepEqual(disconnected.equipmentOffline, [`aerator-${suffix}`]);
     assert.equal(disconnected.aerators.on, 0);
+    assert.equal((await fetch(pondListUrl, { headers: { Cookie: tmCookie } })).status, 503);
     assert.equal((await fetch(currentUrl, { headers: { Cookie: saCookie } })).status, 403);
     assert.equal((await fetch(`${base}/ponds/pond-b-${suffix}/sensors/current`,
       { headers: { Cookie: tmCookie } })).status, 404);
@@ -386,6 +430,8 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
   } finally {
     if (app) await app.close();
     if (pondUuids[0]) {
+      await pool.query('DELETE FROM feeding_records WHERE pond_id=$1', [pondUuids[0]]);
+      await pool.query('DELETE FROM mortality_records WHERE pond_id=$1', [pondUuids[0]]);
       await pool.query('DELETE FROM sampling_records WHERE pond_id=$1', [pondUuids[0]]);
       await pool.query('DELETE FROM feeding_plan_rounds WHERE pond_id=$1', [pondUuids[0]]);
       await pool.query('DELETE FROM stocking_records WHERE pond_id=$1', [pondUuids[0]]);
@@ -393,6 +439,9 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     if (planningCycleId) await pool.query('DELETE FROM production_cycles WHERE id=$1',
       [planningCycleId]);
     if (companyId) {
+      await pool.query(`DELETE FROM growth_target_points WHERE set_id IN
+        (SELECT id FROM growth_target_sets WHERE company_id=$1)`, [companyId]);
+      await pool.query('DELETE FROM growth_target_sets WHERE company_id=$1', [companyId]);
       await pool.query(`DELETE FROM threshold_values WHERE set_id IN
         (SELECT id FROM threshold_sets WHERE company_id = $1)`, [companyId]);
       await pool.query('DELETE FROM threshold_sets WHERE company_id = $1', [companyId]);

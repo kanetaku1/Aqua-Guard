@@ -24,6 +24,8 @@ import { PondWaterQualityService } from './business/pond-water-quality.service';
 import { PondPlanningService } from './business/pond-planning.service';
 import { PondDetailController } from './business/pond-detail.controller';
 import { PondDetailService } from './business/pond-detail.service';
+import { PondListController } from './business/pond-list.controller';
+import { PondListService } from './business/pond-list.service';
 import { FarmGrowthStatusService } from './business/farm-growth-status.service';
 import { FarmDeviceStatusService } from './business/farm-device-status.service';
 import { SensorHistoryController } from './business/sensor-history.controller';
@@ -56,7 +58,7 @@ import { PostgresService } from './infrastructure/postgres.service';
   controllers: [HealthController, AuthController, AdminController, AdminUsersController,
     AdminDevicesController, AdminSettingsController, SyncStatusController,
     SensorSeriesController, SensorCurrentController, PondWaterQualityController,
-    PondDetailController,
+    PondDetailController, PondListController,
     SensorHistoryController,
     SensorAnomaliesController,
     AlertsController,
@@ -72,7 +74,7 @@ import { PostgresService } from './infrastructure/postgres.service';
     AdminService, AdminUsersService, AdminDevicesService, AdminSettingsService,
     AdminThresholdsService, BusinessScopeService, SyncStatusService, SensorSeriesService,
     SensorCurrentService, PondWaterQualityService, PondPlanningService,
-    PondDetailService, FarmGrowthStatusService,
+    PondDetailService, PondListService, FarmGrowthStatusService,
     FarmDeviceStatusService,
     SensorHistoryService,
     SensorAnomaliesService,
