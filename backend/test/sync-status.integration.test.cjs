@@ -7,6 +7,7 @@ const { AppModule } = require('../dist/app.module');
 const { hashPassword } = require('../dist/auth/password');
 const { ProblemFilter } = require('../dist/http/problem');
 const { InfluxService } = require('../dist/infrastructure/influx.service');
+const { FarmDeviceStatusService } = require('../dist/business/farm-device-status.service');
 const { createPostgresPool } = require('../dist/infrastructure/postgres');
 
 test('scoped telemetry survives API restart and reports no data, offline, delayed and live', async () => {
@@ -231,6 +232,50 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.equal(water.items[0].values.do.severity, 'critical');
     assert.equal(water.items[0].values.ph.quality, 'delayed');
     assert.equal(water.normalRanges.find((row) => row.parameter === 'do').normalMin, 4.5);
+    const deviceStatus = app.get(FarmDeviceStatusService);
+    const initialDevices = await deviceStatus.snapshot(companyId, farmUuids[0],
+      `farm-a-${suffix}`);
+    assert.equal(initialDevices.sensors.online, 6);
+    assert.equal(initialDevices.sensors.total, 6);
+    for (const [name, type, parameter] of [
+      ['old-ph', 'sensor', 'ph'], ['aerator', 'aerator', null], ['pump', 'pump', null],
+    ]) {
+      const id = (await pool.query(`INSERT INTO devices (device_id,type,parameter)
+        VALUES ($1,$2,$3) RETURNING id`, [`${name}-${suffix}`, type, parameter])).rows[0].id;
+      deviceUuids.push(id);
+      await pool.query(`INSERT INTO device_assignments (device_id,pond_id,assigned_at)
+        VALUES ($1,$2,now()-interval '1 day')`, [id, pondUuids[0]]);
+    }
+    const oldAt = new Date(Date.now() - 70 * 60000);
+    await influxCurrent.writeSensorReadings([{
+      farmId: `farm-a-${suffix}`, pondId: `pond-a-${suffix}`,
+      deviceId: `old-ph-${suffix}`, parameter: 'ph', value: 7.8,
+      measuredAt: oldAt, receivedAt: new Date(), validity: 'valid',
+    }]);
+    const missingFeedback = await deviceStatus.snapshot(companyId, farmUuids[0],
+      `farm-a-${suffix}`);
+    assert.equal(missingFeedback.sensors.offline.length, 1);
+    assert.equal(missingFeedback.sensors.offline[0].deviceId, `old-ph-${suffix}`);
+    assert.equal(missingFeedback.aerators.unknown, 1);
+    assert.equal(missingFeedback.aerators.on, 0);
+    await influxCurrent.writeActuatorFeedback(['aerator', 'pump'].map((name) => ({
+      farmId: `farm-a-${suffix}`, pondId: `pond-a-${suffix}`,
+      deviceId: `${name}-${suffix}`, state: name === 'aerator' ? 'on' : 'fault',
+      occurredAt: new Date(Date.now() - 1000), receivedAt: new Date(),
+    })));
+    const withFeedback = await deviceStatus.snapshot(companyId, farmUuids[0],
+      `farm-a-${suffix}`);
+    assert.equal(withFeedback.aerators.on, 1);
+    assert.deepEqual(withFeedback.equipmentFaults, [`pump-${suffix}`]);
+    await influxCurrent.writeDeviceHeartbeats([{
+      farmId: `farm-a-${suffix}`, pondId: `pond-a-${suffix}`,
+      deviceId: `aerator-${suffix}`, sentAt: new Date(), receivedAt: new Date(),
+      onlineHint: false,
+    }]);
+    const disconnected = await deviceStatus.snapshot(companyId, farmUuids[0],
+      `farm-a-${suffix}`);
+    assert.deepEqual(disconnected.equipmentOffline, [`aerator-${suffix}`]);
+    assert.equal(disconnected.aerators.on, 0);
     assert.equal((await fetch(currentUrl, { headers: { Cookie: saCookie } })).status, 403);
     assert.equal((await fetch(`${base}/ponds/pond-b-${suffix}/sensors/current`,
       { headers: { Cookie: tmCookie } })).status, 404);
