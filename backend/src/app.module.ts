@@ -51,6 +51,7 @@ import { DailyReportSubmitService } from './business/daily-report-submit.service
 import { WeeklyReportTotalsService } from './business/weekly-report-totals.service';
 import { WeeklySamplingCoverageService } from './business/weekly-sampling-coverage.service';
 import { WeeklyReportActivityService } from './business/weekly-report-activity.service';
+import { WeeklyWaterQualityService } from './business/weekly-water-quality.service';
 import { SensorHistoryController } from './business/sensor-history.controller';
 import { SensorHistoryService } from './business/sensor-history.service';
 import { SensorAnomaliesController } from './business/sensor-anomalies.controller';
@@ -111,6 +112,7 @@ import { PostgresService } from './infrastructure/postgres.service';
     DailyReportCreateService, DailyReportUpdateService, DailyReportSubmitService,
     WeeklyReportTotalsService, WeeklySamplingCoverageService,
     WeeklyReportActivityService,
+    WeeklyWaterQualityService,
     SensorHistoryService,
     SensorAnomaliesService,
     AlertsService,

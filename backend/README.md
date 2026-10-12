@@ -110,6 +110,8 @@ Daily Reportの活動欄には、Farmの現地日付と重なるAlert、日付�
 
 Daily Reportの `POST /reports/daily`、`GET/PATCH /reports/daily/{reportId}`、`POST /reports/{reportId}/submit` を実装しました。TMは担当FarmのDraftを作成・編集・提出でき、FMは提出済みのみ閲覧できます。作成時は元記録から201応答を組み立てられることを確認してからReportを保存します。PATCHの部分更新と全件置換は1つのTransactionで保存します。提出時には天候・Summaryを確認し、本文Snapshotと提出状態を同一Transactionで固定します。週次Reportの本文・作成・編集・提出は未実装です。検証は `npm run test:daily-report-create:local`、`npm run test:daily-report-view:local`、`npm run test:daily-report-update:local`、`npm run test:daily-report-submit:local` です。
 
+Weekly Reportの内部集計として、Pond別の給餌・死亡、サンプリング測定状況、週内に継続したAlertとTMのメモ・主要対応、Sensor Databaseの水質最小・最大と範囲外日数を実装しました。水質の傾向は各項目の週内初日・最終日の平均値差を現在のNormal幅で正規化し、最大の変化が10%以上なら増加・減少、それ未満なら安定とする暫定ルールです。DO・pH・水温のいずれかに週内の有効値がないPondは `503 weekly_sensor_not_ready` とし、正常な値を補いません。Weekly Reportの公開APIと提出Snapshotへの接続は未実装です。確認コマンドは `npm run test:weekly-report-totals:local`、`npm run test:weekly-sampling-coverage:local`、`npm run test:weekly-report-activity:local`、`npm run test:weekly-water-quality:local` です。
+
 `GET /ponds/{pondId}/sensors/history` は保存済みの有効な計測値を5分単位の行にまとめ、6項目の値・重大度とページ情報を返します。同じ5分枠に同じ項目が複数ある場合は最新値を使い、欠測項目は `value: null` とします。現行 OpenAPI の `HistoryValue.severity` は必須で null や `no_data` を許さないため、欠測項目の severity はフロントエンド Mock と同じ `normal` を返します。表示側では `value: null` を欠測として扱います。期間未指定時は直近24時間、指定できる範囲は最大31日です。検証は `npm run test:sensor-history:local` で行えます。
 
 Sensor Current／Series／History／Anomalies は TM と担当 Farm の Pond に限定します。`GET /ponds/{pondId}/sensors/anomalies` は PostgreSQL に保存した異常区間を現行 OpenAPI の `SensorAnomaly` 形式で返し、関連 Alert があれば `alertId` を含めます。期間未指定時は直近7日と重なる区間を返します。受信時 Critical 判定と5分処理の Warning／Attention 判定で閾値逸脱区間を作り、有効な回復点で区間を閉じます。増加・減少傾向の発報条件は既存資料では未確定のため、推測した条件で行を生成しません。参照 API の検証は `npm run test:sensor-anomalies:local` で行えます。
