@@ -26,6 +26,11 @@ function service({ missing = false } = {}) {
       return { rows: [{ min: '10', max: '20' }] };
     }
     if (sql.includes('FROM reports')) return { rows: [] };
+    if (sql.includes('INSERT INTO farm_status_daily')) return { rows: [] };
+    if (sql.includes('FROM farm_status_daily')) return { rows: [{
+      date: '2026-10-12', status: 'warning', water_quality: 'warning',
+      growth: 'attention', operations: 'normal',
+    }] };
     throw new Error(`Unexpected query: ${sql}`);
   } } };
   const water = { snapshot: async () => ({ items: [
@@ -64,6 +69,11 @@ test('farm list counts before filtering and detail shares the same status', asyn
   assert.equal(detail.status, list.items[0].status);
   assert.deepEqual(detail.docRange, { min: 10, max: 20 });
   assert.deepEqual(detail.technicalManagers, [{ id: 'tm', name: 'Manager' }]);
+  const trend = await farms.trend(principal, 'farm-a', '14', now);
+  assert.deepEqual(trend.items, [{ date: '2026-10-12', status: 'warning',
+    waterQuality: 'warning', growth: 'attention', operations: 'normal' }]);
+  await assert.rejects(() => farms.trend(principal, 'farm-a', '91', now),
+    (error) => error.getStatus() === 422);
   await assert.rejects(() => farms.detail(principal, 'outside-farm', now),
     (error) => error.getStatus() === 404);
 });

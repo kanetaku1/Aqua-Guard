@@ -16,6 +16,10 @@ interface FarmRow {
   time_zone: string; pond_count: string;
 }
 interface ReportRow { type: 'daily' | 'weekly'; status: string; due_at: Date }
+interface TrendRow {
+  date: string; status: Severity; water_quality: Severity;
+  growth: Severity; operations: Severity;
+}
 
 function shift(date: string, days: number): string {
   return new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000)
@@ -127,6 +131,28 @@ export class FarmStatusService {
         ...(overdue ? ['Overdue reports'] : []),
       ].join(', ') : null };
     const status = worst(worst(waterStatus, growthStatus), operationsStatus);
+    await this.postgres.pool.query(
+      `INSERT INTO farm_status_daily
+         (farm_id,status_date,status,water_quality,growth,operations,computed_at)
+       VALUES ($1,$2::date,$3,$4,$5,$6,$7)
+       ON CONFLICT (farm_id,status_date) DO UPDATE SET
+         status=CASE WHEN array_position(ARRAY['normal','attention','warning','critical'],
+           EXCLUDED.status) > array_position(ARRAY['normal','attention','warning','critical'],
+           farm_status_daily.status) THEN EXCLUDED.status ELSE farm_status_daily.status END,
+         water_quality=CASE WHEN array_position(ARRAY['normal','attention','warning','critical'],
+           EXCLUDED.water_quality) > array_position(ARRAY['normal','attention','warning','critical'],
+           farm_status_daily.water_quality) THEN EXCLUDED.water_quality
+           ELSE farm_status_daily.water_quality END,
+         growth=CASE WHEN array_position(ARRAY['normal','attention','warning','critical'],
+           EXCLUDED.growth) > array_position(ARRAY['normal','attention','warning','critical'],
+           farm_status_daily.growth) THEN EXCLUDED.growth ELSE farm_status_daily.growth END,
+         operations=CASE WHEN array_position(ARRAY['normal','attention','warning','critical'],
+           EXCLUDED.operations) > array_position(ARRAY['normal','attention','warning','critical'],
+           farm_status_daily.operations) THEN EXCLUDED.operations
+           ELSE farm_status_daily.operations END,
+         computed_at=EXCLUDED.computed_at`,
+      [farm.id, today, status, waterStatus, growthStatus, operationsStatus, now],
+    );
     const mainReason = status === waterStatus && status !== 'normal'
       ? `Water quality: ${waterQuality.fact}`
       : status === growthStatus && status !== 'normal'
@@ -213,5 +239,31 @@ export class FarmStatusService {
         ...(report.type === 'daily' ? { date: report.report_date }
           : { weekStart: report.week_start }) } : null,
     };
+  }
+
+  async trend(principal: Principal, farmId: string,
+    daysInput: unknown, now = new Date()) {
+    const days = daysInput === undefined ? 14 : Number(daysInput);
+    if (!Number.isInteger(days) || days < 1 || days > 90
+      || (daysInput !== undefined && typeof daysInput !== 'string')) {
+      throw new ApiProblem(422, 'validation_error', 'days must be an integer from 1 to 90');
+    }
+    const farm = (await this.farms(principal)).find((item) => item.public_id === farmId);
+    if (!farm) throw new ApiProblem(404, 'not_found', 'Farm not found');
+    await this.summarize(principal, farm, now);
+    const today = new Intl.DateTimeFormat('sv-SE',
+      { timeZone: farm.time_zone }).format(now);
+    const result = await this.postgres.pool.query<TrendRow>(
+      `SELECT to_char(status_date,'YYYY-MM-DD') AS date,status,
+         water_quality,growth,operations FROM farm_status_daily
+       WHERE farm_id=$1 AND status_date > ($2::date-$3::integer)
+         AND status_date <= $2::date ORDER BY status_date`,
+      [farm.id, today, days],
+    );
+    return { items: result.rows.map((row) => ({
+      date: row.date, status: row.status,
+      waterQuality: row.water_quality, growth: row.growth,
+      operations: row.operations,
+    })) };
   }
 }

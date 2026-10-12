@@ -15,4 +15,10 @@ export class FarmStatusController {
   detail(@Req() request: AuthRequest, @Param('farmId') farmId: string) {
     return this.farms.detail(requirePrincipal(request), farmId);
   }
+
+  @Get(':farmId/status-trend')
+  trend(@Req() request: AuthRequest, @Param('farmId') farmId: string,
+    @Query('days') days: string | undefined) {
+    return this.farms.trend(requirePrincipal(request), farmId, days);
+  }
 }
