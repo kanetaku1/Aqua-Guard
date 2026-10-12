@@ -192,10 +192,11 @@ DailyとWeeklyは共通の`reports`でID・Farm・状態を管理する。これ
 | テーブル | 主な列 | 制約・用途 |
 | --- | --- | --- |
 | `reports` | `id uuid PK`, `public_id text UNIQUE`, `farm_id uuid FK`, `type text`, `status text`, `report_date date NULL`, `week_start date NULL`, `week_end date NULL`, `technical_manager_id uuid FK`, `due_at timestamptz`, `saved_at timestamptz NULL`, `submitted_at timestamptz NULL`, `submitted_by uuid FK NULL`, `created_at`, `updated_at`, `row_version bigint` | `type IN ('daily','weekly')`、`status IN ('draft','submitted')`。Dailyは`report_date`のみ、Weeklyは月曜`week_start`と`week_end`を持つ |
-| `daily_report_inputs` | `report_id uuid PK/FK`, `weather text NULL`, `rainfall_mm numeric NULL`, `events text NULL`, `generator text NULL`, `summary text NULL` | `DailyReportInput.environment`と`summary`。提出時はWeather・Summary必須 |
-| `daily_report_pond_inputs` | `report_id uuid FK`, `pond_id uuid FK`, `appetite text NULL`, `tray text NULL`, `health text NULL`, `observations text[]`, `health_note text NULL` | PK `(report_id, pond_id)`。DailyのPond別観察。給餌量・死亡数をここへ複製しない |
+| `daily_report_inputs` | `report_id uuid PK/FK`, `weather text NULL`, `rainfall_mm numeric NULL`, `events text NULL`, `summary text NULL` | `DailyReportInput.environment`と`summary`。提出時はWeather・Summary必須 |
+| `daily_report_pond_inputs` | `report_id uuid FK`, `pond_id uuid FK`, `appetite text NULL`, `tray text NULL`, `mortality_note text NULL`, `health text NULL`, `observations text[]`, `health_note text NULL` | PK `(report_id, pond_id)`。DailyのPond別観察。給餌量・死亡数をここへ複製しない |
 | `report_excluded_alerts` | `report_id uuid FK`, `alert_id uuid FK` | PK `(report_id, alert_id)`。Dailyの`excludedAlertIds` |
 | `report_manual_actions` | `id uuid PK`, `public_id text UNIQUE`, `report_id uuid FK`, `pond_id uuid FK NULL`, `at timestamptz`, `action text`, `outcome text NULL`, `sort_order integer` | Dailyの`manualActions`。PATCHで送った全件で置換し、既存IDを持つ行は同じReport内に限定 |
+| `report_manual_equipment_events` | `id uuid PK`, `public_id text UNIQUE`, `report_id uuid FK`, `pond_id uuid FK NULL`, `equipment text`, `failure text`, `occurred_at timestamptz`, `action text NULL`, `status text` | Dailyの`manualEquipmentEvents`。PATCHで送った全件で置換 |
 | `weekly_report_inputs` | `report_id uuid PK/FK`, `water_quality_comment text NULL`, `laboratory_confirmed boolean`, `technical_summary text NULL` | `WeeklyReportInput`。提出時はTechnical Summary必須 |
 | `weekly_report_alert_notes` | `report_id uuid FK`, `alert_id uuid FK`, `cause text NULL`, `action text NULL`, `outcome text NULL` | PK `(report_id, alert_id)`。Weeklyの`alertNotes` |
 | `report_snapshots` | `report_id uuid PK/FK`, `schema_version text`, `payload jsonb`, `source_cutoff_at timestamptz`, `influx_queried_at timestamptz NULL`, `created_at timestamptz` | Submitted時の`DailyReport`／`WeeklyReport`応答を固定。生センサー時系列は入れない |
@@ -204,6 +205,8 @@ DailyとWeeklyは共通の`reports`でID・Farm・状態を管理する。これ
 Migration `0018_reports_foundation.sql` では共通の `reports` テーブルを作成した。Dailyの`UNIQUE (farm_id, report_date) WHERE type='daily'`とWeeklyの`UNIQUE (farm_id, week_start) WHERE type='weekly'`を置く。`week_start`はFarm現地時間の月曜、`week_end`は同週の日曜。Reportの`overdue`は`/farms/{farmId}/report-status`用の導出状態で、`reports.status`へは保存しない。未作成Reportの締切は現行RulesとFarmタイムゾーンから計算し、作成済みReportは保存済み`due_at`を使う。期日変更をどのDraftへ適用するかは運用ルール確定時に決める。
 
 Daily DraftのGETでは、給餌・死亡・設備・Alert・対応を元データから再構成し、TMの入力は上記入力テーブルから重ねる。給餌の`amountKg`、死亡の`count`等をDaily入力テーブルで編集しない。Pond別の`appetite`／`tray`はDailyのTM入力を表示する。Feeding記録の`trayCheck`からDailyの`tray`への変換規則は未確定であり、自動変換しない。`manualActions`置換、`excludedAlertIds`、Pond観察は1Transactionで保存する。Weekly Draftの再構成タイミングはOpenAPI未定義なので、提出時には少なくとも現在の元データとInfluxDB集計を確定させる。
+
+Migration `0019_daily_report_inputs.sql` はDaily手入力値の保存先を追加する。`DailyReport` の `appetite`・`tray`・`health` は各Pond行でnull不可だが、新規DraftにはTM入力が存在しない。給餌記録やセンサー状態から自動的にこれらを確定する規則もないため、未入力を正常値として返さない。本文APIを接続する前に、現行契約内での初期値の根拠または入力順序を確定する必要がある。
 
 Submittedへの遷移時はReport行をロックし、必須入力・担当権限・状態を確認してスナップショットと`submitted_at`を同一PostgreSQL Transactionで保存する。PostgreSQLの元記録は同一Transaction内の一貫した読取スナップショットで集める。週次の水質はInfluxDBからPondごとのDO最小、pH最小・最大、水温最大、範囲外日数、Alert件数等を集計してからSnapshotへ入れ、集計完了時刻を残す。両DB間に単一Transactionはないため、提出Snapshotは「保存した集計結果とその取得時点」を正本とする。これは週次**派生結果**であり、測定点の複製ではない。提出後のGETはSnapshotを返し、元記録の訂正・閾値変更・遅延IoTデータで提出内容を暗黙に変えない。提出後RevisionのAPIは未定義なので、新たな訂正操作を勝手に設けない。`ReportAction.source`は`alert_handling`／`actuator_log`／`manual`、`Source` enum全体はAPI側の定義に従う。
 
