@@ -32,6 +32,7 @@
     "test:weekly-sampling-coverage:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/weekly-sampling-coverage.integration.test.cjs",
     "test:weekly-report-inputs:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/weekly-report-inputs.integration.test.cjs",
     "test:farm-production:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/farm-production.integration.test.cjs",
+    "test:company-production": "node --test test/company-production.test.cjs",
     "test:critical:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/critical-evaluation.integration.test.cjs",
     "test:periodic:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/periodic-alert.integration.test.cjs",
     "test:mortality:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/mortality.integration.test.cjs",
