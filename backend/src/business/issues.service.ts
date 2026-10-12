@@ -120,16 +120,34 @@ export class IssuesService {
 
   async get(principal: Principal, issueId: string, language: Language) {
     const row = await this.row(principal, issueId);
-    const actions = await this.postgres.pool.query<{
+    const [actions, reports] = await Promise.all([
+      this.postgres.pool.query<{
       public_id: string; performed_at: Date; type: string; note: string | null;
       user_id: string; user_name: string;
-    }>(
+      }>(
       `SELECT aa.public_id, aa.performed_at, aa.type, aa.note,
          u.public_id AS user_id, u.name AS user_name
        FROM alert_actions aa JOIN users u ON u.id=aa.recorded_by
        WHERE aa.alert_id=$1 ORDER BY aa.performed_at,aa.created_at,aa.id`,
       [row.alert_id],
-    );
+      ),
+      this.postgres.pool.query<{
+        public_id: string; type: 'daily' | 'weekly';
+        report_date: string | null; week_start: string | null;
+      }>(
+        `SELECT r.public_id,r.type,
+           to_char(r.report_date,'YYYY-MM-DD') AS report_date,
+           to_char(r.week_start,'YYYY-MM-DD') AS week_start
+         FROM reports r JOIN farms f ON f.id=r.farm_id
+         JOIN report_snapshots s ON s.report_id=r.id
+         JOIN alerts a ON a.id=$1
+         WHERE f.public_id=$2 AND f.company_id=$3 AND r.status='submitted'
+           AND s.payload->'alerts' @>
+             jsonb_build_array(jsonb_build_object('id',a.public_id))
+         ORDER BY r.submitted_at DESC,r.id DESC`,
+        [row.alert_id, row.farm_public_id, principal.companyId],
+      ),
+    ]);
     const subject = name(row.parameter === 'sensor_offline'
       ? row.sensor_parameter ?? row.parameter : row.parameter, language);
     const isLow = row.trend === 'decreasing';
@@ -157,7 +175,13 @@ export class IssuesService {
         recordedBy: { id: action.user_id, name: action.user_name },
         source: 'alert_handling',
       })),
-      relatedReports: [],
+      relatedReports: reports.rows.map((report) => ({
+        id: report.public_id, type: report.type,
+        label: report.type === 'daily' ? `Daily ${report.report_date}`
+          : `Weekly ${report.week_start}`,
+        ...(report.type === 'daily' ? { date: report.report_date }
+          : { weekStart: report.week_start }),
+      })),
     };
   }
 }

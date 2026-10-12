@@ -19,6 +19,7 @@ test('alert API scopes TM access and persists handling transitions', async () =>
   const emails = [];
   let companyId;
   let offlineDeviceId;
+  let reportUuid;
   let app;
   try {
     companyId = (await pool.query(`INSERT INTO companies (public_id,name,status)
@@ -94,6 +95,19 @@ test('alert API scopes TM access and persists handling transitions', async () =>
     assert.equal(fmDetail.issueType, 'water_quality');
     assert.equal(fmDetail.handling, 'unacknowledged');
     assert.ok(!JSON.stringify(fmDetail).includes('4.1'));
+    reportUuid = (await pool.query(`INSERT INTO reports
+      (public_id,farm_id,type,report_date,technical_manager_id,due_at,
+        status,submitted_at,submitted_by)
+      VALUES ($1,$2,'daily','2026-10-12',$3,now(),
+        'submitted',now(),$3) RETURNING id`,
+    [`daily-${suffix}`, farmIds[0], userIds[0]])).rows[0].id;
+    await pool.query(`INSERT INTO report_snapshots
+      (report_id,schema_version,payload,source_cutoff_at)
+      VALUES ($1,'daily-v1',$2::jsonb,now())`,
+    [reportUuid, JSON.stringify({ alerts: [{ id: `ALT-0-${suffix}` }] })]);
+    const linked = await (await call('GET', `/issues/${issueIds[0]}`, fm)).json();
+    assert.deepEqual(linked.relatedReports, [{ id: `daily-${suffix}`,
+      type: 'daily', label: 'Daily 2026-10-12', date: '2026-10-12' }]);
     assert.equal((await call('GET', '/issues?state=bad', fm)).status, 422);
     const list = await call('GET', '/alerts?state=open&pageSize=1', tm);
     assert.equal(list.status, 200);
@@ -174,6 +188,10 @@ test('alert API scopes TM access and persists handling transitions', async () =>
     assert.equal(offlineIssueDetail.summary, 'Sensor Kekeruhan offline di Pond a');
   } finally {
     if (app) await app.close();
+    if (reportUuid) {
+      await pool.query('DELETE FROM report_snapshots WHERE report_id=$1', [reportUuid]);
+      await pool.query('DELETE FROM reports WHERE id=$1', [reportUuid]);
+    }
     if (alertUuids.length) {
       await pool.query('DELETE FROM alert_state_history WHERE alert_id=ANY($1)', [alertUuids]);
       await pool.query('DELETE FROM alert_actions WHERE alert_id=ANY($1)', [alertUuids]);
