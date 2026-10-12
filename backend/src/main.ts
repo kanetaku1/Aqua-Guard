@@ -7,6 +7,7 @@ import { SensorIngestionService } from './infrastructure/sensor-ingestion.servic
 import { MqttSensorSubscriberService } from './infrastructure/mqtt-sensor-subscriber.service';
 import { CriticalEvaluationService } from './infrastructure/critical-evaluation.service';
 import { PeriodicAlertService } from './infrastructure/periodic-alert.service';
+import { AlertNotificationMaterializerService } from './infrastructure/alert-notification-materializer.service';
 
 async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT ?? '8000');
@@ -50,6 +51,28 @@ async function bootstrap(): Promise<void> {
   } catch (error) {
     new Logger('PeriodicAlerts').error('Initial periodic alert scan failed', error);
   }
+  try {
+    const result = await app.get(AlertNotificationMaterializerService).runOnce();
+    if (result.materialized || result.noRecipient || result.failed) {
+      new Logger('AlertNotifications').log(JSON.stringify(result));
+    }
+  } catch (error) {
+    new Logger('AlertNotifications').error('Initial notification materialization failed', error);
+  }
+  let notificationRunning = false;
+  const notificationTimer = setInterval(async () => {
+    if (notificationRunning) return;
+    notificationRunning = true;
+    try {
+      const result = await app.get(AlertNotificationMaterializerService).runOnce();
+      if (result.materialized || result.noRecipient || result.failed) {
+        new Logger('AlertNotifications').log(JSON.stringify(result));
+      }
+    } catch (error) {
+      new Logger('AlertNotifications').error('Notification materialization failed', error);
+    } finally { notificationRunning = false; }
+  }, 60_000);
+  notificationTimer.unref();
   let recoveryRunning = false;
   const recoveryTimer = setInterval(async () => {
     if (recoveryRunning) return;

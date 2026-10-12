@@ -45,6 +45,7 @@ import { SensorIngestionService } from './infrastructure/sensor-ingestion.servic
 import { MqttSensorSubscriberService } from './infrastructure/mqtt-sensor-subscriber.service';
 import { CriticalEvaluationService } from './infrastructure/critical-evaluation.service';
 import { PeriodicAlertService } from './infrastructure/periodic-alert.service';
+import { AlertNotificationMaterializerService } from './infrastructure/alert-notification-materializer.service';
 import { PostgresService } from './infrastructure/postgres.service';
 
 @Module({
@@ -61,6 +62,7 @@ import { PostgresService } from './infrastructure/postgres.service';
     MqttSensorSubscriberService,
     CriticalEvaluationService,
     PeriodicAlertService,
+    AlertNotificationMaterializerService,
     AuthService, MailService, PasswordLinksService,
     AdminService, AdminUsersService, AdminDevicesService, AdminSettingsService,
     AdminThresholdsService, BusinessScopeService, SyncStatusService, SensorSeriesService,
