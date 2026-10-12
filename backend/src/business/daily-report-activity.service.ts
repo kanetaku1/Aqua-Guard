@@ -23,6 +23,10 @@ interface ManualActionRow {
   public_id: string; at: Date; action: string; outcome: string | null;
   pond_id: string | null; pond_name: string | null; pond_farm_id: string | null;
 }
+interface ActuatorActionRow {
+  public_id: string; at: Date; command: string;
+  device_id: string; pond_id: string; pond_name: string;
+}
 interface EquipmentRow {
   public_id: string; equipment: string; failure: string; occurred_at: Date;
   action: string | null; status: 'in_progress' | 'resolved';
@@ -44,7 +48,8 @@ export class DailyReportActivityService {
       [date, timeZone],
     );
     const { day_start: start, day_end: end } = boundary.rows[0];
-    const [alerts, alertActions, manualActions, manualEquipment, actuatorEquipment] = await Promise.all([
+    const [alerts, alertActions, manualActions, manualEquipment,
+      actuatorEquipment, actuatorActions] = await Promise.all([
       this.postgres.pool.query<AlertRow>(
         `SELECT al.public_id,p.public_id AS pond_id,p.name AS pond_name,
            al.parameter,d.parameter AS device_parameter,al.severity,al.state,
@@ -88,6 +93,15 @@ export class DailyReportActivityService {
          WHERE e.report_id=$1 ORDER BY e.occurred_at,e.id`, [reportUuid],
       ),
       this.equipment.faultEvents(farmUuid, start, end, now),
+      this.postgres.pool.query<ActuatorActionRow>(
+        `SELECT l.public_id,l.at,l.command,d.device_id,
+           p.public_id AS pond_id,p.name AS pond_name
+         FROM actuator_logs l JOIN devices d ON d.id=l.device_id
+         JOIN ponds p ON p.id=l.pond_id
+         WHERE p.farm_id=$1 AND l.result='succeeded'
+           AND l.at>=$2 AND l.at<$3
+         ORDER BY l.at,l.id`, [farmUuid, start, end],
+      ),
     ]);
     if (manualActions.rows.some((row) => row.pond_farm_id !== null
       && row.pond_farm_id !== farmUuid)
@@ -131,6 +145,12 @@ export class DailyReportActivityService {
         id: row.public_id, source: 'manual', at: row.at.toISOString(),
         pond: pond(row.pond_id, row.pond_name),
         action: row.action, outcome: row.outcome,
+      })),
+      ...actuatorActions.rows.map((row) => ({
+        id: row.public_id, source: 'actuator_log', at: row.at.toISOString(),
+        pond: { id: row.pond_id, name: row.pond_name },
+        action: `${row.device_id}: ${row.command.replace(/_/g, ' ')}`,
+        outcome: null,
       })),
     ].sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id));
     return {

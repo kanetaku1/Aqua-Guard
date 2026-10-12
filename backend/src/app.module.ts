@@ -58,6 +58,8 @@ import { WeeklyReportCreateService } from './business/weekly-report-create.servi
 import { WeeklyReportUpdateService } from './business/weekly-report-update.service';
 import { WeeklyReportSubmitService } from './business/weekly-report-submit.service';
 import { ReportSubmitService } from './business/report-submit.service';
+import { ActuatorsController } from './business/actuators.controller';
+import { ActuatorsService } from './business/actuators.service';
 import { SensorHistoryController } from './business/sensor-history.controller';
 import { SensorHistoryService } from './business/sensor-history.service';
 import { SensorAnomaliesController } from './business/sensor-anomalies.controller';
@@ -98,7 +100,7 @@ import { PostgresService } from './infrastructure/postgres.service';
     AlertsController,
     IssuesController,
     MortalityController, FeedingController,
-    SamplingController],
+    SamplingController, ActuatorsController],
   providers: [PostgresService, InfluxService, SensorIngestionService,
     MqttTelemetrySubscriberService, DeviceTelemetryIngestionService,
     CriticalEvaluationService,
@@ -123,7 +125,7 @@ import { PostgresService } from './infrastructure/postgres.service';
     WeeklyReportViewService,
     WeeklyReportCreateService,
     WeeklyReportUpdateService,
-    WeeklyReportSubmitService, ReportSubmitService,
+    WeeklyReportSubmitService, ReportSubmitService, ActuatorsService,
     SensorHistoryService,
     SensorAnomaliesService,
     AlertsService,
