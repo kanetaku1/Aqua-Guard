@@ -92,6 +92,8 @@ TM向け `GET /farms/{farmId}/ponds` は担当FarmのPond一覧を返し、`stat
 
 Farm Summary の成長観点に向けて、稼働中の生産サイクルと最新サンプリングから、成長目標との比率および Behind のPond割合を計算する内部サービスを追加しました。割合の Attention／Warning 境界は Rules、Pond単位の Behind 判定幅は Growth Targets に従います。サンプルまたは目標値が欠けるPondがあれば `sampleBasedStatus: null` とし、未確定を正常と扱いません。放養尾数が未保存のためSurvival Rate急低下の判定はまだ含めず、フロントエンド向け `FarmSummary` APIには接続していません。`npm run test:sampling:local` と `npm run test:unit` で検証します。
 
+`GET /farms/{farmId}/production` は指定したSampling日、またはFarmの最新Sampling日を基準に、Pond別のABW・ADG・目標比とFarm合計のBiomass・重み付きSurvival Rate・FCRを計算します。推定不明減耗の正式式が未確定の間は、合意した暫定ルールとして不明減耗を0尾とし、推定生存尾数を「放養尾数−累積死亡数」とします。Farmの比率はPond比率の平均ではなく、元の分子・分母から計算します。放養、初期Biomass、Sampling、成長目標、正の増重量が揃わず必須KPIを計算できない場合は `503 production_data_not_ready` を返します。実DB確認は `npm run test:farm-production:local` です。
+
 Farm運用状態では、現行割当のSensorは最後の有効な計測時刻からOnline／Offlineを、Aerator・PumpはFeedbackの状態とHeartbeatから稼働・故障・切断を集計します。`GET /farms/{farmId}/operational-status` はTMの担当Farmについて、現地日付の給餌記録と予定、次回Sampling予定、登録済み発電機状態を組み合わせて現行OpenAPIの `OperationalStatus` を返します。次回Sampling予定が未登録なら `null`、発電機状態または機器の実状態が未確認なら503を返し、正常値を補いません。発電機状態とSampling予定は現行OpenAPIに更新APIがないため、`farm_generator_states` と `farm_sampling_schedule` をバックエンド運用側で登録する必要があります。`npm run test:sync-status:local` と `npm run test:farm-operations:local` で検証します。
 
 Reportの共通ID・種別・日付・担当TM・保存時刻・提出時刻・締切を `reports` テーブルに保存します。`GET /farms/{farmId}/report-status` は担当TMに、Farmの現地日付とRulesの締切から当日Daily・今週Weeklyの状態を返し、最新の提出済みReportを示します。未作成なら `reportId: null`、締切後は `overdue` とし、既存Draftの締切は保存済み `due_at` を使用します。実DB検証は `npm run test:farm-report-status:local` です。
