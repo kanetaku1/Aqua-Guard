@@ -44,6 +44,11 @@ export class PondWaterQualityService {
     if (principal.role !== 'technical_manager') {
       throw new ApiProblem(403, 'forbidden', 'Technical manager access required');
     }
+    return this.snapshot(principal, farmId);
+  }
+
+  // Called after the report service has checked Farm and Report visibility.
+  async snapshot(principal: Principal, farmId: string) {
     const visible = await this.scope.visibleFarmIds(principal);
     const farm = await this.postgres.pool.query<{ id: string }>(
       `SELECT id FROM farms WHERE public_id=$1 AND company_id=$2 AND public_id=ANY($3)`,

@@ -24,6 +24,7 @@
     "test:reports:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/reports.integration.test.cjs",
     "test:daily-report-records:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/daily-report-records.integration.test.cjs",
     "test:daily-report-activity:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/daily-report-activity.integration.test.cjs",
+    "test:daily-report-view:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/daily-report-view.integration.test.cjs",
     "test:critical:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/critical-evaluation.integration.test.cjs",
     "test:periodic:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/periodic-alert.integration.test.cjs",
     "test:mortality:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/mortality.integration.test.cjs",
