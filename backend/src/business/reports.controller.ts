@@ -4,7 +4,7 @@ import { ReportsService } from './reports.service';
 import { DailyReportViewService } from './daily-report-view.service';
 import { DailyReportCreateService } from './daily-report-create.service';
 import { DailyReportUpdateService } from './daily-report-update.service';
-import { DailyReportSubmitService } from './daily-report-submit.service';
+import { ReportSubmitService } from './report-submit.service';
 import { WeeklyReportViewService } from './weekly-report-view.service';
 import { WeeklyReportCreateService } from './weekly-report-create.service';
 import { WeeklyReportUpdateService } from './weekly-report-update.service';
@@ -16,7 +16,7 @@ export class ReportsController {
     private readonly daily: DailyReportViewService,
     private readonly dailyCreate: DailyReportCreateService,
     private readonly dailyUpdate: DailyReportUpdateService,
-    private readonly dailySubmit: DailyReportSubmitService,
+    private readonly submitService: ReportSubmitService,
     private readonly weekly: WeeklyReportViewService,
     private readonly weeklyCreate: WeeklyReportCreateService,
     private readonly weeklyUpdate: WeeklyReportUpdateService,
@@ -66,7 +66,7 @@ export class ReportsController {
 
   @Post(':reportId/submit')
   submit(@Req() request: AuthRequest, @Param('reportId') reportId: string) {
-    return this.dailySubmit.submit(requirePrincipal(request), reportId,
+    return this.submitService.submit(requirePrincipal(request), reportId,
       preferredLanguage(request));
   }
 }
