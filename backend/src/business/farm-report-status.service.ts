@@ -85,7 +85,7 @@ export class FarmReportStatusService {
          ORDER BY r.submitted_at DESC,r.id DESC LIMIT 1`, [currentFarm.id],
       ),
     ]);
-    const weeklyDueDate = addDays(weekStart, rules.weeklyReportDueWeekday - 1);
+    const weeklyDueDate = addDays(weekStart, 7 + rules.weeklyReportDueWeekday - 1);
     const due = await this.postgres.pool.query<DueRow>(
       `SELECT (($1::date + $2::time) AT TIME ZONE $3) AS daily_due,
          (($4::date + $5::time) AT TIME ZONE $3) AS weekly_due`,

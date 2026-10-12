@@ -90,7 +90,7 @@ TM向け `GET /ponds/{pondId}` は、担当Pondの面積、現在の放養サイ
 
 TM向け `GET /farms/{farmId}/ponds` は担当FarmのPond一覧を返し、`status`・`alertState` で絞り込めます。状態とAlertは水質一覧、ABW・目標比は現行サイクルの最新Sampling、当日の給餌・死亡は現場記録、予定回数は給餌計画、エアレーター稼働数はInfluxDBのFeedbackから取得します。欠測値は契約上nullableな項目では `null` にし、Sensorまたは登録済みエアレーターの状態が確定できないPondでは `503 telemetry_not_ready` を返します。`latestSamplingDate` は絞り込み後のPondの最新日です。実DB・InfluxDBの確認は `npm run test:sync-status:local` です。
 
-Farm Summary の成長観点に向けて、稼働中の生産サイクルと最新サンプリングから、成長目標との比率および Behind のPond割合を計算する内部サービスを追加しました。割合の Attention／Warning 境界は Rules、Pond単位の Behind 判定幅は Growth Targets に従います。サンプルまたは目標値が欠けるPondがあれば `sampleBasedStatus: null` とし、未確定を正常と扱いません。放養尾数が未保存のためSurvival Rate急低下の判定はまだ含めず、フロントエンド向け `FarmSummary` APIには接続していません。`npm run test:sampling:local` と `npm run test:unit` で検証します。
+Farm Summary の成長観点に向けて、稼働中の生産サイクルと最新サンプリングから、成長目標との比率および Behind のPond割合を計算します。割合の Attention／Warning 境界は Rules、Pond単位の Behind 判定幅は Growth Targets に従います。サンプルまたは目標値が欠けるPondがあれば `sampleBasedStatus: null` とし、Farm Summaryはデータ不足として返します。Survival Rate急低下による重大度の昇格条件は未確定で、現在の成長観点には含めていません。`npm run test:sampling:local` と `npm run test:unit` で検証します。
 
 `GET /farms/{farmId}/production` は指定したSampling日、またはFarmの最新Sampling日を基準に、Pond別のABW・ADG・目標比とFarm合計のBiomass・重み付きSurvival Rate・FCRを計算します。推定不明減耗の正式式が未確定の間は、合意した暫定ルールとして不明減耗を0尾とし、推定生存尾数を「放養尾数−累積死亡数」とします。Farmの比率はPond比率の平均ではなく、元の分子・分母から計算します。放養、初期Biomass、Sampling、成長目標、正の増重量が揃わず必須KPIを計算できない場合は `503 production_data_not_ready` を返します。実DB確認は `npm run test:farm-production:local` です。
 
@@ -118,7 +118,7 @@ Sensor Current／Series／History／Anomalies は TM と担当 Farm の Pond に
 
 `GET/POST /ponds/{pondId}/feedings` と `PATCH /feedings/{recordId}` も担当 TM のみ利用できます。`round`・`feedType`・`amountKg`・`trayCheck` はフロントエンド OpenAPI の名前と enum を使用します。同一 Pond・日付・回の重複登録は `409`、未来日の登録は `422` とし、一覧に直近2日の `dailyTotals` を返します。返却する `time` は初回記録時刻を WIB の `HH:mm` で表示します。修正前後の値を監査テーブルに残します。
 
-業務画面向け Farm/Pond 状態APIは未実装です。運用開始前に対象IoT機器からの受信を確認し、再起動時は保存済みの有効な計測値と未処理判定から状態を復元する方針です。最初の5分を無条件に `normal` とせず、鮮度切れや必要項目の欠落も正常扱いしません。運用開始時に確認する機器・項目・鮮度の具体的条件、および未放養・Sampling未実施時に [フロントエンドOpenAPI](../frontend/app/api/openapi.frontend.yaml) の必須日付をどう扱うかは引き続き確定が必要です。バックエンド側で契約を独自変更せず、[DB設計の未決事項](./docs/database_design.md)に記録しています。
+`GET /farms` と `GET /farms/{farmId}` は、担当範囲内の水質・成長・運用の3観点を組み合わせた状態を返します。`counts` は絞り込み前のFarm数です。未受信のセンサー、未測定の成長、未確認の設備・発電機を正常と扱わず、必要な根拠が欠ければ `503 farm_status_not_ready` を返します。Daily／Weeklyの未作成とDraftの期限切れはFarm現地時間とRulesで判定します。`GET /farms/{farmId}/status-trend` はまだ未実装です。運用開始前に対象IoT機器からの受信を確認し、再起動時は保存済みの有効な計測値と未処理判定から状態を復元します。最初の5分を無条件に `normal` としません。未放養・Sampling未実施時に [フロントエンドOpenAPI](../frontend/app/api/openapi.frontend.yaml) の必須日付をどう扱うかは引き続き確定が必要です。バックエンド側で契約を独自変更せず、[DB設計の未決事項](./docs/database_design.md)に記録しています。
 
 Sampling API は Pond の一覧・登録・修正と Farm の日付別一覧・一括保存に対応します。DOC、ABW、ADG、目標比、成長判定、Laboratory の閾値判定は保存済み記録と現行の管理設定から計算します。一括保存は同一 Farm 内の指定 Pond だけを同一トランザクションで更新し、途中で失敗した場合は全件を戻します。記録日を含む `production_cycles` が必要で、未登録の場合は 422 を返します。現行 OpenAPI に放養登録 API がないため、運用開始時のサイクル登録経路は今後の設計課題です。ローカル検証は `npm run test:sampling:local` で行えます。
 

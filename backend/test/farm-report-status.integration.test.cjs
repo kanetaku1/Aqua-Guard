@@ -42,7 +42,7 @@ test('report status follows farm time zone, due rules, saved reports and access 
         dueAt: '2026-10-12T09:00:00.000Z', savedAt: null },
       weeklyThisWeek: { reportId: null, state: 'not_started',
         weekStart: '2026-10-12', weekEnd: '2026-10-18',
-        dueAt: '2026-10-13T03:00:00.000Z', savedAt: null },
+        dueAt: '2026-10-20T03:00:00.000Z', savedAt: null },
       lastSubmitted: null,
     });
     assert.equal((await service.get(principal, `farm-${suffix}`, afterDailyDue))
