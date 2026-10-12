@@ -63,7 +63,9 @@ function object(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
-function displayTitle(row: AlertRow, language: Language): string {
+export function displayTitle(row: Pick<AlertRow,
+  'parameter' | 'device_parameter' | 'observed_value' | 'threshold_value' | 'direction' | 'unit'>,
+language: Language): string {
   const names: Record<string, [string, string]> = {
     do: ['DO', 'DO'], ph: ['pH', 'pH'], temperature: ['Temperature', 'Suhu'],
     tds: ['TDS', 'TDS'], turbidity: ['Turbidity', 'Kekeruhan'],
