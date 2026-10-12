@@ -7,13 +7,15 @@ import { DailyReportActivityService } from './daily-report-activity.service';
 import { DailyReportPondsService } from './daily-report-ponds.service';
 import { PondWaterQualityService } from './pond-water-quality.service';
 
-interface ReportRow {
+export interface DailyDraftSource {
   id: string; public_id: string; status: 'draft' | 'submitted';
   farm_uuid: string; farm_id: string; farm_name: string; time_zone: string;
   date: string; manager_id: string; manager_name: string;
   submitted_at: Date | null; due_at: Date; saved_at: Date | null;
   weather: string | null; rainfall_mm: string | null;
   events: string | null; summary: string | null;
+}
+interface ReportRow extends DailyDraftSource {
   frozen: Record<string, unknown> | null;
 }
 interface NeighborRow { public_id: string; date: string }
@@ -56,33 +58,43 @@ export class DailyReportViewService {
     if (!row || (principal.role === 'farms_manager' && row.status !== 'submitted')) {
       throw new ApiProblem(404, 'not_found', 'Report not found');
     }
-    const neighbors = await this.postgres.pool.query<NeighborRow>(
-      `SELECT public_id,to_char(report_date,'YYYY-MM-DD') AS date
-       FROM reports WHERE farm_id=$1 AND type='daily' AND report_date<>$2::date
-         AND ($3::boolean=false OR status='submitted')
-       ORDER BY report_date`,
-      [row.farm_uuid, row.date, principal.role === 'farms_manager'],
-    );
-    const previous = neighbors.rows.filter((item) => item.date < row.date).at(-1);
-    const next = neighbors.rows.find((item) => item.date > row.date);
-    const navigation = {
-      previousReportId: previous?.public_id ?? null,
-      nextReportId: next?.public_id ?? null,
-      previousReportDate: previous?.date ?? null,
-      nextReportDate: next?.date ?? null,
-    };
     if (row.status === 'submitted') {
       if (!row.frozen) {
         throw new ApiProblem(503, 'report_snapshot_unavailable',
           'Submitted report snapshot is unavailable');
       }
-      return { ...row.frozen, ...navigation };
+      return { ...row.frozen,
+        ...await this.navigation(row.farm_uuid, row.date, true) };
     }
-    const [ponds, activity, quality] = await Promise.all([
+    return this.renderDraft(principal, row, language);
+  }
+
+  private async navigation(farmUuid: string, date: string, submittedOnly: boolean) {
+    const neighbors = await this.postgres.pool.query<NeighborRow>(
+      `SELECT public_id,to_char(report_date,'YYYY-MM-DD') AS date
+       FROM reports WHERE farm_id=$1 AND type='daily' AND report_date<>$2::date
+         AND ($3::boolean=false OR status='submitted')
+       ORDER BY report_date`,
+      [farmUuid, date, submittedOnly],
+    );
+    const previous = neighbors.rows.filter((item) => item.date < date).at(-1);
+    const next = neighbors.rows.find((item) => item.date > date);
+    return {
+      previousReportId: previous?.public_id ?? null,
+      nextReportId: next?.public_id ?? null,
+      previousReportDate: previous?.date ?? null,
+      nextReportDate: next?.date ?? null,
+    };
+  }
+
+  async renderDraft(principal: Principal, row: DailyDraftSource,
+    language?: 'en' | 'id') {
+    const [ponds, activity, quality, navigation] = await Promise.all([
       this.ponds.snapshot(row.id, row.farm_uuid, row.date),
       this.activity.snapshot(row.id, row.farm_uuid, row.date, row.time_zone,
         new Date(), language),
       this.water.snapshot(principal, row.farm_id),
+      this.navigation(row.farm_uuid, row.date, false),
     ]);
     const farmStatus = quality.items.reduce<Severity>((status, item) =>
       RANK[item.status as Severity] > RANK[status] ? item.status as Severity : status,
