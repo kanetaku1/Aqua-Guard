@@ -39,6 +39,24 @@ export class WeeklyReportViewService {
     private readonly activity: WeeklyReportActivityService,
   ) {}
 
+  private async systemStatus(principal: Principal, row: WeeklyDraftSource) {
+    const today = new Intl.DateTimeFormat('sv-SE',
+      { timeZone: row.time_zone }).format(new Date());
+    if (row.week_end >= today) {
+      return (await this.farmStatus.detail(principal, row.farm_id)).status;
+    }
+    const result = await this.postgres.pool.query<{ status: string }>(
+      `SELECT status FROM farm_status_daily
+       WHERE farm_id=$1 AND status_date=$2::date`,
+      [row.farm_uuid, row.week_end],
+    );
+    if (!result.rows[0]) {
+      throw new ApiProblem(503, 'weekly_report_data_not_ready',
+        'Farm status was not observed at the end of the reporting week');
+    }
+    return result.rows[0].status;
+  }
+
   async get(principal: Principal, reportId: string, language?: 'en' | 'id') {
     const visible = await this.scope.visibleFarmIds(principal);
     const result = await this.postgres.pool.query<ReportRow>(
@@ -90,10 +108,10 @@ export class WeeklyReportViewService {
 
   async renderDraft(principal: Principal, row: WeeklyDraftSource,
     language?: 'en' | 'id') {
-    const [production, farm, totals, coverage, water, lab, activity, navigation] =
+    const [production, systemFarmStatus, totals, coverage, water, lab, activity, navigation] =
       await Promise.all([
         this.production.get(principal, row.farm_id, row.week_end),
-        this.farmStatus.detail(principal, row.farm_id),
+        this.systemStatus(principal, row),
         this.totals.snapshot(row.farm_uuid, row.week_start),
         this.coverage.snapshot(row.farm_uuid, row.week_start),
         this.water.snapshot(principal.companyId, row.farm_uuid,
@@ -129,8 +147,8 @@ export class WeeklyReportViewService {
       ...navigation,
       docRange: { min: Math.min(...docs), max: Math.max(...docs) },
       summary: {
-        farmCondition: row.farm_condition ?? farm.status,
-        systemFarmStatus: farm.status,
+        farmCondition: row.farm_condition ?? systemFarmStatus,
+        systemFarmStatus,
         pondsBehind: production.kpis.growthDistribution.behind,
         pondsTotal: production.ponds.length,
         feedKg: totals.feeding.total,

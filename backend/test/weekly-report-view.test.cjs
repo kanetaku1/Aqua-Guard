@@ -19,6 +19,9 @@ test('weekly draft joins Pond sources and submitted response uses frozen snapsho
     if (sql.includes('FROM reports WHERE farm_id')) return { rows: [
       { public_id: 'weekly-previous', week_start: '2026-10-05' },
     ] };
+    if (sql.includes('FROM farm_status_daily')) return { rows: [
+      { status: 'warning' },
+    ] };
     throw new Error(`Unexpected query: ${sql}`);
   } } };
   const production = { get: async () => ({
@@ -51,6 +54,10 @@ test('weekly draft joins Pond sources and submitted response uses frozen snapsho
   assert.equal(draft.summary.alertsOngoing, 1);
   assert.deepEqual(draft.docRange, { min: 12, max: 12 });
   assert.equal(draft.pondsThisWeek[0].waterQuality.doMin, 5);
+  source.week_start = '2026-09-28';
+  source.week_end = '2026-10-04';
+  const historic = await service.get(principal, 'weekly-1');
+  assert.equal(historic.summary.systemFarmStatus, 'warning');
   await assert.rejects(() => service.get({ ...principal, role: 'farms_manager' },
     'weekly-1'), (error) => error.getStatus() === 404);
   source.status = 'submitted';

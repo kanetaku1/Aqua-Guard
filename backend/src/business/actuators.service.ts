@@ -214,7 +214,7 @@ export class ActuatorsService {
       || pageSize < 1 || pageSize > 100) {
       throw new ApiProblem(422, 'validation_error', 'Invalid pagination');
     }
-    const [count, rows] = await Promise.all([
+    const [count, rows, devices] = await Promise.all([
       this.postgres.pool.query<{ total: string }>(
         `SELECT count(*)::text AS total FROM actuator_logs WHERE pond_id=$1`,
         [pond.pondUuid]),
@@ -226,11 +226,18 @@ export class ActuatorsService {
          WHERE l.pond_id=$1 ORDER BY l.at DESC,l.id DESC
          LIMIT $2 OFFSET $3`,
         [pond.pondUuid, pageSize, (page - 1) * pageSize]),
+      this.devices(pond.pondUuid),
     ]);
     const total = Number(count.rows[0]?.total ?? 0);
+    let aerator = 0;
+    let pump = 0;
+    const names = new Map(devices.map((device) => [device.device_id,
+      device.type === 'aerator' ? `Aerator ${++aerator}`
+        : `Water Pump ${++pump}`]));
     return { items: rows.rows.map((row) => ({
       id: row.public_id, actuatorId: row.device_id,
-      actuatorName: row.device_id, command: row.command,
+      actuatorName: names.get(row.device_id) ?? row.device_id,
+      command: row.command,
       at: row.at.toISOString(),
       by: row.actor_id && row.actor_name
         ? { id: row.actor_id, name: row.actor_name } : null,

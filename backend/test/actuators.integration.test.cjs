@@ -12,8 +12,13 @@ test('Actuator view uses observed state and commands remain safety blocked', asy
   const deviceId = `aerator-${suffix}`;
   const pondId = `pond-${suffix}`;
   const farmId = `farm-${suffix}`;
+  let pending = Promise.resolve();
   const postgres = { pool: {
-    query: (...args) => client.query(...args),
+    query: (...args) => {
+      const result = pending.then(() => client.query(...args));
+      pending = result.then(() => {}, () => {});
+      return result;
+    },
     connect: async () => ({
       query: async (sql, ...args) => {
         if (sql === 'BEGIN') return client.query('SAVEPOINT actuator_command');
@@ -83,6 +88,7 @@ test('Actuator view uses observed state and commands remain safety blocked', asy
     const logs = await service.logs(tm, pondId, { page: '1', pageSize: '10' });
     assert.equal(logs.total, 2);
     assert.equal(logs.items[0].actuatorId, deviceId);
+    assert.equal(logs.items[0].actuatorName, 'Aerator 1');
     assert.equal(logs.items[0].result, 'succeeded');
     await assert.rejects(() => service.list({ ...tm, role: 'farms_manager' },
       pondId), (error) => error.getStatus() === 403);
