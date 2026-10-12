@@ -39,6 +39,7 @@ import { HealthController } from './health.controller';
 import { InfluxService } from './infrastructure/influx.service';
 import { SensorIngestionService } from './infrastructure/sensor-ingestion.service';
 import { CriticalEvaluationService } from './infrastructure/critical-evaluation.service';
+import { PeriodicAlertService } from './infrastructure/periodic-alert.service';
 import { PostgresService } from './infrastructure/postgres.service';
 
 @Module({
@@ -52,6 +53,7 @@ import { PostgresService } from './infrastructure/postgres.service';
     SamplingController],
   providers: [PostgresService, InfluxService, SensorIngestionService,
     CriticalEvaluationService,
+    PeriodicAlertService,
     AuthService, MailService, PasswordLinksService,
     AdminService, AdminUsersService, AdminDevicesService, AdminSettingsService,
     AdminThresholdsService, BusinessScopeService, SyncStatusService, SensorSeriesService,

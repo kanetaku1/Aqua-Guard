@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 import { ProblemFilter } from './http/problem';
 import { SensorIngestionService } from './infrastructure/sensor-ingestion.service';
 import { CriticalEvaluationService } from './infrastructure/critical-evaluation.service';
+import { PeriodicAlertService } from './infrastructure/periodic-alert.service';
 
 async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT ?? '8000');
@@ -38,6 +39,12 @@ async function bootstrap(): Promise<void> {
     new Logger('CriticalRecovery').error('Critical receipt recovery failed', error);
   }
   await app.listen(port, '0.0.0.0');
+  try {
+    const result = await app.get(PeriodicAlertService).runOnce();
+    if (result.points) new Logger('PeriodicAlerts').log(JSON.stringify(result));
+  } catch (error) {
+    new Logger('PeriodicAlerts').error('Initial periodic alert scan failed', error);
+  }
   let recoveryRunning = false;
   const recoveryTimer = setInterval(async () => {
     if (recoveryRunning) return;
@@ -52,6 +59,18 @@ async function bootstrap(): Promise<void> {
     } finally { recoveryRunning = false; }
   }, 60_000);
   recoveryTimer.unref();
+  let periodicRunning = false;
+  const periodicTimer = setInterval(async () => {
+    if (periodicRunning) return;
+    periodicRunning = true;
+    try {
+      const result = await app.get(PeriodicAlertService).runOnce();
+      if (result.points) new Logger('PeriodicAlerts').log(JSON.stringify(result));
+    } catch (error) {
+      new Logger('PeriodicAlerts').error('Periodic alert scan failed', error);
+    } finally { periodicRunning = false; }
+  }, 5 * 60_000);
+  periodicTimer.unref();
 }
 
 void bootstrap();
