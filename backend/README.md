@@ -94,15 +94,17 @@ Farm Summary の成長観点に向けて、稼働中の生産サイクルと最�
 
 Farm運用状態では、現行割当のSensorは最後の有効な計測時刻からOnline／Offlineを、Aerator・PumpはFeedbackの状態とHeartbeatから稼働・故障・切断を集計します。`GET /farms/{farmId}/operational-status` はTMの担当Farmについて、現地日付の給餌記録と予定、次回Sampling予定、登録済み発電機状態を組み合わせて現行OpenAPIの `OperationalStatus` を返します。次回Sampling予定が未登録なら `null`、発電機状態または機器の実状態が未確認なら503を返し、正常値を補いません。発電機状態とSampling予定は現行OpenAPIに更新APIがないため、`farm_generator_states` と `farm_sampling_schedule` をバックエンド運用側で登録する必要があります。`npm run test:sync-status:local` と `npm run test:farm-operations:local` で検証します。
 
-Reportの共通ID・種別・日付・担当TM・保存時刻・提出時刻・締切を `reports` テーブルに保存する土台を追加しました。`GET /farms/{farmId}/report-status` は担当TMに、Farmの現地日付とRulesの締切から当日Daily・今週Weeklyの状態を返し、最新の提出済みReportを示します。未作成なら `reportId: null`、締切後は `overdue` とし、既存Draftの締切は保存済み `due_at` を使用します。Report本文・作成・提出APIは今後の実装範囲です。実DB検証は `npm run test:farm-report-status:local` です。
+Reportの共通ID・種別・日付・担当TM・保存時刻・提出時刻・締切を `reports` テーブルに保存します。`GET /farms/{farmId}/report-status` は担当TMに、Farmの現地日付とRulesの締切から当日Daily・今週Weeklyの状態を返し、最新の提出済みReportを示します。未作成なら `reportId: null`、締切後は `overdue` とし、既存Draftの締切は保存済み `due_at` を使用します。実DB検証は `npm run test:farm-report-status:local` です。
 
 `GET /reports` はフロントエンド契約の種別・Farm・状態・日付範囲・ページ指定に対応します。FMには提出済みのみ、TMには担当FarmのDraftと提出済みを返します。Dailyの手入力項目は `daily_report_inputs`、Pond別入力、除外Alert、手入力Action・設備Eventのテーブルへ保存する設計です。Report一覧と入力テーブルの実DB検証は `npm run test:reports:local` です。
 
 Daily Report本文の元記録として、指定日・Farmの給餌量と回数、計画回数、最後の飼料、死亡尾数と重量をPond別・Farm合計で読む内部サービスを追加しました。異なる記録のJOINで合計が重複しないよう集計を分離し、日付外の記録は混ぜません。検証は `npm run test:daily-report-records:local` です。
 
-各Pondの `appetite`・`tray`・`health` はフロントエンドMockと同じ `good`・`clean`・`normal` を下書きフォームの編集可能な初期値とし、保存済みのTM入力があればそちらを優先します。これはセンサーから計算するPond／Farmの状態ではありません。Daily本文APIでは、この入力値と元記録に設備・Alert等を合成する必要があります。
+各Pondの `appetite`・`tray`・`health` はフロントエンドMockと同じ `good`・`clean`・`normal` を下書きフォームの編集可能な初期値とし、保存済みのTM入力があればそちらを優先します。これはセンサーから計算するPond／Farmの状態ではありません。Daily本文APIでは、これらの入力値に元記録・設備状態・Alertを合成します。
 
-Daily Reportの活動欄に向け、Farmの現地日付と重なるAlert、日付内のAlert対応、除外指定、手入力Action・設備Eventを読む内部サービスを追加しました。前日から継続したAlertも含め、手入力が別FarmのPondを指す場合は返しません。Actuator操作ログと故障通知のReport反映は設備操作の実装時に接続します。実DB検証は `npm run test:daily-report-activity:local` です。
+Daily Reportの活動欄には、Farmの現地日付と重なるAlert、日付内のAlert対応、除外指定、手入力Action・設備Event、およびActuator Feedbackから作る故障Eventを含めます。前日から継続したAlertも含め、手入力が別FarmのPondを指す場合は返しません。Actuator操作ログのAction反映は今後の実装範囲です。実DB検証は `npm run test:daily-report-activity:local` です。
+
+Daily Reportの `POST /reports/daily`、`GET/PATCH /reports/daily/{reportId}`、`POST /reports/{reportId}/submit` を実装しました。TMは担当FarmのDraftを作成・編集・提出でき、FMは提出済みのみ閲覧できます。作成時は元記録から201応答を組み立てられることを確認してからReportを保存します。PATCHの部分更新と全件置換は1つのTransactionで保存します。提出時には天候・Summaryを確認し、本文Snapshotと提出状態を同一Transactionで固定します。週次Reportの本文・作成・編集・提出は未実装です。検証は `npm run test:daily-report-create:local`、`npm run test:daily-report-view:local`、`npm run test:daily-report-update:local`、`npm run test:daily-report-submit:local` です。
 
 `GET /ponds/{pondId}/sensors/history` は保存済みの有効な計測値を5分単位の行にまとめ、6項目の値・重大度とページ情報を返します。同じ5分枠に同じ項目が複数ある場合は最新値を使い、欠測項目は `value: null` とします。現行 OpenAPI の `HistoryValue.severity` は必須で null や `no_data` を許さないため、欠測項目の severity はフロントエンド Mock と同じ `normal` を返します。表示側では `value: null` を欠測として扱います。期間未指定時は直近24時間、指定できる範囲は最大31日です。検証は `npm run test:sensor-history:local` で行えます。
 
