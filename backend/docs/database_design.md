@@ -105,6 +105,8 @@ ThresholdのFarm別取得では、現在のFarm版にあるParameterはその値
 
 `production_cycles.started_on = stocking_records.stocked_on`とする。給餌・死亡・Sampling・KPIは対象サイクルに結び、再放養後に旧サイクルの累積値を混ぜない。放養記録の登録・更新APIは**現行OpenAPIにない**ため、既存のPond取得・KPI APIの入力源としてデータを持ちつつ、外部からの編集経路はAPI追加合意後に確定する。既存データ移行時は出典と登録者を保持する。初期Biomassが不明ならFCRを架空の0や数値で返さない。
 
+現行実装では `stocking_records` と日別の `feeding_plan_rounds` をMigration `0016_pond_planning.sql` で作成した。放養記録は複合FKでサイクルのPond・開始日との一致を保証する。給餌計画はPond・日付・回の組を一意にし、回の時刻・飼料・予定量・注記を保持する。計画が未登録の日は `PondDetail.feeding` を空配列で返す。登録・訂正の公開APIは未合意のままなので追加していない。
+
 ### 6.2 現場記録
 
 | テーブル | 主な列 | 制約・対応API |

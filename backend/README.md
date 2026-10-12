@@ -86,6 +86,8 @@ Device の接続状態と最終受信時刻は InfluxDB の記録から算出し
 
 TM 向け `GET /farms/{farmId}/ponds/water-quality` は担当 Farm の Pond ごとに6項目の最新値・品質・重大度を返し、各 Pond の状態をセンサー値と未解決 Alert のうち最も重い重大度で集計します。未受信は `value: null`・`quality: no_data`、無効または Offline の値は `value: null`・`quality: offline` として返し、架空の計測値を補いません。`counts` は Pond の状態別件数、`normalRanges` はその Farm に有効な閾値の Attention 境界から作ります。現在値APIとは用途が異なり、表全体の取得を欠測1項目で失敗させません。実DB／InfluxDB確認は `npm run test:sync-status:local` です。
 
+TM向け `GET /ponds/{pondId}` は、担当Pondの面積、現在の放養サイクルの記録、DOC、最新SamplingのABW、当日の給餌計画、未解決Alert数を返します。状態は有効な6項目のSensor現在値と未解決Alertの最も重い重大度で算出し、必要なSensor値が欠ける場合は `503 telemetry_not_ready` を返します。放養記録がない場合は `stockedOn`・`stockedPl`・`doc`、Samplingがない場合は `abwG` を `null` にします。給餌計画がない場合は `feeding` の配列を空で返します。`stocking_records` と `feeding_plan_rounds` は既存のPond取得契約の入力源ですが、登録・編集の公開APIは現行フロントエンド契約にないため追加していません。保存構造はMigration `0016_pond_planning.sql`、確認コマンドは `npm run test:pond-planning:local` と `npm run test:sync-status:local` です。
+
 Farm Summary の成長観点に向けて、稼働中の生産サイクルと最新サンプリングから、成長目標との比率および Behind のPond割合を計算する内部サービスを追加しました。割合の Attention／Warning 境界は Rules、Pond単位の Behind 判定幅は Growth Targets に従います。サンプルまたは目標値が欠けるPondがあれば `sampleBasedStatus: null` とし、未確定を正常と扱いません。放養尾数が未保存のためSurvival Rate急低下の判定はまだ含めず、フロントエンド向け `FarmSummary` APIには接続していません。`npm run test:sampling:local` と `npm run test:unit` で検証します。
 
 Farm運用状態の土台として、現行割当のSensorは最後の有効な計測時刻からOnline／Offlineを、Aerator・PumpはFeedbackの状態とHeartbeatから稼働・故障・切断を集計する内部サービスを追加しました。初回受信のないSensorはOffline一覧に含めず、Feedbackのない設備は稼働数へ算入せず `unknown` として保持します。現行OpenAPIの `OperationalStatus` に必要なReport期限・給餌予定回数・次回サンプリング・発電機情報はまだ揃っていないため、公開APIには接続していません。実DB／InfluxDB検証は `npm run test:sync-status:local` です。
