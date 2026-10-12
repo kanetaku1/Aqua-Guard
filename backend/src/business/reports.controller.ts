@@ -5,6 +5,7 @@ import { DailyReportViewService } from './daily-report-view.service';
 import { DailyReportCreateService } from './daily-report-create.service';
 import { DailyReportUpdateService } from './daily-report-update.service';
 import { DailyReportSubmitService } from './daily-report-submit.service';
+import { WeeklyReportViewService } from './weekly-report-view.service';
 
 @Controller('reports')
 export class ReportsController {
@@ -14,6 +15,7 @@ export class ReportsController {
     private readonly dailyCreate: DailyReportCreateService,
     private readonly dailyUpdate: DailyReportUpdateService,
     private readonly dailySubmit: DailyReportSubmitService,
+    private readonly weekly: WeeklyReportViewService,
   ) {}
 
   @Get()
@@ -24,6 +26,12 @@ export class ReportsController {
   @Get('daily/:reportId')
   getDaily(@Req() request: AuthRequest, @Param('reportId') reportId: string) {
     return this.daily.get(requirePrincipal(request), reportId, preferredLanguage(request));
+  }
+
+  @Get('weekly/:reportId')
+  getWeekly(@Req() request: AuthRequest, @Param('reportId') reportId: string) {
+    return this.weekly.get(requirePrincipal(request), reportId,
+      preferredLanguage(request));
   }
 
   @Post('daily')

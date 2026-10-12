@@ -34,6 +34,7 @@
     "test:weekly-report-activity:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/weekly-report-activity.integration.test.cjs",
     "test:weekly-water-quality:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/weekly-water-quality.integration.test.cjs",
     "test:weekly-laboratory:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/weekly-laboratory.integration.test.cjs",
+    "test:weekly-report-view": "node --test test/weekly-report-view.test.cjs",
     "test:farm-production:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/farm-production.integration.test.cjs",
     "test:company-production": "node --test test/company-production.test.cjs",
     "test:farm-status": "node --test test/farm-status.test.cjs",
