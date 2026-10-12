@@ -211,6 +211,18 @@ export class CriticalEvaluationService {
       );
     }
     await client.query(
+      `INSERT INTO issues
+         (public_id,farm_id,pond_id,issue_type,parameter,severity,trend,
+          state,source_type,source_id,since)
+       SELECT $2,$3,a.pond_id,'water_quality',a.parameter,a.severity,
+         CASE WHEN a.direction='below' THEN 'decreasing' ELSE 'increasing' END,
+         'ongoing','alert',a.id,a.occurred_at
+       FROM alerts a WHERE a.id=$1
+       ON CONFLICT (source_type,source_id) DO UPDATE SET
+         severity=EXCLUDED.severity`,
+      [alertId, `ISS-${randomUUID()}`, target.farm_uuid],
+    );
+    await client.query(
       `INSERT INTO alert_notification_outbox (alert_id, event_kind)
        VALUES ($1,'critical_detected') ON CONFLICT DO NOTHING`, [alertId],
     );

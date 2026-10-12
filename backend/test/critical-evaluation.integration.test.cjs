@@ -117,6 +117,13 @@ test('critical evaluation creates one episode, deduplicates retries and recovers
     assert.equal(alerts.rows[0].severity, 'critical');
     assert.equal(alerts.rows[0].episode_no, '1');
     assert.equal(Number(alerts.rows[0].observed_value), 3.4);
+    const issues = await pool.query(
+      `SELECT public_id, severity, state, source_id FROM issues WHERE pond_id=$1`, [pondId]);
+    assert.equal(issues.rows.length, 1);
+    assert.match(issues.rows[0].public_id, /^ISS-/);
+    assert.equal(issues.rows[0].severity, 'critical');
+    assert.equal(issues.rows[0].state, 'ongoing');
+    assert.equal(issues.rows[0].source_id, alerts.rows[0].id);
     const intervals = await pool.query(
       `SELECT kind, severity, extreme_value, alert_id
        FROM sensor_anomaly_intervals WHERE pond_id=$1`, [pondId],
@@ -166,6 +173,7 @@ test('critical evaluation creates one episode, deduplicates retries and recovers
         WHERE pond_id=$1`, [pondId]);
       await pool.query(`DELETE FROM alert_notification_outbox WHERE alert_id IN
         (SELECT id FROM alerts WHERE pond_id=$1)`, [pondId]);
+      await pool.query('DELETE FROM issues WHERE pond_id=$1', [pondId]);
       await pool.query('DELETE FROM sensor_anomaly_intervals WHERE pond_id=$1', [pondId]);
       await pool.query('DELETE FROM alerts WHERE pond_id=$1', [pondId]);
       await pool.query('DELETE FROM alert_detection_states WHERE pond_id=$1', [pondId]);
