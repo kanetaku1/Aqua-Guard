@@ -8,6 +8,7 @@ const { hashPassword } = require('../dist/auth/password');
 const { ProblemFilter } = require('../dist/http/problem');
 const { InfluxService } = require('../dist/infrastructure/influx.service');
 const { FarmDeviceStatusService } = require('../dist/business/farm-device-status.service');
+const { jakartaDate } = require('../dist/business/pond-planning.service');
 const { createPostgresPool } = require('../dist/infrastructure/postgres');
 
 test('scoped telemetry survives API restart and reports no data, offline, delayed and live', async () => {
@@ -26,6 +27,7 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
   const userUuids = [];
   const emails = [];
   let waterAlertId;
+  let planningCycleId;
   let app;
   try {
     const orgResponse = await fetch(
@@ -181,6 +183,11 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.equal((await seriesWithOverride.json()).threshold.warningLow, 4);
     const currentUrl = `${base}/ponds/pond-a-${suffix}/sensors/current`;
     assert.equal((await fetch(currentUrl, { headers: { Cookie: tmCookie } })).status, 503);
+    const detailUrl = `${base}/ponds/pond-a-${suffix}`;
+    assert.equal((await fetch(detailUrl, { headers: { Cookie: tmCookie } })).status, 503);
+    assert.equal((await fetch(detailUrl, { headers: { Cookie: fmCookie } })).status, 403);
+    assert.equal((await fetch(`${base}/ponds/pond-b-${suffix}`,
+      { headers: { Cookie: tmCookie } })).status, 404);
     const parameters = ['do', 'ph', 'temperature', 'tds', 'turbidity', 'water_level'];
     for (const parameter of parameters) {
       const deviceId = `current-${parameter}-${suffix}`;
@@ -212,6 +219,41 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.equal(current.items.find((item) => item.parameter === 'ph').quality, 'delayed');
     assert.ok(current.items.filter((item) => item.parameter !== 'ph')
       .every((item) => item.quality === 'live'));
+    const today = jakartaDate();
+    const stockedOn = new Date(Date.parse(`${today}T00:00:00Z`) - 10 * 86400000)
+      .toISOString().slice(0, 10);
+    planningCycleId = (await pool.query(`INSERT INTO production_cycles
+      (pond_id,started_on,status) VALUES ($1,$2,'active') RETURNING id`,
+    [pondUuids[0], stockedOn])).rows[0].id;
+    await pool.query(`INSERT INTO stocking_records
+      (public_id,cycle_id,pond_id,stocked_on,stocked_pl,recorded_by)
+      VALUES ($1,$2,$3,$4,10000,$5)`,
+    [`stock-${suffix}`, planningCycleId, pondUuids[0], stockedOn, userUuids[1]]);
+    await pool.query(`INSERT INTO feeding_plan_rounds
+      (pond_id,plan_date,round_no,scheduled_at,feed_type,amount_kg)
+      VALUES ($1,$2,1,'06:00','Grower',12),($1,$2,2,'12:00','Grower',10)`,
+    [pondUuids[0], today]);
+    const detailResponse = await fetch(detailUrl, { headers: { Cookie: tmCookie } });
+    assert.equal(detailResponse.status, 200);
+    const detail = await detailResponse.json();
+    assert.deepEqual(detail.pond, { id: `pond-a-${suffix}`, name: 'Pond A' });
+    assert.deepEqual(detail.farm, { id: `farm-a-${suffix}`, name: 'Farm A' });
+    assert.equal(detail.status, 'critical');
+    assert.equal(detail.areaHa, 0.8);
+    assert.equal(detail.stockedOn, stockedOn);
+    assert.equal(detail.doc, 10);
+    assert.equal(detail.stockedPl, 10000);
+    assert.equal(detail.abwG, null);
+    assert.equal(detail.openAlerts, 0);
+    assert.deepEqual(detail.feeding.schedule, ['06:00', '12:00']);
+    assert.deepEqual(detail.feeding.planToday.map((row) => row.amountKg), [12, 10]);
+    assert.ok(Date.parse(detail.updatedAt));
+    await pool.query(`INSERT INTO sampling_records
+      (public_id,pond_id,cycle_id,sample_date,sample_count,sample_weight_g,recorded_by)
+      VALUES ($1,$2,$3,$4,100,2500,$5)`,
+    [`SMP-detail-${suffix}`, pondUuids[0], planningCycleId, today, userUuids[1]]);
+    assert.equal((await (await fetch(detailUrl,
+      { headers: { Cookie: tmCookie } })).json()).abwG, 25);
     const waterUrl = `${base}/farms/farm-a-${suffix}/ponds/water-quality`;
     assert.equal((await fetch(waterUrl, { headers: { Cookie: fmCookie } })).status, 403);
     assert.equal((await fetch(`${base}/farms/farm-b-${suffix}/ponds/water-quality`,
@@ -231,6 +273,8 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.equal(water.items[0].values.do.value, 3);
     assert.equal(water.items[0].values.do.severity, 'critical');
     assert.equal(water.items[0].values.ph.quality, 'delayed');
+    assert.equal((await (await fetch(detailUrl,
+      { headers: { Cookie: tmCookie } })).json()).openAlerts, 1);
     assert.equal(water.normalRanges.find((row) => row.parameter === 'do').normalMin, 4.5);
     const deviceStatus = app.get(FarmDeviceStatusService);
     const initialDevices = await deviceStatus.snapshot(companyId, farmUuids[0],
@@ -341,6 +385,13 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.ok(!(await cleanSeries.json()).points.some((point) => point.min === 2.5));
   } finally {
     if (app) await app.close();
+    if (pondUuids[0]) {
+      await pool.query('DELETE FROM sampling_records WHERE pond_id=$1', [pondUuids[0]]);
+      await pool.query('DELETE FROM feeding_plan_rounds WHERE pond_id=$1', [pondUuids[0]]);
+      await pool.query('DELETE FROM stocking_records WHERE pond_id=$1', [pondUuids[0]]);
+    }
+    if (planningCycleId) await pool.query('DELETE FROM production_cycles WHERE id=$1',
+      [planningCycleId]);
     if (companyId) {
       await pool.query(`DELETE FROM threshold_values WHERE set_id IN
         (SELECT id FROM threshold_sets WHERE company_id = $1)`, [companyId]);
