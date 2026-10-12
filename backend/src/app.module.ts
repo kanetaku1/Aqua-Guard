@@ -37,6 +37,7 @@ import { ReportsService } from './business/reports.service';
 import { DailyReportRecordsService } from './business/daily-report-records.service';
 import { DailyReportPondsService } from './business/daily-report-ponds.service';
 import { DailyReportActivityService } from './business/daily-report-activity.service';
+import { DailyReportEquipmentService } from './business/daily-report-equipment.service';
 import { SensorHistoryController } from './business/sensor-history.controller';
 import { SensorHistoryService } from './business/sensor-history.service';
 import { SensorAnomaliesController } from './business/sensor-anomalies.controller';
@@ -87,7 +88,7 @@ import { PostgresService } from './infrastructure/postgres.service';
     PondDetailService, PondListService, FarmGrowthStatusService,
     FarmDeviceStatusService, FarmOperationalStatusService, FarmReportStatusService,
     ReportsService, DailyReportRecordsService, DailyReportPondsService,
-    DailyReportActivityService,
+    DailyReportActivityService, DailyReportEquipmentService,
     SensorHistoryService,
     SensorAnomaliesService,
     AlertsService,

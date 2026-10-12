@@ -18,7 +18,9 @@ test('daily report record source sums independent records once and isolates the 
     },
   } };
   const records = new DailyReportRecordsService(postgres);
-  const reportPonds = new DailyReportPondsService(postgres, records);
+  const reportPonds = new DailyReportPondsService(postgres, records, {
+    aerators: async () => new Map([[`pond-a-${suffix}`, { on: 1, total: 2 }]]),
+  });
   try {
     await client.query('BEGIN');
     const company = (await client.query(`INSERT INTO companies (public_id,name,status)
@@ -77,6 +79,8 @@ test('daily report record source sums independent records once and isolates the 
     assert.equal(initial.ponds[0].appetite, 'good');
     assert.equal(initial.ponds[0].tray, 'clean');
     assert.equal(initial.ponds[0].health, 'normal');
+    assert.deepEqual(initial.ponds[0].aerators, { on: 1, total: 2 });
+    assert.deepEqual(initial.ponds[1].aerators, { on: 0, total: 0 });
     assert.deepEqual(initial.ponds[0].observations, []);
     assert.deepEqual(initial.totals, {
       feedKg: 5.75, mortalityPcs: 5, mortalityKg: 0.2,
