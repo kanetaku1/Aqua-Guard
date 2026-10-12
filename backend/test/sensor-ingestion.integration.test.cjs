@@ -207,11 +207,38 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
     assert.equal((await telemetryRows('device_heartbeats', 'online_hint'))[0]._value, true);
     await publisher.publishAsync(feedbackTopic, JSON.stringify(feedback), { qos: 1 });
     await until(async () => (await telemetryRows('actuator_feedback', 'state')).length === 1);
-    await publisher.publishAsync(feedbackTopic, JSON.stringify({ ...feedback, state: 'off' }),
+    await publisher.publishAsync(feedbackTopic, JSON.stringify({ ...feedback,
+      eventId: `conflict-${suffix}`, state: 'off' }),
       { qos: 1 });
     await until(async () => (await pool.query(`SELECT count(*)::integer AS n
       FROM mqtt_rejected_messages WHERE topic=$1 AND reason_code='telemetry_point_conflict'`,
     [feedbackTopic])).rows[0].n === 1);
+    await publisher.publishAsync(feedbackTopic, JSON.stringify({ ...feedback,
+      occurredAt: new Date(Date.now() - 2000).toISOString() }), { qos: 1 });
+    await until(async () => (await pool.query(`SELECT count(*)::integer AS n
+      FROM mqtt_rejected_messages WHERE topic=$1 AND reason_code='event_id_conflict'`,
+    [feedbackTopic])).rows[0].n === 1);
+    await pool.query(`UPDATE device_telemetry_receipts SET status='pending',stored_at=NULL
+      WHERE device_id=$1 AND kind='heartbeat' AND event_id=$2`,
+    [actuatorDeviceId, heartbeat.eventId]);
+    assert.equal((await deviceIngestion.recoverPendingFromStorage()).recovered, 1);
+    assert.equal((await pool.query(`SELECT status FROM device_telemetry_receipts
+      WHERE device_id=$1 AND kind='heartbeat' AND event_id=$2`,
+    [actuatorDeviceId, heartbeat.eventId])).rows[0].status, 'stored');
+    const retryFeedback = { ...feedback, eventId: `storage-retry-${suffix}`,
+      occurredAt: new Date(Date.now() - 1000).toISOString() };
+    const writeFeedback = influx.writeActuatorFeedback.bind(influx);
+    influx.writeActuatorFeedback = async () => { throw new Error('simulated Influx outage'); };
+    await assert.rejects(deviceIngestion.ingest('feedback', retryFeedback),
+      (error) => error.getStatus() === 503);
+    assert.equal((await pool.query(`SELECT status FROM device_telemetry_receipts
+      WHERE device_id=$1 AND kind='feedback' AND event_id=$2`,
+    [actuatorDeviceId, retryFeedback.eventId])).rows[0].status, 'pending');
+    influx.writeActuatorFeedback = writeFeedback;
+    await deviceIngestion.ingest('feedback', retryFeedback);
+    assert.equal((await pool.query(`SELECT status FROM device_telemetry_receipts
+      WHERE device_id=$1 AND kind='feedback' AND event_id=$2`,
+    [actuatorDeviceId, retryFeedback.eventId])).rows[0].status, 'stored');
     await publisher.publishAsync(feedbackTopic, JSON.stringify({ ...feedback,
       eventId: `bad-feedback-${suffix}`, state: 'invalid' }), { qos: 1 });
     await until(async () => (await pool.query(`SELECT count(*)::integer AS n
@@ -253,6 +280,8 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
       await pool.query('DELETE FROM devices WHERE id = $1', [deviceId]);
     }
     if (actuatorDeviceId) {
+      await pool.query('DELETE FROM device_telemetry_receipts WHERE device_id = $1',
+        [actuatorDeviceId]);
       await pool.query('DELETE FROM device_assignments WHERE device_id = $1', [actuatorDeviceId]);
       await pool.query('DELETE FROM devices WHERE id = $1', [actuatorDeviceId]);
     }
