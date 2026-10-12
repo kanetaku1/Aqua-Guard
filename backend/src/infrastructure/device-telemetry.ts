@@ -10,6 +10,8 @@ interface DeviceTags {
 export interface DeviceHeartbeat extends DeviceTags {
   sentAt: Date;
   onlineHint: boolean;
+  eventId?: string;
+  payloadHash?: string;
 }
 
 export interface ActuatorFeedback extends DeviceTags {
@@ -18,6 +20,8 @@ export interface ActuatorFeedback extends DeviceTags {
   mode?: string;
   faultCode?: string;
   commandId?: string;
+  eventId?: string;
+  payloadHash?: string;
 }
 
 function basePoint(measurement: string, device: DeviceTags, observedAt: Date): Point {
@@ -36,8 +40,11 @@ function basePoint(measurement: string, device: DeviceTags, observedAt: Date): P
 }
 
 export function toHeartbeatPoint(heartbeat: DeviceHeartbeat): Point {
-  return basePoint('device_heartbeats', heartbeat, heartbeat.sentAt)
+  const point = basePoint('device_heartbeats', heartbeat, heartbeat.sentAt)
     .booleanField('online_hint', heartbeat.onlineHint);
+  if (heartbeat.eventId) point.stringField('event_id', heartbeat.eventId);
+  if (heartbeat.payloadHash) point.stringField('payload_hash', heartbeat.payloadHash);
+  return point;
 }
 
 export function toActuatorFeedbackPoint(feedback: ActuatorFeedback): Point {
@@ -49,5 +56,7 @@ export function toActuatorFeedbackPoint(feedback: ActuatorFeedback): Point {
   if (feedback.mode) point.stringField('mode', feedback.mode);
   if (feedback.faultCode) point.stringField('fault_code', feedback.faultCode);
   if (feedback.commandId) point.stringField('command_id', feedback.commandId);
+  if (feedback.eventId) point.stringField('event_id', feedback.eventId);
+  if (feedback.payloadHash) point.stringField('payload_hash', feedback.payloadHash);
   return point;
 }
