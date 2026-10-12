@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ProblemFilter } from './http/problem';
 import { SensorIngestionService } from './infrastructure/sensor-ingestion.service';
+import { MqttSensorSubscriberService } from './infrastructure/mqtt-sensor-subscriber.service';
 import { CriticalEvaluationService } from './infrastructure/critical-evaluation.service';
 import { PeriodicAlertService } from './infrastructure/periodic-alert.service';
 
@@ -14,6 +15,7 @@ async function bootstrap(): Promise<void> {
   }
 
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
   app.enableCsrfProtection();
   app.useGlobalFilters(new ProblemFilter());
   app.setGlobalPrefix('api/v1', {
@@ -39,6 +41,9 @@ async function bootstrap(): Promise<void> {
     new Logger('CriticalRecovery').error('Critical receipt recovery failed', error);
   }
   await app.listen(port, '0.0.0.0');
+  if (process.env.MQTT_ENABLED === 'true') {
+    void app.get(MqttSensorSubscriberService).start();
+  }
   try {
     const result = await app.get(PeriodicAlertService).runOnce();
     if (result.points) new Logger('PeriodicAlerts').log(JSON.stringify(result));

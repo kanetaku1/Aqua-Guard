@@ -38,7 +38,7 @@ docker compose --env-file .env.example ps
 
 停止するときは `docker compose --env-file .env.example stop` を実行します。Volume に保存されたデータは残ります。初期パスワードや Token は初回起動時に設定されるため、Volume を保持したまま環境変数だけ変更しても既存ユーザーの認証情報は変わりません。
 
-Mosquitto はローカル開発用に匿名接続を許可しています。ホストへの公開ポートは `127.0.0.1` に限定しています。実機接続や本番配置の前に、機器認証・Topic・QoS を確定します。
+Mosquitto はローカル開発用に匿名接続を許可しています。ホストへの公開ポートは `127.0.0.1` に限定しています。実機接続や本番配置の前に、機器認証・Topic・QoS を確定します。バックエンドの受信を有効にするには `.env` に `MQTT_ENABLED=true` を設定します。現行のローカル受信 Topic は `aquaguard/sensors/<deviceId>/readings`、QoS は 1 です。Event は JSON で `eventId`、`deviceId`、`parameter`、`value`、`measuredAt` を含み、登録済み機器の ID と Topic の ID が一致する必要があります。購読側は保存完了後に確認応答を返し、一時的な保存失敗時は再接続して Broker の再配送を受けます。不正な Event は `mqtt_rejected_messages` に理由・ハッシュ・件数を記録して確認応答を返します（生の Payload は保存しません）。再起動後の再配送には固定の `MQTT_CLIENT_ID` を使います。ローカル結合確認は `npm run test:ingestion:local` で行います。
 
 Mailpit は開発用のメール受信箱です。招待・パスワード再設定メールは外部へ配送されず、受信画面でリンクを確認できます。API をホスト上で起動するときの `SMTP_HOST` は `127.0.0.1`、Compose 内で起動するときは `mailpit` にします。実際のメール配送を使う環境では `SMTP_HOST`、`SMTP_PORT`、必要なら `SMTP_USER`／`SMTP_PASSWORD` と `SMTP_SECURE`、`MAIL_FROM`、`WEB_APP_ORIGIN` を環境別に設定します。
 
@@ -80,7 +80,7 @@ Device の接続状態と最終受信時刻は InfluxDB の記録から算出し
 
 `GET /sync-status` は FM に会社の全 Farm、TM に担当 Farm のセンサー記録を対象として InfluxDB を参照し、Rules の遅延・Offline 分数で品質を判定します。参照成功時刻は `syncedAt` として返し、ユーザー別の参照Checkpointを保存します。データがなければ `quality: no_data` です。次回参照時刻は画面の5分再取得間隔から算出します。
 
-`GET /ponds/{pondId}/sensors/series` は担当権限を PostgreSQL で確認した後、InfluxDB の実測値を指定間隔に集計します。欠損区間の `avg`・`min`・`max` は `null` で、表示する `threshold` は Farm 別上書きを優先します。現行フロントエンドの24時間・7日・30日表示に対応します。MQTT 接続は未実装のため、現時点の実測値は直接書き込みテストと受信保存サービスの結合テストのデータだけです。
+`GET /ponds/{pondId}/sensors/series` は担当権限を PostgreSQL で確認した後、InfluxDB の実測値を指定間隔に集計します。欠損区間の `avg`・`min`・`max` は `null` で、表示する `threshold` は Farm 別上書きを優先します。現行フロントエンドの24時間・7日・30日表示に対応します。MQTT 購読を有効にすると、受信 Event の実測値も同じ系列に保存されます。
 
 `GET /ponds/{pondId}/sensors/current` は担当 Pond に割り当てられた有効な6種類のセンサーについて、InfluxDB の保存済み最新値をリクエスト時に読み、Farm 別閾値と運用ルールから `severity`・`quality` を計算します。API 再起動後も同じ保存値を読み直します。必要な機器・有効値が欠ける、または計測値がオフライン判定時間を超える場合は `503 telemetry_not_ready` を返し、架空の値や `normal` を返しません。`series` と `sync-status` も無効な計測点を判定対象から外します。
 
@@ -108,7 +108,7 @@ Sampling API は Pond の一覧・登録・修正と Farm の日付別一覧・�
 
 PostgreSQL の初期テーブルと InfluxDB の論理系列は実装済みです。`SensorIngestionService` は単一 Sensor Event の項目・計測時刻・機器割当を検証し、Receipt を先に記録してから InfluxDB に保存します。同一 Event の再送は重複保存せず、別 Event が同じ計測点を占有しようとした場合は Receipt を隔離します。起動時には `pending` の Receipt と InfluxDB の保存済み点を照合し、保存が確認できたものだけ `stored` に復旧します。InfluxDB に点がない Receipt は `pending` のままにし、再送を待ちます。Web 向けの受信 API は追加していません。
 
-保存済みの新規 Sensor Event は受信直後に、その計測時刻に有効な Farm 別／共通閾値で Critical 判定します。Critical の初回発生では Alert・Issue・異常区間・通知 Outbox・Receipt の判定完了を同じ PostgreSQL Transaction で保存し、継続点や再送で重複させません。現在の即時判定では、計測値が未来、または運用ルールの Offline 判定分数より古い場合と、同じ機器の後続点より古い場合は即時発報を見送り、理由を Receipt に残します。これは遅延点を現在の危険として通知しないための暫定条件で、専用の許容経過時間は実機条件に合わせて確定が必要です。保存後の判定が失敗した Receipt は `stored` に残り、再送、起動時、および稼働中の定期回収で再試行します。`npm run test:critical:local` で実 DB／InfluxDB を使った検証ができます。通知 Outbox の利用者別配信と MQTT Broker 接続は後続作業です。Outbox に行があるだけでは利用者への通知完了を意味しません。
+保存済みの新規 Sensor Event は受信直後に、その計測時刻に有効な Farm 別／共通閾値で Critical 判定します。Critical の初回発生では Alert・Issue・異常区間・通知 Outbox・Receipt の判定完了を同じ PostgreSQL Transaction で保存し、継続点や再送で重複させません。現在の即時判定では、計測値が未来、または運用ルールの Offline 判定分数より古い場合と、同じ機器の後続点より古い場合は即時発報を見送り、理由を Receipt に残します。これは遅延点を現在の危険として通知しないための暫定条件で、専用の許容経過時間は実機条件に合わせて確定が必要です。保存後の判定が失敗した Receipt は `stored` に残り、再送、起動時、および稼働中の定期回収で再試行します。`npm run test:critical:local` で実 DB／InfluxDB を使った検証ができます。通知 Outbox の利用者別配信は後続作業です。Outbox に行があるだけでは利用者への通知完了を意味しません。
 
 起動時と稼働中の5分間隔で、有効な受信点を時刻順に再読込します。Warning は判定時に、Attention は Rules の `attentionToAlertMinutes` だけ連続した後に、Alert・Issue・異常区間を作ります。3～5分の計測周期に対し、点の間隔が6分を超える場合はAttentionの継続時間をリセットします（Rules の遅延判定時間が6分未満なら短い方を使います）。この6分は機器側の実測周期が決まるまでの暫定値です。回復点では異常区間を閉じますが、TMのAlert解決状態は自動変更しません。Criticalへの昇格は受信時判定と同じAlertを使い、古い点で重大度を下げません。未完了Receiptの点は追い越さず、再実行しても重複作成しません。Alert・Issue・検知状態・Farm別Checkpointは同一PostgreSQL Transactionで更新します。初回読込は直近24時間に限定します。Checkpointより古い計測時刻の点が後から届いた場合、直近24時間かつ既存の異常区間内の有効値に限り、区間の最大・最小値を補正します。この補正で過去Alertの発報・重大度・対応状態は変更しません。既存区間のない古い点による異常区間の再構築、24時間より古い点の補正、Farm／Pond集計と5分Checkpointの`/sync-status`への反映は未実装です。実DB・InfluxDB検証は `npm run test:periodic:local` です。
 
