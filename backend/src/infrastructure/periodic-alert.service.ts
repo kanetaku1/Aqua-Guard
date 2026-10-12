@@ -24,6 +24,10 @@ interface Point {
 interface LastValid {
   _time?: string; pond_id?: string; device_id?: string;
 }
+interface LateReceipt {
+  device_id: string; event_id: string; pond_public_id: string;
+  measured_at: Date;
+}
 interface OfflineState {
   id: string; current_alert_id: string | null; episode_no: string;
   offline_active: boolean;
@@ -95,8 +99,9 @@ export class PeriodicAlertService {
         `INSERT INTO sensor_sync_checkpoints (scope_key) VALUES ($1)
          ON CONFLICT DO NOTHING`, [scope],
       );
-      await client.query('SELECT scope_key FROM sensor_sync_checkpoints WHERE scope_key=$1 FOR UPDATE',
-        [scope]);
+      const checkpoint = await client.query<{ last_success_at: Date | null }>(
+        `SELECT last_success_at FROM sensor_sync_checkpoints
+         WHERE scope_key=$1 FOR UPDATE`, [scope]);
       let processed = 0;
       for (const batch of batches) {
         await this.ensureStates(client, batch.device);
@@ -145,6 +150,8 @@ export class PeriodicAlertService {
           processed += 1;
         }
       }
+      await this.correctLateExtremes(client, farm, devices.rows,
+        checkpoint.rows[0].last_success_at, now);
       for (const device of devices.rows) {
         const last = latestValid.get(`${device.pond_public_id}:${device.device_id}`);
         if (last && last >= device.assigned_at && last <= now) {
@@ -173,6 +180,48 @@ export class PeriodicAlertService {
       return processed;
     } catch (error) { await client.query('ROLLBACK'); throw error; }
     finally { client.release(); }
+  }
+
+  private async correctLateExtremes(client: PoolClient, farm: Farm, devices: Device[],
+    lastScan: Date | null, now: Date): Promise<void> {
+    if (!lastScan) return;
+    const byId = new Map(devices.map((device): [string, Device] => [device.id, device]));
+    const receipts = await client.query<LateReceipt>(
+      `SELECT r.device_id,r.event_id,ref->>'pondId' AS pond_public_id,
+         (ref->>'measuredAt')::timestamptz AS measured_at
+       FROM ingestion_receipts r
+       CROSS JOIN LATERAL jsonb_array_elements(r.observation_refs) ref
+       JOIN ponds p ON p.public_id=ref->>'pondId'
+       JOIN alert_detection_states s ON s.pond_id=p.id AND s.device_id=r.device_id
+         AND s.parameter=ref->>'parameter' AND s.direction='low'
+         AND s.periodic_measured_through >= (ref->>'measuredAt')::timestamptz
+       WHERE r.status='completed' AND r.processed_at > $1 AND r.processed_at <= $2
+         AND ref->>'farmId'=$3
+         AND (ref->>'measuredAt')::timestamptz >= $2::timestamptz - interval '24 hours'
+         AND (ref->>'measuredAt')::timestamptz <= $2
+       ORDER BY r.processed_at,r.id`, [lastScan, now, farm.public_id],
+    );
+    for (const receipt of receipts.rows) {
+      const device = byId.get(receipt.device_id);
+      if (!device || device.pond_public_id !== receipt.pond_public_id
+        || receipt.measured_at < device.assigned_at) continue;
+      const points = await this.readPoints(farm, device, receipt.measured_at, receipt.measured_at);
+      const point = points.find((row) => row.event_id === receipt.event_id
+        && row._time && new Date(row._time).getTime() === receipt.measured_at.getTime());
+      if (point?.validity !== 'valid' || typeof point.value !== 'number'
+        || !Number.isFinite(point.value)) continue;
+      await client.query(
+        `UPDATE sensor_anomaly_intervals SET extreme_value=
+           CASE WHEN kind='below_threshold' THEN LEAST(extreme_value,$4::numeric)
+             ELSE GREATEST(extreme_value,$4::numeric) END,
+           updated_at=now()
+         WHERE pond_id=$1 AND device_id=$2 AND parameter=$3
+           AND kind IN ('below_threshold','above_threshold')
+           AND extreme_value IS NOT NULL AND started_at <= $5
+           AND (ended_at IS NULL OR ended_at >= $5)`,
+        [device.pond_id, device.id, device.parameter, point.value, receipt.measured_at],
+      );
+    }
   }
 
   private async readPoints(farm: Farm, device: Device, start: Date, now: Date): Promise<Point[]> {

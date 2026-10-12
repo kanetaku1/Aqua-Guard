@@ -137,6 +137,21 @@ test('periodic scan creates attention and warning, closes recovery, and shares c
     assert.ok(checkpoint.rows[0].last_success_at);
     assert.ok(checkpoint.rows[0].processed_through);
 
+    const intervalBefore = await pool.query(`SELECT extreme_value FROM sensor_anomaly_intervals
+      WHERE alert_id=$1`, [alerts.rows[1].id]);
+    assert.equal(Number(intervalBefore.rows[0].extreme_value), 3.4);
+    await ingestion.ingest(event('late-critical', 3.1, 19.5));
+    await periodic.runOnce();
+    const intervalAfter = await pool.query(`SELECT extreme_value FROM sensor_anomaly_intervals
+      WHERE alert_id=$1`, [alerts.rows[1].id]);
+    assert.equal(Number(intervalAfter.rows[0].extreme_value), 3.1);
+    assert.equal((await pool.query('SELECT count(*)::integer AS n FROM alerts WHERE pond_id=$1',
+      [pondId])).rows[0].n, 3);
+    await ingestion.ingest(event('late-outside', 3.0, 16));
+    await periodic.runOnce();
+    assert.equal(Number((await pool.query(`SELECT extreme_value FROM sensor_anomaly_intervals
+      WHERE alert_id=$1`, [alerts.rows[1].id])).rows[0].extreme_value), 3.1);
+
     for (const [name, parameter] of [['offline', 'ph'], ['never-seen', 'temperature']]) {
       const id = (await pool.query(`INSERT INTO devices (device_id,type,parameter)
         VALUES ($1,'sensor',$2) RETURNING id`, [`${name}-${suffix}`, parameter])).rows[0].id;
