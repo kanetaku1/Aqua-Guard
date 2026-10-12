@@ -28,6 +28,7 @@ interface Point { value?: number; validity?: string; event_id?: string }
 interface State {
   id: string; direction: Direction; episode_no: string;
   current_alert_id: string | null; live_measured_through: Date | null;
+  periodic_measured_through: Date | null;
 }
 interface AlertState { id: string; state: string; severity: string }
 type Result = { status: 'pending' | 'evaluated' | 'skipped' | 'already_done';
@@ -131,7 +132,8 @@ export class CriticalEvaluationService {
       [pondUuid, deviceUuid, parameter, direction],
     );
     const result = await client.query<State>(
-      `SELECT id, direction, episode_no, current_alert_id, live_measured_through
+      `SELECT id, direction, episode_no, current_alert_id, live_measured_through,
+         periodic_measured_through
        FROM alert_detection_states WHERE pond_id=$1 AND device_id=$2 AND parameter=$3
        ORDER BY direction FOR UPDATE`,
       [pondUuid, deviceUuid, parameter],
@@ -297,7 +299,9 @@ export class CriticalEvaluationService {
       }
       const states = await this.state(client, target.pond_uuid, receipt.device_id, ref.parameter);
       if (states.some((state) => state.live_measured_through
-        && at <= state.live_measured_through)) {
+        && at <= state.live_measured_through)
+        || states.some((state) => state.periodic_measured_through
+          && at <= state.periodic_measured_through)) {
         await this.complete(client, receiptId, 'skipped', policy.setId,
           { reason: 'out_of_order', measuredAt: ref.measuredAt });
         await client.query('COMMIT');
