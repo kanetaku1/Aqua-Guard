@@ -186,7 +186,7 @@ PATCHの名前であっても、`/feedings/{recordId}`と`/mortalities/{recordId
 | POST | `/actuators/{actuatorId}/commands` | `command` → `Actuator` | 202 |
 | GET | `/ponds/{pondId}/actuator-logs` | `page`, `pageSize` → `ActuatorLog[]` | 200 |
 
-`command`は`turn_on`、`turn_off`、`set_auto`のみ。Actuatorの`state`は`on`／`off`／`fault`、`mode`は`auto`／`manual`、`connection`は`online`／`offline`。`blockedCommands[]`はSafety Layerで禁止された操作と理由を返す。Auto中に手動操作するとManual（override）になるため、画面は確認ダイアログを示す。サーバー側でもSafety Layerを再評価し、禁止時は`409`・`code: safety_blocked`と理由を返して設備へ送信しない。
+`command`はフロントエンドOpenAPIの`turn_on`、`turn_off`、`set_manual`、`set_auto`。Actuatorの`state`は`on`／`off`／`fault`、`mode`は`auto`／`manual`、`connection`は`online`／`offline`。`blockedCommands[]`はSafety Layerで禁止された操作と理由を返す。Auto中に手動操作するとManual（override）になるため、画面は確認ダイアログを示す。サーバー側でもSafety Layerを再評価し、禁止時は`409`・`code: safety_blocked`と理由を返して設備へ送信しない。実機プロトコルとSafetyルールの確定までは全Commandを拒否し、202を返さない。
 
 **202は受付であり、実機実行完了を意味しない。** 現行OpenAPIの202本文は`Actuator`であり、Command IDや詳細な配送状態は返さない。既存画面は状態を再取得し、操作履歴の`result`（`succeeded`／`failed`／`blocked`）を参照する。バックエンド内部では要求者、対象、要求、Safety判定、送信、ACK、結果、時刻を追跡し、再送による二重操作を防ぐ。追跡用の公開APIは第11章の追加提案とする。PID設定値、Emergency Stopの操作APIはOpenAPIに定義されていないため、現行Commandのenumへ暗黙に追加しない。
 
