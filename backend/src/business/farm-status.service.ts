@@ -20,6 +20,10 @@ interface TrendRow {
   date: string; status: Severity; water_quality: Severity;
   growth: Severity; operations: Severity;
 }
+interface CaptureRow extends FarmRow {
+  company_id: string; actor_id: string | null;
+  actor_role: 'farms_manager' | 'technical_manager' | null;
+}
 
 function shift(date: string, days: number): string {
   return new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000)
@@ -265,5 +269,48 @@ export class FarmStatusService {
       waterQuality: row.water_quality, growth: row.growth,
       operations: row.operations,
     })) };
+  }
+
+  async captureAll(now = new Date()) {
+    const farms = await this.postgres.pool.query<CaptureRow>(
+      `SELECT f.id,f.public_id,f.name,f.location,f.time_zone,
+         f.company_id,count(DISTINCT p.id)::text AS pond_count,
+         actor.id AS actor_id,actor.role AS actor_role
+       FROM farms f LEFT JOIN ponds p ON p.farm_id=f.id
+       LEFT JOIN LATERAL (
+         SELECT u.id,u.role FROM users u
+         LEFT JOIN user_farm_assignments a ON a.user_id=u.id
+           AND a.farm_id=f.id AND a.unassigned_at IS NULL
+         WHERE u.company_id=f.company_id AND u.status='active'
+           AND (u.role='farms_manager'
+             OR (u.role='technical_manager' AND a.id IS NOT NULL))
+         ORDER BY CASE WHEN u.role='farms_manager' THEN 0 ELSE 1 END,u.id
+         LIMIT 1
+       ) actor ON true
+       WHERE f.status='active'
+       GROUP BY f.id,actor.id,actor.role ORDER BY f.id`,
+    );
+    const result = { captured: 0, skipped: 0, failed: 0 };
+    for (const farm of farms.rows) {
+      if (!farm.actor_id || !farm.actor_role) {
+        result.skipped++;
+        continue;
+      }
+      const principal: Principal = {
+        userId: farm.actor_id, sessionId: 'background-status-capture',
+        companyId: farm.company_id, role: farm.actor_role,
+      };
+      try {
+        await this.summarize(principal, farm, now);
+        result.captured++;
+      } catch (error) {
+        if (error instanceof ApiProblem && error.getStatus() === 503) {
+          result.skipped++;
+        } else {
+          result.failed++;
+        }
+      }
+    }
+    return result;
   }
 }

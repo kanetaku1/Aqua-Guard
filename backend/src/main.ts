@@ -9,6 +9,7 @@ import { CriticalEvaluationService } from './infrastructure/critical-evaluation.
 import { PeriodicAlertService } from './infrastructure/periodic-alert.service';
 import { AlertNotificationMaterializerService } from './infrastructure/alert-notification-materializer.service';
 import { DeviceTelemetryIngestionService } from './infrastructure/device-telemetry-ingestion.service';
+import { FarmStatusService } from './business/farm-status.service';
 
 async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT ?? '8000');
@@ -57,6 +58,10 @@ async function bootstrap(): Promise<void> {
   try {
     const result = await app.get(PeriodicAlertService).runOnce();
     if (result.points) new Logger('PeriodicAlerts').log(JSON.stringify(result));
+    const captured = await app.get(FarmStatusService).captureAll();
+    if (captured.skipped || captured.failed) {
+      new Logger('FarmStatusHistory').warn(JSON.stringify(captured));
+    }
   } catch (error) {
     new Logger('PeriodicAlerts').error('Initial periodic alert scan failed', error);
   }
@@ -103,6 +108,10 @@ async function bootstrap(): Promise<void> {
     try {
       const result = await app.get(PeriodicAlertService).runOnce();
       if (result.points) new Logger('PeriodicAlerts').log(JSON.stringify(result));
+      const captured = await app.get(FarmStatusService).captureAll();
+      if (captured.skipped || captured.failed) {
+        new Logger('FarmStatusHistory').warn(JSON.stringify(captured));
+      }
     } catch (error) {
       new Logger('PeriodicAlerts').error('Periodic alert scan failed', error);
     } finally { periodicRunning = false; }
