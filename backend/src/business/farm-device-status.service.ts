@@ -115,7 +115,7 @@ export class FarmDeviceStatusService {
       }
     }
     return { sensors, aerators, pumps, equipmentFaults, equipmentOffline,
-      // Report deadlines, generator and planned feeding rounds are not available yet.
+      // Report deadlines, generator and feeding plans are not wired into this snapshot yet.
       completeForFarmOperations: false };
   }
 }

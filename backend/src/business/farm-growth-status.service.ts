@@ -89,7 +89,7 @@ export class FarmGrowthStatusService {
       sampleBasedStatus: evaluated === eligible
         ? growthSeverity(behindPonds.length, eligible, attentionPct, warningPct) : null,
       behind: behindPonds.length, eligible, evaluated, behindPonds, latestSamplingDate,
-      // Stocked counts are not yet stored, so a sharp survival-rate drop cannot be assessed.
+      // Survival estimation is not implemented, including cycles without stocking records.
       survivalTrendAvailable: false,
     };
   }
