@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PostgresService } from '../infrastructure/postgres.service';
 import { displayTitle } from './alerts.service';
+import { DailyReportEquipmentService } from './daily-report-equipment.service';
 
 type Language = 'en' | 'id' | undefined;
 interface DayRow { day_start: Date; day_end: Date }
@@ -30,7 +31,10 @@ interface EquipmentRow {
 
 @Injectable()
 export class DailyReportActivityService {
-  constructor(private readonly postgres: PostgresService) {}
+  constructor(
+    private readonly postgres: PostgresService,
+    private readonly equipment: DailyReportEquipmentService,
+  ) {}
 
   async snapshot(reportUuid: string, farmUuid: string, date: string,
     timeZone: string, now = new Date(), language: Language = 'en') {
@@ -40,7 +44,7 @@ export class DailyReportActivityService {
       [date, timeZone],
     );
     const { day_start: start, day_end: end } = boundary.rows[0];
-    const [alerts, alertActions, manualActions, manualEquipment] = await Promise.all([
+    const [alerts, alertActions, manualActions, manualEquipment, actuatorEquipment] = await Promise.all([
       this.postgres.pool.query<AlertRow>(
         `SELECT al.public_id,p.public_id AS pond_id,p.name AS pond_name,
            al.parameter,d.parameter AS device_parameter,al.severity,al.state,
@@ -83,6 +87,7 @@ export class DailyReportActivityService {
          FROM report_manual_equipment_events e LEFT JOIN ponds p ON p.id=e.pond_id
          WHERE e.report_id=$1 ORDER BY e.occurred_at,e.id`, [reportUuid],
       ),
+      this.equipment.faultEvents(farmUuid, start, end, now),
     ]);
     if (manualActions.rows.some((row) => row.pond_farm_id !== null
       && row.pond_farm_id !== farmUuid)
@@ -131,12 +136,13 @@ export class DailyReportActivityService {
     return {
       alerts: alertItems,
       actions,
-      equipmentEvents: manualEquipment.rows.map((row) => ({
+      equipmentEvents: [...actuatorEquipment, ...manualEquipment.rows.map((row) => ({
         id: row.public_id, source: 'manual', equipment: row.equipment,
         pond: pond(row.pond_id, row.pond_name), failure: row.failure,
         occurredAt: row.occurred_at.toISOString(), action: row.action,
         status: row.status,
-      })),
+      }))].sort((a, b) => a.occurredAt.localeCompare(b.occurredAt)
+        || a.id.localeCompare(b.id)),
     };
   }
 }

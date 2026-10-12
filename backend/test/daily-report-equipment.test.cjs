@@ -48,3 +48,37 @@ test('Daily Report reports Influx failure as service unavailable', async () => {
     (error) => error.getStatus() === 503
       && error.getResponse().code === 'storage_unavailable');
 });
+
+test('Daily Report creates one event per fault interval and resolves it from later feedback', async () => {
+  const postgres = { pool: { query: async (sql) => sql.includes('FROM farms')
+    ? { rows: [{ public_id: 'farm-1' }] }
+    : { rows: [{ device_id: 'aerator-1', pond_id: 'pond-1', pond_name: 'Pond 1',
+      assigned_at: new Date('2026-10-11T00:00:00Z'), unassigned_at: null }] } } };
+  const feedback = [
+    ['2026-10-11T23:00:00Z', 'fault', 'old'],
+    ['2026-10-12T00:10:00Z', 'fault', 'old'],
+    ['2026-10-12T00:20:00Z', 'off'],
+    ['2026-10-12T01:00:00Z', 'fault', 'overheat'],
+    ['2026-10-12T01:05:00Z', 'fault', 'overheat'],
+    ['2026-10-12T01:30:00Z', 'on'],
+    ['2026-10-12T02:00:00Z', 'fault', 'motor'],
+    ['2026-10-12T03:00:00Z', 'on'],
+  ].map(([_time, state, fault_code]) => ({
+    _time, state, fault_code, pond_id: 'pond-1', device_id: 'aerator-1',
+  }));
+  const influx = { org: 'test', bucket: 'test', client: { getQueryApi: () => ({
+    collectRows: async (flux) => {
+      assert.match(flux, /pivot\(/);
+      return feedback;
+    },
+  }) } };
+  const equipment = new DailyReportEquipmentService(postgres, influx);
+  const events = await equipment.faultEvents('farm-uuid',
+    new Date('2026-10-12T00:00:00Z'), new Date('2026-10-13T00:00:00Z'),
+    new Date('2026-10-12T02:30:00Z'));
+  assert.deepEqual(events.map((event) => [event.failure, event.status]), [
+    ['overheat', 'resolved'], ['motor', 'in_progress'],
+  ]);
+  assert.equal(events[0].source, 'actuator');
+  assert.equal(events[0].pond.id, 'pond-1');
+});

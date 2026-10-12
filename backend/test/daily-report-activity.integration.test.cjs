@@ -15,7 +15,11 @@ test('daily activity includes spanning alerts, exclusions and actions on the far
       pending = result.then(() => {}, () => {});
       return result;
     },
-  } });
+  } }, { faultEvents: async () => [{
+    id: `actuator-${suffix}`, source: 'actuator', equipment: 'aerator-1',
+    pond: { id: `pond-${suffix}`, name: 'Pond' }, failure: 'overheat',
+    occurredAt: '2026-10-12T01:00:00.000Z', action: null, status: 'resolved',
+  }] });
   try {
     await client.query('BEGIN');
     const company = (await client.query(`INSERT INTO companies (public_id,name,status)
@@ -78,6 +82,10 @@ test('daily activity includes spanning alerts, exclusions and actions on the far
     assert.equal(result.actions[0].action, 'Increased aeration — Extra aeration');
     assert.equal(result.actions[1].outcome, 'Repaired');
     assert.deepEqual(result.equipmentEvents, [{
+      id: `actuator-${suffix}`, source: 'actuator', equipment: 'aerator-1',
+      pond: { id: `pond-${suffix}`, name: 'Pond' }, failure: 'overheat',
+      occurredAt: '2026-10-12T01:00:00.000Z', action: null, status: 'resolved',
+    }, {
       id: `event-${suffix}`, source: 'manual', equipment: 'Pump',
       pond: { id: `pond-${suffix}`, name: 'Pond' }, failure: 'Leak',
       occurredAt: '2026-10-12T03:00:00.000Z', action: 'Replacement planned',
