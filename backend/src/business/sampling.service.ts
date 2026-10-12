@@ -7,6 +7,7 @@ import { Principal } from '../auth/auth.service';
 import { ApiProblem } from '../http/problem';
 import { PostgresService } from '../infrastructure/postgres.service';
 import { BusinessScopeService } from './business-scope.service';
+import { targetAt } from './farm-growth-status.service';
 import { severityFor } from './sensor-current.service';
 
 const LABS = ['tan', 'no2', 'vibrio', 'alkalinity'] as const;
@@ -89,16 +90,6 @@ function input(body: unknown, today: string): Input {
   }
   return { date: sampleDate, note: raw.note as string | null ?? null, ...measurement(raw) };
 }
-function target(doc: number, growth: Growth): number | null {
-  const points = growth.points;
-  if (!points.length || doc < points[0].doc || doc > points[points.length - 1].doc) return null;
-  const highIndex = points.findIndex((point) => point.doc >= doc);
-  const high = points[highIndex];
-  if (high.doc === doc) return high.targetAbwG;
-  const low = points[highIndex - 1];
-  return low.targetAbwG + (high.targetAbwG - low.targetAbwG)
-    * (doc - low.doc) / (high.doc - low.doc);
-}
 function conflict(error: unknown): never {
   if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
     throw new ApiProblem(409, 'sampling_date_exists', 'Sampling already exists for this pond and date');
@@ -157,7 +148,7 @@ export class SamplingService {
       const priorAbw = row.prior_count === null ? null : Number(row.prior_weight) / row.prior_count;
       const adgGPerDay = abwG === null || priorAbw === null || row.prior_date === null
         ? null : (abwG - priorAbw) / days(row.sample_date, row.prior_date);
-      const targetAbwG = target(doc, growth);
+      const targetAbwG = targetAt(doc, growth.points);
       const vsTargetPct = abwG === null || targetAbwG === null
         ? null : (abwG / targetAbwG - 1) * 100;
       const growthState = vsTargetPct === null ? null

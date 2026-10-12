@@ -7,6 +7,7 @@ const { AppModule } = require('../dist/app.module');
 const { hashPassword } = require('../dist/auth/password');
 const { ProblemFilter } = require('../dist/http/problem');
 const { createPostgresPool } = require('../dist/infrastructure/postgres');
+const { FarmGrowthStatusService } = require('../dist/business/farm-growth-status.service');
 
 test('sampling contract, growth calculation, lab severity and atomic batch upsert', async () => {
   const pool = createPostgresPool();
@@ -135,6 +136,11 @@ test('sampling contract, growth calculation, lab severity and atomic batch upser
     assert.equal((await rolledBack.json()).items[0].sampleWeightG, 74);
     await pool.query(`INSERT INTO production_cycles (pond_id, started_on, status)
       VALUES ($1, $2, 'active')`, [pondIds[1], day(-34)]);
+    const farmGrowth = app.get(FarmGrowthStatusService);
+    const incompleteGrowth = await farmGrowth.snapshot(companyId, userIds[0], farmIds[0]);
+    assert.equal(incompleteGrowth.eligible, 2);
+    assert.equal(incompleteGrowth.evaluated, 1);
+    assert.equal(incompleteGrowth.sampleBasedStatus, null);
     const batch = await request('POST', batchPath, tm, { date: today, entries: [
       { pondId: `pond-a-${suffix}`, sampleCount: 10, sampleWeightG: 90, no2: 1.2 },
       { pondId: `pond-c-${suffix}`, sampleCount: 10, sampleWeightG: 80 },
@@ -151,6 +157,9 @@ test('sampling contract, growth calculation, lab severity and atomic batch upser
     const farmRecords = await farmList.json();
     assert.equal(farmRecords.items.length, 2);
     assert.equal(farmRecords.onTrackBandPct, 5);
+    const growthBefore = await farmGrowth.snapshot(companyId, userIds[0], farmIds[0]);
+    assert.equal(growthBefore.sampleBasedStatus, 'normal');
+    assert.equal(growthBefore.evaluated, 2);
     assert.equal((await request('POST', batchPath, tm, { date: today, entries: [
       { pondId: `pond-a-${suffix}` }, { pondId: `pond-a-${suffix}` },
     ] })).status, 422);
@@ -165,6 +174,12 @@ test('sampling contract, growth calculation, lab severity and atomic batch upser
     assert.equal(audit.rows[0].total, 1);
     assert.equal((await request('POST', `/ponds/pond-c-${suffix}/samplings`, tm,
       { date: day(-40) })).status, 422);
+    assert.equal((await request('PATCH', `/samplings/${batchItems[1].id}`, tm,
+      { date: today, sampleCount: 10, sampleWeightG: 50 })).status, 200);
+    const growthAfter = await farmGrowth.snapshot(companyId, userIds[0], farmIds[0]);
+    assert.equal(growthAfter.behind, 1);
+    assert.equal(growthAfter.sampleBasedStatus, 'warning');
+    assert.deepEqual(growthAfter.behindPonds.map((pond) => pond.id), [`pond-c-${suffix}`]);
   } finally {
     if (app) await app.close();
     if (pondIds.length) {
