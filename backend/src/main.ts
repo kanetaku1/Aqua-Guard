@@ -8,6 +8,7 @@ import { MqttTelemetrySubscriberService } from './infrastructure/mqtt-telemetry-
 import { CriticalEvaluationService } from './infrastructure/critical-evaluation.service';
 import { PeriodicAlertService } from './infrastructure/periodic-alert.service';
 import { AlertNotificationMaterializerService } from './infrastructure/alert-notification-materializer.service';
+import { DeviceTelemetryIngestionService } from './infrastructure/device-telemetry-ingestion.service';
 
 async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT ?? '8000');
@@ -32,6 +33,14 @@ async function bootstrap(): Promise<void> {
     }
   } catch (error) {
     new Logger('SensorRecovery').error('Pending receipt recovery failed', error);
+  }
+  try {
+    const result = await app.get(DeviceTelemetryIngestionService).recoverPendingFromStorage();
+    if (result.recovered || result.missing || result.quarantined) {
+      new Logger('DeviceTelemetryRecovery').log(JSON.stringify(result));
+    }
+  } catch (error) {
+    new Logger('DeviceTelemetryRecovery').error('Pending device telemetry recovery failed', error);
   }
   try {
     const result = await app.get(CriticalEvaluationService).recoverUnevaluated();
