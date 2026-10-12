@@ -107,6 +107,8 @@ ThresholdのFarm別取得では、現在のFarm版にあるParameterはその値
 
 現行実装では `stocking_records` と日別の `feeding_plan_rounds` をMigration `0016_pond_planning.sql` で作成した。放養記録は複合FKでサイクルのPond・開始日との一致を保証する。給餌計画はPond・日付・回の組を一意にし、回の時刻・飼料・予定量・注記を保持する。計画が未登録の日は `PondDetail.feeding` を空配列で返す。登録・訂正の公開APIは未合意のままなので追加していない。
 
+Farm運用状態用にMigration `0017_farm_operations.sql` で `farm_generator_states`（Farmごとの最新の構造化状態・観測時刻・任意の試験時刻）と `farm_sampling_schedule`（Farmごとの予定日）を追加した。`OperationalStatus.nextSampling` は現地日付以降の最も早い予定日を使い、予定がなければ `null` を返す。どちらも現行OpenAPIに更新APIがないため、登録方法はバックエンド運用手順で定める。
+
 ### 6.2 現場記録
 
 | テーブル | 主な列 | 制約・対応API |
@@ -303,7 +305,7 @@ InfluxDB書込とPostgreSQLのReceipt／Checkpoint更新は原子的にCommitで
 | --- | --- |
 | InfluxDB | Version、Bucket／Table表現、Retention、Backup、同時刻点の重複挙動、容量見積もり |
 | Device通知 | センサー以外のHeartbeat・Actuator実状態・ACKのPayload。なければ`connection`や実状態の信頼性が下がる |
-| Generator | `OperationalStatus.generator`の構造化された状態・試験時刻の入力源が現行OpenAPIにない。Reportの自由文`environment.generator`から正確に導出できない |
+| Generator | `OperationalStatus.generator`用に`farm_generator_states`へ構造化状態・観測時刻・任意の試験時刻を保存する。現行OpenAPIに更新APIがないためバックエンド運用側で登録が必要。Reportの自由文`environment.generator`からは導出しない |
 | 初回Actuator状態 | フィードバック未着時の`Actuator.state`はOpenAPIに未知値がない。誤って`off`／`fault`を返さない表現が必要 |
 | 初回Sensor・生産状態 | 運用開始前にIoT受信を確認し、再起動時はInfluxDBの保存済み有効データと未処理Receipt・Alertから状態を復元する。受信履歴があるだけでNormalとはせず、対象機器・必要項目・鮮度の受入条件を確定する。未放養・Sampling未実施でも`PondProduction.doc`・`CompanyProduction.latestSamplingDate`・`FarmProduction.samplingDate`が必須となる契約上の課題は残る |
 | Issueの傾向 | 初回発生で比較対象がない場合も`Issue.trend`は必須。`stable`を無根拠に返さないため、初回の表現を確認する |

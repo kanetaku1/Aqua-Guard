@@ -92,7 +92,7 @@ TM向け `GET /farms/{farmId}/ponds` は担当FarmのPond一覧を返し、`stat
 
 Farm Summary の成長観点に向けて、稼働中の生産サイクルと最新サンプリングから、成長目標との比率および Behind のPond割合を計算する内部サービスを追加しました。割合の Attention／Warning 境界は Rules、Pond単位の Behind 判定幅は Growth Targets に従います。サンプルまたは目標値が欠けるPondがあれば `sampleBasedStatus: null` とし、未確定を正常と扱いません。放養尾数が未保存のためSurvival Rate急低下の判定はまだ含めず、フロントエンド向け `FarmSummary` APIには接続していません。`npm run test:sampling:local` と `npm run test:unit` で検証します。
 
-Farm運用状態の土台として、現行割当のSensorは最後の有効な計測時刻からOnline／Offlineを、Aerator・PumpはFeedbackの状態とHeartbeatから稼働・故障・切断を集計する内部サービスを追加しました。初回受信のないSensorはOffline一覧に含めず、Feedbackのない設備は稼働数へ算入せず `unknown` として保持します。現行OpenAPIの `OperationalStatus` に必要なReport期限・給餌予定回数・次回サンプリング・発電機情報はまだ揃っていないため、公開APIには接続していません。実DB／InfluxDB検証は `npm run test:sync-status:local` です。
+Farm運用状態では、現行割当のSensorは最後の有効な計測時刻からOnline／Offlineを、Aerator・PumpはFeedbackの状態とHeartbeatから稼働・故障・切断を集計します。`GET /farms/{farmId}/operational-status` はTMの担当Farmについて、現地日付の給餌記録と予定、次回Sampling予定、登録済み発電機状態を組み合わせて現行OpenAPIの `OperationalStatus` を返します。次回Sampling予定が未登録なら `null`、発電機状態または機器の実状態が未確認なら503を返し、正常値を補いません。発電機状態とSampling予定は現行OpenAPIに更新APIがないため、`farm_generator_states` と `farm_sampling_schedule` をバックエンド運用側で登録する必要があります。`npm run test:sync-status:local` と `npm run test:farm-operations:local` で検証します。
 
 `GET /ponds/{pondId}/sensors/history` は保存済みの有効な計測値を5分単位の行にまとめ、6項目の値・重大度とページ情報を返します。同じ5分枠に同じ項目が複数ある場合は最新値を使い、欠測項目は `value: null` とします。現行 OpenAPI の `HistoryValue.severity` は必須で null や `no_data` を許さないため、欠測項目の severity はフロントエンド Mock と同じ `normal` を返します。表示側では `value: null` を欠測として扱います。期間未指定時は直近24時間、指定できる範囲は最大31日です。検証は `npm run test:sensor-history:local` で行えます。
 
