@@ -19,6 +19,8 @@ import { SensorSeriesController } from './business/sensor-series.controller';
 import { SensorSeriesService } from './business/sensor-series.service';
 import { SensorCurrentController } from './business/sensor-current.controller';
 import { SensorCurrentService } from './business/sensor-current.service';
+import { PondWaterQualityController } from './business/pond-water-quality.controller';
+import { PondWaterQualityService } from './business/pond-water-quality.service';
 import { SensorHistoryController } from './business/sensor-history.controller';
 import { SensorHistoryService } from './business/sensor-history.service';
 import { SensorAnomaliesController } from './business/sensor-anomalies.controller';
@@ -45,7 +47,8 @@ import { PostgresService } from './infrastructure/postgres.service';
 @Module({
   controllers: [HealthController, AuthController, AdminController, AdminUsersController,
     AdminDevicesController, AdminSettingsController, SyncStatusController,
-    SensorSeriesController, SensorCurrentController, SensorHistoryController,
+    SensorSeriesController, SensorCurrentController, PondWaterQualityController,
+    SensorHistoryController,
     SensorAnomaliesController,
     AlertsController,
     IssuesController,
@@ -57,7 +60,8 @@ import { PostgresService } from './infrastructure/postgres.service';
     AuthService, MailService, PasswordLinksService,
     AdminService, AdminUsersService, AdminDevicesService, AdminSettingsService,
     AdminThresholdsService, BusinessScopeService, SyncStatusService, SensorSeriesService,
-    SensorCurrentService, SensorHistoryService, SensorAnomaliesService,
+    SensorCurrentService, PondWaterQualityService, SensorHistoryService,
+    SensorAnomaliesService,
     AlertsService,
     IssuesService,
     MortalityService, FeedingService, SamplingService,

@@ -24,6 +24,7 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
   const deviceUuids = [];
   const userUuids = [];
   const emails = [];
+  let waterAlertId;
   let app;
   try {
     const orgResponse = await fetch(
@@ -104,6 +105,23 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.equal(noData.quality, 'no_data');
     assert.ok(Date.parse(noData.syncedAt));
     assert.ok(Date.parse(noData.nextSyncAt));
+    const emptyWater = await fetch(
+      `${base}/farms/farm-a-${suffix}/ponds/water-quality`,
+      { headers: { Cookie: tmCookie } },
+    );
+    assert.equal(emptyWater.status, 200);
+    assert.equal((await emptyWater.json()).items[0].values.do.quality, 'no_data');
+    waterAlertId = (await pool.query(`INSERT INTO alerts
+      (public_id,pond_id,parameter,severity,occurred_at)
+      VALUES ($1,$2,'ph','warning',now()) RETURNING id`,
+    [`ALT-early-${suffix}`, pondUuids[0]])).rows[0].id;
+    const alertOnly = await fetch(
+      `${base}/farms/farm-a-${suffix}/ponds/water-quality`,
+      { headers: { Cookie: tmCookie } },
+    );
+    assert.equal((await alertOnly.json()).items[0].status, 'warning');
+    await pool.query('DELETE FROM alerts WHERE id=$1', [waterAlertId]);
+    waterAlertId = undefined;
 
     const influx = app.get(InfluxService);
     const write = async (letter, minutesAgo, value) => influx.writeSensorReadings([{
@@ -172,7 +190,7 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
       deviceUuids.push(deviceUuid);
       await pool.query(
         `INSERT INTO device_assignments (device_id, pond_id, assigned_at)
-         VALUES ($1, $2, now())`, [deviceUuid, pondUuids[0]],
+         VALUES ($1, $2, now()-interval '1 day')`, [deviceUuid, pondUuids[0]],
       );
     }
     const influxCurrent = app.get(InfluxService);
@@ -193,6 +211,26 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.equal(current.items.find((item) => item.parameter === 'ph').quality, 'delayed');
     assert.ok(current.items.filter((item) => item.parameter !== 'ph')
       .every((item) => item.quality === 'live'));
+    const waterUrl = `${base}/farms/farm-a-${suffix}/ponds/water-quality`;
+    assert.equal((await fetch(waterUrl, { headers: { Cookie: fmCookie } })).status, 403);
+    assert.equal((await fetch(`${base}/farms/farm-b-${suffix}/ponds/water-quality`,
+      { headers: { Cookie: tmCookie } })).status, 404);
+    waterAlertId = (await pool.query(`INSERT INTO alerts
+      (public_id,pond_id,parameter,severity,occurred_at)
+      VALUES ($1,$2,'ph','warning',now()) RETURNING id`,
+    [`ALT-water-${suffix}`, pondUuids[0]])).rows[0].id;
+    const waterResponse = await fetch(waterUrl, { headers: { Cookie: tmCookie } });
+    assert.equal(waterResponse.status, 200);
+    const water = await waterResponse.json();
+    assert.equal(water.items.length, 1);
+    assert.deepEqual(water.counts, { normal: 0, attention: 0, warning: 0, critical: 1 });
+    assert.equal(water.items[0].status, 'critical');
+    assert.equal(water.items[0].openAlerts, 1);
+    assert.equal(water.items[0].worstAlertState, 'unacknowledged');
+    assert.equal(water.items[0].values.do.value, 3);
+    assert.equal(water.items[0].values.do.severity, 'critical');
+    assert.equal(water.items[0].values.ph.quality, 'delayed');
+    assert.equal(water.normalRanges.find((row) => row.parameter === 'do').normalMin, 4.5);
     assert.equal((await fetch(currentUrl, { headers: { Cookie: saCookie } })).status, 403);
     assert.equal((await fetch(`${base}/ponds/pond-b-${suffix}/sensors/current`,
       { headers: { Cookie: tmCookie } })).status, 404);
@@ -244,6 +282,12 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     );
     assert.equal(invalidCurrent.status, 503);
     assert.equal((await invalidCurrent.json()).code, 'telemetry_not_ready');
+    const unavailableWater = await fetch(
+      `${restartedBase}/farms/farm-a-${suffix}/ponds/water-quality`,
+      { headers: { Cookie: tmCookie } },
+    );
+    assert.equal(unavailableWater.status, 200);
+    assert.equal((await unavailableWater.json()).items[0].values.do.value, null);
     const cleanSeries = await fetch(
       `${restartedBase}/ponds/pond-a-${suffix}/sensors/series?${range}`,
       { headers: { Cookie: tmCookie } },
@@ -270,6 +314,7 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
       await pool.query('DELETE FROM device_assignments WHERE device_id = $1', [deviceId]);
       await pool.query('DELETE FROM devices WHERE id = $1', [deviceId]);
     }
+    if (waterAlertId) await pool.query('DELETE FROM alerts WHERE id=$1', [waterAlertId]);
     for (const pondId of pondUuids) await pool.query('DELETE FROM ponds WHERE id = $1', [pondId]);
     for (const farmId of farmUuids) await pool.query('DELETE FROM farms WHERE id = $1', [farmId]);
     if (companyId) await pool.query('DELETE FROM companies WHERE id = $1', [companyId]);
