@@ -12,6 +12,7 @@ interface IssueRow {
   since: Date; resolved_at: Date | null; alert_id: string;
   acknowledged_user_id: string | null; acknowledged_user_name: string | null;
   handler_id: string | null; handler_name: string | null;
+  sensor_parameter: string | null;
 }
 
 function invalid(field: string, message: string): never {
@@ -33,10 +34,12 @@ const COLUMNS = `i.id, i.public_id, f.public_id AS farm_public_id,
   i.issue_type, i.parameter, i.trend, i.severity, a.state AS handling,
   i.state, i.since, i.resolved_at, a.id AS alert_id,
   au.public_id AS acknowledged_user_id, au.name AS acknowledged_user_name,
-  hu.public_id AS handler_id, hu.name AS handler_name`;
+  hu.public_id AS handler_id, hu.name AS handler_name,
+  d.parameter AS sensor_parameter`;
 const JOINS = `FROM issues i JOIN farms f ON f.id=i.farm_id
   JOIN ponds p ON p.id=i.pond_id
   JOIN alerts a ON i.source_type='alert' AND a.id=i.source_id
+  LEFT JOIN devices d ON d.id=a.device_id
   LEFT JOIN users au ON au.id=a.acknowledged_by
   LEFT JOIN LATERAL (
     SELECT aa.recorded_by FROM alert_actions aa WHERE aa.alert_id=a.id
@@ -127,11 +130,12 @@ export class IssuesService {
        WHERE aa.alert_id=$1 ORDER BY aa.performed_at,aa.created_at,aa.id`,
       [row.alert_id],
     );
-    const subject = name(row.parameter, language);
+    const subject = name(row.parameter === 'sensor_offline'
+      ? row.sensor_parameter ?? row.parameter : row.parameter, language);
     const isLow = row.trend === 'decreasing';
     const summary = row.parameter === 'sensor_offline'
-      ? (language === 'id' ? `Sensor offline di ${row.pond_name}`
-        : `Sensor offline in ${row.pond_name}`)
+      ? (language === 'id' ? `Sensor ${subject} offline di ${row.pond_name}`
+        : `${subject} sensor offline in ${row.pond_name}`)
       : language === 'id'
       ? `${subject} ${isLow ? 'rendah' : 'tinggi'} di ${row.pond_name}`
       : `${isLow ? 'Low' : 'High'} ${subject} in ${row.pond_name}`;

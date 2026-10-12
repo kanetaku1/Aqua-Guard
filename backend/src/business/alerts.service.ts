@@ -15,7 +15,8 @@ const ACTION_TYPES = ['increased_aeration', 'water_exchange', 'equipment_inspect
 interface AlertRow {
   id: string; public_id: string; pond_id: string; pond_public_id: string; pond_name: string;
   farm_id: string; farm_public_id: string; device_id: string | null;
-  device_public_id: string | null; parameter: string; severity: string; state: State;
+  device_public_id: string | null; device_parameter: string | null;
+  parameter: string; severity: string; state: State;
   observed_value: string | null; threshold_value: string | null; unit: string | null;
   direction: 'below' | 'above' | null; occurred_at: Date; resolved_at: Date | null;
   acknowledged_at: Date | null; acknowledged_user_id: string | null;
@@ -70,6 +71,11 @@ function displayTitle(row: AlertRow, language: Language): string {
     sensor_offline: ['Sensor offline', 'Sensor offline'],
   };
   const name = names[row.parameter]?.[language === 'id' ? 1 : 0] ?? row.parameter;
+  if (row.parameter === 'sensor_offline') {
+    const sensor = names[row.device_parameter ?? '']?.[language === 'id' ? 1 : 0]
+      ?? row.device_parameter ?? 'Sensor';
+    return language === 'id' ? `Sensor ${sensor} offline` : `${sensor} sensor offline`;
+  }
   if (row.observed_value === null || row.threshold_value === null || !row.direction) return name;
   const side = row.direction === 'below'
     ? (language === 'id' ? 'di bawah ambang' : 'below threshold')
@@ -81,7 +87,8 @@ function displayTitle(row: AlertRow, language: Language): string {
 
 const COLUMNS = `al.id, al.public_id, al.pond_id, p.public_id AS pond_public_id,
   p.name AS pond_name, f.id AS farm_id, f.public_id AS farm_public_id,
-  al.device_id, d.device_id AS device_public_id, al.parameter, al.severity,
+  al.device_id, d.device_id AS device_public_id,
+  d.parameter AS device_parameter, al.parameter, al.severity,
   al.state, al.observed_value, al.threshold_value, al.unit, al.direction,
   al.occurred_at, al.resolved_at, al.acknowledged_at,
   au.public_id AS acknowledged_user_id, au.name AS acknowledged_user_name,

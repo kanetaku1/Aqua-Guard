@@ -18,6 +18,7 @@ test('alert API scopes TM access and persists handling transitions', async () =>
   const issueIds = [];
   const emails = [];
   let companyId;
+  let offlineDeviceId;
   let app;
   try {
     companyId = (await pool.query(`INSERT INTO companies (public_id,name,status)
@@ -146,6 +147,31 @@ test('alert API scopes TM access and persists handling transitions', async () =>
       [alertUuids[0]]);
     assert.deepEqual(history.rows.map((row) => row.to_state),
       ['acknowledged', 'in_progress', 'resolved']);
+
+    offlineDeviceId = (await pool.query(`INSERT INTO devices (device_id,type,parameter)
+      VALUES ($1,'sensor','turbidity') RETURNING id`,
+    [`offline-device-${suffix}`])).rows[0].id;
+    await pool.query(`INSERT INTO device_assignments (device_id,pond_id,assigned_at)
+      VALUES ($1,$2,now()-interval '1 day')`, [offlineDeviceId, pondIds[0]]);
+    const offlineAlert = `ALT-offline-${suffix}`;
+    const offlineIssue = `ISS-offline-${suffix}`;
+    const offlineUuid = (await pool.query(`INSERT INTO alerts
+      (public_id,pond_id,device_id,parameter,severity,occurred_at)
+      VALUES ($1,$2,$3,'sensor_offline','attention',now()) RETURNING id`,
+    [offlineAlert, pondIds[0], offlineDeviceId])).rows[0].id;
+    alertUuids.push(offlineUuid);
+    await pool.query(`INSERT INTO issues
+      (public_id,farm_id,pond_id,issue_type,parameter,severity,trend,
+       state,source_type,source_id,since)
+      VALUES ($1,$2,$3,'sensor','sensor_offline','attention','stable',
+        'ongoing','alert',$4,now())`,
+    [offlineIssue, farmIds[0], pondIds[0], offlineUuid]);
+    const offlineAlertDetail = await (await call('GET', `/alerts/${offlineAlert}`, tm)).json();
+    assert.equal(offlineAlertDetail.title, 'Sensor Kekeruhan offline');
+    assert.equal(offlineAlertDetail.value, null);
+    assert.equal(offlineAlertDetail.issueId, offlineIssue);
+    const offlineIssueDetail = await (await call('GET', `/issues/${offlineIssue}`, fm)).json();
+    assert.equal(offlineIssueDetail.summary, 'Sensor Kekeruhan offline di Pond a');
   } finally {
     if (app) await app.close();
     if (alertUuids.length) {
@@ -153,6 +179,10 @@ test('alert API scopes TM access and persists handling transitions', async () =>
       await pool.query('DELETE FROM alert_actions WHERE alert_id=ANY($1)', [alertUuids]);
       await pool.query('DELETE FROM issues WHERE source_id=ANY($1)', [alertUuids]);
       await pool.query('DELETE FROM alerts WHERE id=ANY($1)', [alertUuids]);
+    }
+    if (offlineDeviceId) {
+      await pool.query('DELETE FROM device_assignments WHERE device_id=$1', [offlineDeviceId]);
+      await pool.query('DELETE FROM devices WHERE id=$1', [offlineDeviceId]);
     }
     for (const userId of userIds) {
       await pool.query('DELETE FROM auth_sessions WHERE user_id=$1', [userId]);
