@@ -20,6 +20,7 @@ interface AlertRow {
   direction: 'below' | 'above' | null; occurred_at: Date; resolved_at: Date | null;
   acknowledged_at: Date | null; acknowledged_user_id: string | null;
   acknowledged_user_name: string | null; handler_id: string | null; handler_name: string | null;
+  issue_public_id: string | null;
 }
 
 function invalid(field: string, message: string): never {
@@ -84,14 +85,16 @@ const COLUMNS = `al.id, al.public_id, al.pond_id, p.public_id AS pond_public_id,
   al.state, al.observed_value, al.threshold_value, al.unit, al.direction,
   al.occurred_at, al.resolved_at, al.acknowledged_at,
   au.public_id AS acknowledged_user_id, au.name AS acknowledged_user_name,
-  hu.public_id AS handler_id, hu.name AS handler_name`;
+  hu.public_id AS handler_id, hu.name AS handler_name,
+  i.public_id AS issue_public_id`;
 const JOINS = `FROM alerts al JOIN ponds p ON p.id=al.pond_id
   JOIN farms f ON f.id=p.farm_id LEFT JOIN devices d ON d.id=al.device_id
   LEFT JOIN users au ON au.id=al.acknowledged_by
   LEFT JOIN LATERAL (
     SELECT aa.recorded_by FROM alert_actions aa WHERE aa.alert_id=al.id
     ORDER BY aa.created_at DESC, aa.id DESC LIMIT 1
-  ) handler ON true LEFT JOIN users hu ON hu.id=handler.recorded_by`;
+  ) handler ON true LEFT JOIN users hu ON hu.id=handler.recorded_by
+  LEFT JOIN issues i ON i.source_type='alert' AND i.source_id=al.id`;
 
 @Injectable()
 export class AlertsService {
@@ -194,7 +197,7 @@ export class AlertsService {
         ? { id: row.acknowledged_user_id, name: row.acknowledged_user_name } : null,
       sensor: row.device_public_id ? { deviceId: row.device_public_id,
         connection: online?.has(row.device_public_id) ? 'online' : 'offline' } : null,
-      issueId: null,
+      issueId: row.issue_public_id,
       actions: actions.rows.map((action) => ({
         id: action.public_id, performedAt: action.performed_at.toISOString(),
         type: action.type, ...(action.note === null ? {} : { note: action.note }),
@@ -285,6 +288,10 @@ export class AlertsService {
       await client.query(
         `UPDATE alerts SET state='resolved', resolved_at=now(), resolve_note=$2
          WHERE id=$1`, [row.id, note],
+      );
+      await client.query(
+        `UPDATE issues SET state='resolved', resolved_at=now()
+         WHERE source_type='alert' AND source_id=$1`, [row.id],
       );
       await this.history(client, row.id, row.state, 'resolved', principal.userId);
     });

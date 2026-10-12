@@ -15,6 +15,7 @@ test('alert API scopes TM access and persists handling transitions', async () =>
   const pondIds = [];
   const userIds = [];
   const alertUuids = [];
+  const issueIds = [];
   const emails = [];
   let companyId;
   let app;
@@ -50,6 +51,12 @@ test('alert API scopes TM access and persists handling transitions', async () =>
          threshold_value,unit,direction,occurred_at)
         VALUES ($1,$2,'do','critical',4.1,4.5,'mg/L','below',now()) RETURNING id`,
       [`ALT-${index}-${suffix}`, pondIds[index]])).rows[0].id);
+      issueIds.push((await pool.query(`INSERT INTO issues
+        (public_id,farm_id,pond_id,issue_type,parameter,severity,trend,
+         state,source_type,source_id,since)
+        VALUES ($1,$2,$3,'water_quality','do','critical','decreasing',
+          'ongoing','alert',$4,now()) RETURNING public_id`,
+      [`ISS-${index}-${suffix}`, farmIds[index], pondIds[index], alertUuids[index]])).rows[0].public_id);
     }
     app = await NestFactory.create(AppModule, { logger: false });
     app.enableCsrfProtection();
@@ -76,6 +83,17 @@ test('alert API scopes TM access and persists handling transitions', async () =>
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     assert.equal((await call('GET', '/alerts', fm)).status, 403);
+    assert.equal((await call('GET', '/issues', tm)).status, 403);
+    const fmIssues = await call('GET', '/issues', fm);
+    assert.equal(fmIssues.status, 200);
+    assert.equal((await fmIssues.json()).total, 2);
+    const fmDetailResponse = await call('GET', `/issues/${issueIds[0]}`, fm);
+    assert.equal(fmDetailResponse.status, 200);
+    const fmDetail = await fmDetailResponse.json();
+    assert.equal(fmDetail.issueType, 'water_quality');
+    assert.equal(fmDetail.handling, 'unacknowledged');
+    assert.ok(!JSON.stringify(fmDetail).includes('4.1'));
+    assert.equal((await call('GET', '/issues?state=bad', fm)).status, 422);
     const list = await call('GET', '/alerts?state=open&pageSize=1', tm);
     assert.equal(list.status, 200);
     const page = await list.json();
@@ -96,7 +114,7 @@ test('alert API scopes TM access and persists handling transitions', async () =>
     assert.equal(detail.handledBy.id, `technical_manager-${suffix}`);
     assert.deepEqual(detail.actions, []);
     assert.equal(detail.sensor, null);
-    assert.equal(detail.issueId, null);
+    assert.equal(detail.issueId, issueIds[0]);
     assert.equal((await call('POST', `/alerts/${id}/acknowledge`, tm)).status, 409);
     result = await call('POST', `/alerts/${id}/actions`, tm,
       { performedAt: new Date().toISOString(), type: 'increased_aeration', note: 'Aerator started' });
@@ -111,6 +129,13 @@ test('alert API scopes TM access and persists handling transitions', async () =>
     detail = await result.json();
     assert.equal(detail.state, 'resolved');
     assert.ok(detail.resolvedAt);
+    const resolvedIssues = await (await call('GET', '/issues?state=resolved', fm)).json();
+    assert.equal(resolvedIssues.total, 1);
+    assert.equal(resolvedIssues.items[0].id, issueIds[0]);
+    assert.equal(resolvedIssues.items[0].handling, 'resolved');
+    const resolvedDetail = await (await call('GET', `/issues/${issueIds[0]}`, fm)).json();
+    assert.equal(resolvedDetail.actions.length, 1);
+    assert.equal(resolvedDetail.actions[0].type, 'increased_aeration');
     assert.equal((await call('POST', `/alerts/${id}/resolve`, tm, {})).status, 409);
     assert.equal((await call('POST', `/alerts/${id}/actions`, tm,
       { performedAt: new Date().toISOString(), type: 'other' })).status, 409);
@@ -126,6 +151,7 @@ test('alert API scopes TM access and persists handling transitions', async () =>
     if (alertUuids.length) {
       await pool.query('DELETE FROM alert_state_history WHERE alert_id=ANY($1)', [alertUuids]);
       await pool.query('DELETE FROM alert_actions WHERE alert_id=ANY($1)', [alertUuids]);
+      await pool.query('DELETE FROM issues WHERE source_id=ANY($1)', [alertUuids]);
       await pool.query('DELETE FROM alerts WHERE id=ANY($1)', [alertUuids]);
     }
     for (const userId of userIds) {
