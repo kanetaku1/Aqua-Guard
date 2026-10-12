@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import { AuthRequest, preferredLanguage, requirePrincipal } from '../auth/session.guard';
 import { ReportsService } from './reports.service';
 import { DailyReportViewService } from './daily-report-view.service';
 import { DailyReportCreateService } from './daily-report-create.service';
+import { DailyReportUpdateService } from './daily-report-update.service';
 
 @Controller('reports')
 export class ReportsController {
@@ -10,6 +11,7 @@ export class ReportsController {
     private readonly reports: ReportsService,
     private readonly daily: DailyReportViewService,
     private readonly dailyCreate: DailyReportCreateService,
+    private readonly dailyUpdate: DailyReportUpdateService,
   ) {}
 
   @Get()
@@ -25,6 +27,13 @@ export class ReportsController {
   @Post('daily')
   createDaily(@Req() request: AuthRequest, @Body() body: unknown) {
     return this.dailyCreate.create(requirePrincipal(request), body,
+      preferredLanguage(request));
+  }
+
+  @Patch('daily/:reportId')
+  updateDaily(@Req() request: AuthRequest, @Param('reportId') reportId: string,
+    @Body() body: unknown) {
+    return this.dailyUpdate.update(requirePrincipal(request), reportId, body,
       preferredLanguage(request));
   }
 }
