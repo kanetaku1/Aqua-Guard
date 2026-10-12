@@ -42,7 +42,8 @@ import { PasswordLinksService } from './auth/password-links.service';
 import { HealthController } from './health.controller';
 import { InfluxService } from './infrastructure/influx.service';
 import { SensorIngestionService } from './infrastructure/sensor-ingestion.service';
-import { MqttSensorSubscriberService } from './infrastructure/mqtt-sensor-subscriber.service';
+import { MqttTelemetrySubscriberService } from './infrastructure/mqtt-telemetry-subscriber.service';
+import { DeviceTelemetryIngestionService } from './infrastructure/device-telemetry-ingestion.service';
 import { CriticalEvaluationService } from './infrastructure/critical-evaluation.service';
 import { PeriodicAlertService } from './infrastructure/periodic-alert.service';
 import { AlertNotificationMaterializerService } from './infrastructure/alert-notification-materializer.service';
@@ -59,7 +60,7 @@ import { PostgresService } from './infrastructure/postgres.service';
     MortalityController, FeedingController,
     SamplingController],
   providers: [PostgresService, InfluxService, SensorIngestionService,
-    MqttSensorSubscriberService,
+    MqttTelemetrySubscriberService, DeviceTelemetryIngestionService,
     CriticalEvaluationService,
     PeriodicAlertService,
     AlertNotificationMaterializerService,

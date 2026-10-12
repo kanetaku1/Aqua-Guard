@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ProblemFilter } from './http/problem';
 import { SensorIngestionService } from './infrastructure/sensor-ingestion.service';
-import { MqttSensorSubscriberService } from './infrastructure/mqtt-sensor-subscriber.service';
+import { MqttTelemetrySubscriberService } from './infrastructure/mqtt-telemetry-subscriber.service';
 import { CriticalEvaluationService } from './infrastructure/critical-evaluation.service';
 import { PeriodicAlertService } from './infrastructure/periodic-alert.service';
 import { AlertNotificationMaterializerService } from './infrastructure/alert-notification-materializer.service';
@@ -43,7 +43,7 @@ async function bootstrap(): Promise<void> {
   }
   await app.listen(port, '0.0.0.0');
   if (process.env.MQTT_ENABLED === 'true') {
-    void app.get(MqttSensorSubscriberService).start();
+    void app.get(MqttTelemetrySubscriberService).start();
   }
   try {
     const result = await app.get(PeriodicAlertService).runOnce();

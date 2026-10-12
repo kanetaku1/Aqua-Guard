@@ -4,30 +4,37 @@ import { connect, MqttClient } from 'mqtt';
 import { ApiProblem } from '../http/problem';
 import { PostgresService } from './postgres.service';
 import { SensorIngestionService } from './sensor-ingestion.service';
+import { DeviceTelemetryIngestionService } from './device-telemetry-ingestion.service';
 
 const MAX_PAYLOAD_BYTES = 16 * 1024;
 
 @Injectable()
-export class MqttSensorSubscriberService implements OnModuleDestroy {
-  private readonly logger = new Logger(MqttSensorSubscriberService.name);
+export class MqttTelemetrySubscriberService implements OnModuleDestroy {
+  private readonly logger = new Logger(MqttTelemetrySubscriberService.name);
   private client: MqttClient | null = null;
-  private prefix = 'aquaguard/sensors';
+  private sensorPrefix = 'aquaguard/sensors';
+  private devicePrefix = 'aquaguard/devices';
+  private actuatorPrefix = 'aquaguard/actuators';
   private ready: Promise<void> | null = null;
 
   constructor(
     private readonly postgres: PostgresService,
     private readonly ingestion: SensorIngestionService,
+    private readonly deviceIngestion: DeviceTelemetryIngestionService,
   ) {}
 
   start(): Promise<void> {
     if (this.client) return this.ready!;
     const url = process.env.MQTT_URL ?? `mqtt://127.0.0.1:${process.env.MQTT_PORT ?? '1883'}`;
-    const prefix = process.env.MQTT_SENSOR_TOPIC_PREFIX ?? 'aquaguard/sensors';
-    if (!/^[^+#/]+(?:\/[^+#/]+)*$/.test(prefix)) {
-      throw new Error('MQTT_SENSOR_TOPIC_PREFIX must contain plain topic segments');
+    const prefixes = [process.env.MQTT_SENSOR_TOPIC_PREFIX ?? 'aquaguard/sensors',
+      process.env.MQTT_DEVICE_TOPIC_PREFIX ?? 'aquaguard/devices',
+      process.env.MQTT_ACTUATOR_TOPIC_PREFIX ?? 'aquaguard/actuators'];
+    if (prefixes.some((prefix) => !/^[^+#/]+(?:\/[^+#/]+)*$/.test(prefix))) {
+      throw new Error('MQTT topic prefixes must contain plain topic segments');
     }
-    this.prefix = prefix;
-    const filter = `${prefix}/+/readings`;
+    [this.sensorPrefix, this.devicePrefix, this.actuatorPrefix] = prefixes;
+    const filters = [`${this.sensorPrefix}/+/readings`,
+      `${this.devicePrefix}/+/heartbeats`, `${this.actuatorPrefix}/+/feedback`];
     const client = connect(url, {
       clientId: process.env.MQTT_CLIENT_ID ?? 'aquaguard-ingestion-local',
       clean: false, resubscribe: false, reconnectPeriod: 2_000, connectTimeout: 10_000,
@@ -36,29 +43,32 @@ export class MqttSensorSubscriberService implements OnModuleDestroy {
     });
     this.client = client;
     let signalReady: () => void;
+    let subscribedThisProcess = false;
     this.ready = new Promise<void>((resolve) => { signalReady = resolve; });
     client.handleMessage = (packet, done) => {
       const payload = Buffer.isBuffer(packet.payload)
         ? packet.payload : Buffer.from(packet.payload);
       void this.accept(packet.topic, payload).then(() => done()).catch((error) => {
-        this.logger.error('MQTT sensor ingestion failed; reconnecting without acknowledgement', error);
+        this.logger.error('MQTT telemetry ingestion failed; reconnecting without acknowledgement', error);
         client.stream.destroy();
         done(error instanceof Error ? error : new Error('MQTT ingestion failed'));
       });
     };
     client.on('connect', (connack) => {
-      if (connack.sessionPresent) {
-        this.logger.log(`Resumed MQTT sensor subscription to ${filter}`);
+      if (connack.sessionPresent && subscribedThisProcess) {
+        this.logger.log('Resumed MQTT telemetry subscriptions');
         signalReady();
         return;
       }
-      client.subscribe(filter, { qos: 1 }, (error, grants) => {
-        if (error || !grants?.some((grant) => grant.topic === filter && grant.qos === 1)) {
-          this.logger.error('MQTT sensor subscription failed', error);
+      client.subscribe(filters, { qos: 1 }, (error, grants) => {
+        if (error || !filters.every((filter) => grants?.some(
+          (grant) => grant.topic === filter && grant.qos === 1))) {
+          this.logger.error('MQTT telemetry subscription failed', error);
           client.stream.destroy();
           return;
         }
-        this.logger.log(`Subscribed to ${filter} at QoS 1`);
+        subscribedThisProcess = true;
+        this.logger.log(`Subscribed to ${filters.join(', ')} at QoS 1`);
         signalReady();
       });
     });
@@ -67,13 +77,18 @@ export class MqttSensorSubscriberService implements OnModuleDestroy {
   }
 
   async accept(topic: string, payload: Buffer): Promise<void> {
-    const prefix = `${this.prefix}/`;
-    const suffix = '/readings';
-    const topicDevice = topic.startsWith(prefix) && topic.endsWith(suffix)
-      ? topic.slice(prefix.length, -suffix.length) : '';
+    const routes = [
+      { prefix: this.sensorPrefix, suffix: 'readings', kind: 'sensor' },
+      { prefix: this.devicePrefix, suffix: 'heartbeats', kind: 'heartbeat' },
+      { prefix: this.actuatorPrefix, suffix: 'feedback', kind: 'feedback' },
+    ] as const;
+    const route = routes.find((candidate) => topic.startsWith(`${candidate.prefix}/`)
+      && topic.endsWith(`/${candidate.suffix}`));
+    const topicDevice = route
+      ? topic.slice(route.prefix.length + 1, -(route.suffix.length + 1)) : '';
     let reason: string | null = null;
     let event: unknown;
-    if (!topicDevice || topicDevice.includes('/')) reason = 'invalid_topic';
+    if (!route || !topicDevice || topicDevice.includes('/')) reason = 'invalid_topic';
     else if (payload.length > MAX_PAYLOAD_BYTES) reason = 'payload_too_large';
     else {
       try { event = JSON.parse(payload.toString('utf8')); }
@@ -84,7 +99,10 @@ export class MqttSensorSubscriberService implements OnModuleDestroy {
       reason = 'topic_device_mismatch';
     }
     if (!reason) {
-      try { await this.ingestion.ingest(event); }
+      try {
+        if (route?.kind === 'sensor') await this.ingestion.ingest(event);
+        else if (route) await this.deviceIngestion.ingest(route.kind, event);
+      }
       catch (error) {
         if (error instanceof ApiProblem && [409, 422].includes(error.getStatus())) {
           const response = error.getResponse();
@@ -106,7 +124,7 @@ export class MqttSensorSubscriberService implements OnModuleDestroy {
          reason_code=EXCLUDED.reason_code`,
       [topic, digest, payload.length, reason],
     );
-    this.logger.warn(`Rejected MQTT sensor message on ${topic}: ${reason}`);
+    this.logger.warn(`Rejected MQTT telemetry message on ${topic}: ${reason}`);
   }
 
   async onModuleDestroy(): Promise<void> {

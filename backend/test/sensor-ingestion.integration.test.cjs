@@ -7,7 +7,9 @@ const { InfluxService } = require('../dist/infrastructure/influx.service');
 const { SensorIngestionService } = require('../dist/infrastructure/sensor-ingestion.service');
 const { CriticalEvaluationService } = require('../dist/infrastructure/critical-evaluation.service');
 const { AdminThresholdsService } = require('../dist/admin/admin-thresholds.service');
-const { MqttSensorSubscriberService } = require('../dist/infrastructure/mqtt-sensor-subscriber.service');
+const { MqttTelemetrySubscriberService } = require('../dist/infrastructure/mqtt-telemetry-subscriber.service');
+const { DeviceTelemetryIngestionService } = require(
+  '../dist/infrastructure/device-telemetry-ingestion.service');
 
 async function until(check, timeoutMs = 10000) {
   const deadline = Date.now() + timeoutMs;
@@ -35,6 +37,7 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
   let farmId;
   let pondId;
   let deviceId;
+  let actuatorDeviceId;
   try {
     const org = process.env.INFLUXDB_ORG ?? 'aquaguard';
     const orgResponse = await fetch(`${influxUrl}/api/v2/orgs?org=${encodeURIComponent(org)}`,
@@ -74,6 +77,14 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
     await pool.query(
       `INSERT INTO device_assignments (device_id, pond_id, assigned_at)
        VALUES ($1, $2, now() - interval '1 day')`, [deviceId, pondId],
+    );
+    actuatorDeviceId = (await pool.query(
+      `INSERT INTO devices (device_id, type)
+       VALUES ($1, 'aerator') RETURNING id`, [`aerator-${suffix}`],
+    )).rows[0].id;
+    await pool.query(
+      `INSERT INTO device_assignments (device_id, pond_id, assigned_at)
+       VALUES ($1, $2, now() - interval '1 day')`, [actuatorDeviceId, pondId],
     );
     const event = { eventId: `event-${suffix}`, deviceId: `device-${suffix}`,
       parameter: 'do', value: 4.25, measuredAt: new Date(Date.now() - 60000).toISOString() };
@@ -138,7 +149,12 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
     assert.deepEqual(concurrent.map((result) => result.duplicate).sort(), [false, true]);
 
     process.env.MQTT_CLIENT_ID = subscriberClientId;
-    subscriber = new MqttSensorSubscriberService({ pool }, ingestion);
+    const priorSession = await connectAsync(broker,
+      { clientId: subscriberClientId, clean: false });
+    await priorSession.subscribeAsync('aquaguard/sensors/+/readings', { qos: 1 });
+    await priorSession.endAsync();
+    const deviceIngestion = new DeviceTelemetryIngestionService({ pool }, influx);
+    subscriber = new MqttTelemetrySubscriberService({ pool }, ingestion, deviceIngestion);
     let readyTimer;
     try {
       await Promise.race([subscriber.start(), new Promise((_, reject) => {
@@ -168,6 +184,40 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
       FROM mqtt_rejected_messages WHERE topic=$1 AND reason_code='topic_device_mismatch'`,
     [topic])).rows[0].n === 1);
 
+    const heartbeatTopic = `aquaguard/devices/aerator-${suffix}/heartbeats`;
+    const heartbeat = { eventId: `heartbeat-${suffix}`, deviceId: `aerator-${suffix}`,
+      sentAt: new Date(Date.now() - 4000).toISOString(), onlineHint: true };
+    await publisher.publishAsync(heartbeatTopic, JSON.stringify(heartbeat), { qos: 1 });
+    const feedbackTopic = `aquaguard/actuators/aerator-${suffix}/feedback`;
+    const feedback = { eventId: `feedback-${suffix}`, deviceId: `aerator-${suffix}`,
+      occurredAt: new Date(Date.now() - 3000).toISOString(), state: 'on', mode: 'manual' };
+    await assert.rejects(deviceIngestion.ingest('feedback', { ...feedback,
+      deviceId: `device-${suffix}` }), (error) => error.getStatus() === 422
+        && error.getResponse().code === 'device_assignment_invalid');
+    await publisher.publishAsync(feedbackTopic, JSON.stringify(feedback), { qos: 1 });
+    async function telemetryRows(measurement, field) {
+      return influx.client.getQueryApi(influx.org).collectRows(
+        `from(bucket: ${JSON.stringify(bucketName)}) |> range(start: -1h)
+         |> filter(fn: (r) => r._measurement == ${JSON.stringify(measurement)}
+           and r._field == ${JSON.stringify(field)})`,
+      );
+    }
+    await until(async () => (await telemetryRows('actuator_feedback', 'state')).length === 1);
+    assert.equal((await telemetryRows('actuator_feedback', 'state'))[0]._value, 'on');
+    assert.equal((await telemetryRows('device_heartbeats', 'online_hint'))[0]._value, true);
+    await publisher.publishAsync(feedbackTopic, JSON.stringify(feedback), { qos: 1 });
+    await until(async () => (await telemetryRows('actuator_feedback', 'state')).length === 1);
+    await publisher.publishAsync(feedbackTopic, JSON.stringify({ ...feedback, state: 'off' }),
+      { qos: 1 });
+    await until(async () => (await pool.query(`SELECT count(*)::integer AS n
+      FROM mqtt_rejected_messages WHERE topic=$1 AND reason_code='telemetry_point_conflict'`,
+    [feedbackTopic])).rows[0].n === 1);
+    await publisher.publishAsync(feedbackTopic, JSON.stringify({ ...feedback,
+      eventId: `bad-feedback-${suffix}`, state: 'invalid' }), { qos: 1 });
+    await until(async () => (await pool.query(`SELECT count(*)::integer AS n
+      FROM mqtt_rejected_messages WHERE topic=$1 AND reason_code='invalid_device_telemetry'`,
+    [feedbackTopic])).rows[0].n === 1);
+
     const retryEvent = { ...mqttEvent, eventId: `retry-${suffix}`,
       measuredAt: new Date(Date.now() - 5000).toISOString() };
     const originalIngest = ingestion.ingest.bind(ingestion);
@@ -192,6 +242,8 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
     }
     await pool.query(`DELETE FROM mqtt_rejected_messages WHERE topic=$1`,
       [`aquaguard/sensors/device-${suffix}/readings`]);
+    await pool.query(`DELETE FROM mqtt_rejected_messages WHERE topic=$1`,
+      [`aquaguard/actuators/aerator-${suffix}/feedback`]);
     if (priorClientId === undefined) delete process.env.MQTT_CLIENT_ID;
     else process.env.MQTT_CLIENT_ID = priorClientId;
     if (deviceId) {
@@ -199,6 +251,10 @@ test('sensor storage validates assignment, deduplicates retries and quarantines 
       await pool.query('DELETE FROM ingestion_receipts WHERE device_id = $1', [deviceId]);
       await pool.query('DELETE FROM device_assignments WHERE device_id = $1', [deviceId]);
       await pool.query('DELETE FROM devices WHERE id = $1', [deviceId]);
+    }
+    if (actuatorDeviceId) {
+      await pool.query('DELETE FROM device_assignments WHERE device_id = $1', [actuatorDeviceId]);
+      await pool.query('DELETE FROM devices WHERE id = $1', [actuatorDeviceId]);
     }
     if (pondId) await pool.query('DELETE FROM ponds WHERE id = $1', [pondId]);
     if (farmId) await pool.query('DELETE FROM farms WHERE id = $1', [farmId]);
