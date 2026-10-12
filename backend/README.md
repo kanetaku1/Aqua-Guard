@@ -96,9 +96,11 @@ Farm運用状態では、現行割当のSensorは最後の有効な計測時刻�
 
 Reportの共通ID・種別・日付・担当TM・保存時刻・提出時刻・締切を `reports` テーブルに保存する土台を追加しました。`GET /farms/{farmId}/report-status` は担当TMに、Farmの現地日付とRulesの締切から当日Daily・今週Weeklyの状態を返し、最新の提出済みReportを示します。未作成なら `reportId: null`、締切後は `overdue` とし、既存Draftの締切は保存済み `due_at` を使用します。Report本文・作成・提出APIは今後の実装範囲です。実DB検証は `npm run test:farm-report-status:local` です。
 
-`GET /reports` はフロントエンド契約の種別・Farm・状態・日付範囲・ページ指定に対応します。FMには提出済みのみ、TMには担当FarmのDraftと提出済みを返します。Dailyの手入力項目は `daily_report_inputs`、Pond別入力、除外Alert、手入力Action・設備Eventのテーブルへ保存する設計です。現行 `DailyReport` 契約では各Pondの `appetite`・`tray`・`health` が必須かつnull不可ですが、作成直後は入力がなく、記録からも確定できません。値を仮置きしないため、Daily本文の作成・取得・更新はこの初期表示の扱いを確定してから接続します。Report一覧と入力テーブルの実DB検証は `npm run test:reports:local` です。
+`GET /reports` はフロントエンド契約の種別・Farm・状態・日付範囲・ページ指定に対応します。FMには提出済みのみ、TMには担当FarmのDraftと提出済みを返します。Dailyの手入力項目は `daily_report_inputs`、Pond別入力、除外Alert、手入力Action・設備Eventのテーブルへ保存する設計です。Report一覧と入力テーブルの実DB検証は `npm run test:reports:local` です。
 
 Daily Report本文の元記録として、指定日・Farmの給餌量と回数、計画回数、最後の飼料、死亡尾数と重量をPond別・Farm合計で読む内部サービスを追加しました。異なる記録のJOINで合計が重複しないよう集計を分離し、日付外の記録は混ぜません。検証は `npm run test:daily-report-records:local` です。
+
+各Pondの `appetite`・`tray`・`health` はフロントエンドMockと同じ `good`・`clean`・`normal` を下書きフォームの編集可能な初期値とし、保存済みのTM入力があればそちらを優先します。これはセンサーから計算するPond／Farmの状態ではありません。Daily本文APIでは、この入力値と元記録に設備・Alert等を合成する必要があります。
 
 `GET /ponds/{pondId}/sensors/history` は保存済みの有効な計測値を5分単位の行にまとめ、6項目の値・重大度とページ情報を返します。同じ5分枠に同じ項目が複数ある場合は最新値を使い、欠測項目は `value: null` とします。現行 OpenAPI の `HistoryValue.severity` は必須で null や `no_data` を許さないため、欠測項目の severity はフロントエンド Mock と同じ `normal` を返します。表示側では `value: null` を欠測として扱います。期間未指定時は直近24時間、指定できる範囲は最大31日です。検証は `npm run test:sensor-history:local` で行えます。
 

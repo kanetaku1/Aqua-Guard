@@ -206,7 +206,7 @@ Migration `0018_reports_foundation.sql` では共通の `reports` テーブル�
 
 Daily DraftのGETでは、給餌・死亡・設備・Alert・対応を元データから再構成し、TMの入力は上記入力テーブルから重ねる。給餌の`amountKg`、死亡の`count`等をDaily入力テーブルで編集しない。Pond別の`appetite`／`tray`はDailyのTM入力を表示する。Feeding記録の`trayCheck`からDailyの`tray`への変換規則は未確定であり、自動変換しない。`manualActions`置換、`excludedAlertIds`、Pond観察は1Transactionで保存する。Weekly Draftの再構成タイミングはOpenAPI未定義なので、提出時には少なくとも現在の元データとInfluxDB集計を確定させる。
 
-Migration `0019_daily_report_inputs.sql` はDaily手入力値の保存先を追加する。`DailyReport` の `appetite`・`tray`・`health` は各Pond行でnull不可だが、新規DraftにはTM入力が存在しない。給餌記録やセンサー状態から自動的にこれらを確定する規則もないため、未入力を正常値として返さない。本文APIを接続する前に、現行契約内での初期値の根拠または入力順序を確定する必要がある。
+Migration `0019_daily_report_inputs.sql` はDaily手入力値の保存先を追加する。`DailyReport` の `appetite`・`tray`・`health` は各Pond行でnull不可である。フロントエンドMockのフォーム初期値と合わせ、未入力のDraftでは `good`・`clean`・`normal` を編集可能な初期値として返し、保存済みTM入力があれば優先する。これはIoTから判定するPond／Farmの状態には使用しない。
 
 Submittedへの遷移時はReport行をロックし、必須入力・担当権限・状態を確認してスナップショットと`submitted_at`を同一PostgreSQL Transactionで保存する。PostgreSQLの元記録は同一Transaction内の一貫した読取スナップショットで集める。週次の水質はInfluxDBからPondごとのDO最小、pH最小・最大、水温最大、範囲外日数、Alert件数等を集計してからSnapshotへ入れ、集計完了時刻を残す。両DB間に単一Transactionはないため、提出Snapshotは「保存した集計結果とその取得時点」を正本とする。これは週次**派生結果**であり、測定点の複製ではない。提出後のGETはSnapshotを返し、元記録の訂正・閾値変更・遅延IoTデータで提出内容を暗黙に変えない。提出後RevisionのAPIは未定義なので、新たな訂正操作を勝手に設けない。`ReportAction.source`は`alert_handling`／`actuator_log`／`manual`、`Source` enum全体はAPI側の定義に従う。
 
