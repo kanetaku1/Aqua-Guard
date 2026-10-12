@@ -20,6 +20,7 @@
     "test:notifications:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/alert-notification-materializer.integration.test.cjs",
     "test:pond-planning:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/pond-planning.integration.test.cjs",
     "test:farm-operations:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/farm-operational-status.integration.test.cjs",
+    "test:farm-report-status:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/farm-report-status.integration.test.cjs",
     "test:critical:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/critical-evaluation.integration.test.cjs",
     "test:periodic:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/periodic-alert.integration.test.cjs",
     "test:mortality:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/mortality.integration.test.cjs",

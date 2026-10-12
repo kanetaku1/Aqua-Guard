@@ -201,7 +201,7 @@ DailyとWeeklyは共通の`reports`でID・Farm・状態を管理する。これ
 | `report_snapshots` | `report_id uuid PK/FK`, `schema_version text`, `payload jsonb`, `source_cutoff_at timestamptz`, `influx_queried_at timestamptz NULL`, `created_at timestamptz` | Submitted時の`DailyReport`／`WeeklyReport`応答を固定。生センサー時系列は入れない |
 | `report_source_refs` | `report_id uuid FK`, `source_type text`, `source_id uuid`, `source_updated_at timestamptz NULL` | 元の給餌・死亡・Sampling・Alert・Action・Actuator Logを追跡。PKは3列の組合せ |
 
-`reports`にはDailyの`UNIQUE (farm_id, report_date) WHERE type='daily'`とWeeklyの`UNIQUE (farm_id, week_start) WHERE type='weekly'`を置く。`week_start`はWIBの月曜、`week_end`は同週の日曜。Reportの`overdue`は`/farms/{farmId}/report-status`用の導出状態で、`reports.status`へは保存しない。`due_at`は設定版とWIB境界から作成時に計算し、期日変更をどのDraftへ適用するかは運用ルール確定時に決める。
+Migration `0018_reports_foundation.sql` では共通の `reports` テーブルを作成した。Dailyの`UNIQUE (farm_id, report_date) WHERE type='daily'`とWeeklyの`UNIQUE (farm_id, week_start) WHERE type='weekly'`を置く。`week_start`はFarm現地時間の月曜、`week_end`は同週の日曜。Reportの`overdue`は`/farms/{farmId}/report-status`用の導出状態で、`reports.status`へは保存しない。未作成Reportの締切は現行RulesとFarmタイムゾーンから計算し、作成済みReportは保存済み`due_at`を使う。期日変更をどのDraftへ適用するかは運用ルール確定時に決める。
 
 Daily DraftのGETでは、給餌・死亡・設備・Alert・対応を元データから再構成し、TMの入力は上記入力テーブルから重ねる。給餌の`amountKg`、死亡の`count`等をDaily入力テーブルで編集しない。Pond別の`appetite`／`tray`はDailyのTM入力を表示する。Feeding記録の`trayCheck`からDailyの`tray`への変換規則は未確定であり、自動変換しない。`manualActions`置換、`excludedAlertIds`、Pond観察は1Transactionで保存する。Weekly Draftの再構成タイミングはOpenAPI未定義なので、提出時には少なくとも現在の元データとInfluxDB集計を確定させる。
 

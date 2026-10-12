@@ -94,6 +94,8 @@ Farm Summary の成長観点に向けて、稼働中の生産サイクルと最�
 
 Farm運用状態では、現行割当のSensorは最後の有効な計測時刻からOnline／Offlineを、Aerator・PumpはFeedbackの状態とHeartbeatから稼働・故障・切断を集計します。`GET /farms/{farmId}/operational-status` はTMの担当Farmについて、現地日付の給餌記録と予定、次回Sampling予定、登録済み発電機状態を組み合わせて現行OpenAPIの `OperationalStatus` を返します。次回Sampling予定が未登録なら `null`、発電機状態または機器の実状態が未確認なら503を返し、正常値を補いません。発電機状態とSampling予定は現行OpenAPIに更新APIがないため、`farm_generator_states` と `farm_sampling_schedule` をバックエンド運用側で登録する必要があります。`npm run test:sync-status:local` と `npm run test:farm-operations:local` で検証します。
 
+Reportの共通ID・種別・日付・担当TM・保存時刻・提出時刻・締切を `reports` テーブルに保存する土台を追加しました。`GET /farms/{farmId}/report-status` は担当TMに、Farmの現地日付とRulesの締切から当日Daily・今週Weeklyの状態を返し、最新の提出済みReportを示します。未作成なら `reportId: null`、締切後は `overdue` とし、既存Draftの締切は保存済み `due_at` を使用します。Report本文・作成・提出APIは今後の実装範囲です。実DB検証は `npm run test:farm-report-status:local` です。
+
 `GET /ponds/{pondId}/sensors/history` は保存済みの有効な計測値を5分単位の行にまとめ、6項目の値・重大度とページ情報を返します。同じ5分枠に同じ項目が複数ある場合は最新値を使い、欠測項目は `value: null` とします。現行 OpenAPI の `HistoryValue.severity` は必須で null や `no_data` を許さないため、欠測項目の severity はフロントエンド Mock と同じ `normal` を返します。表示側では `value: null` を欠測として扱います。期間未指定時は直近24時間、指定できる範囲は最大31日です。検証は `npm run test:sensor-history:local` で行えます。
 
 Sensor Current／Series／History／Anomalies は TM と担当 Farm の Pond に限定します。`GET /ponds/{pondId}/sensors/anomalies` は PostgreSQL に保存した異常区間を現行 OpenAPI の `SensorAnomaly` 形式で返し、関連 Alert があれば `alertId` を含めます。期間未指定時は直近7日と重なる区間を返します。受信時 Critical 判定と5分処理の Warning／Attention 判定で閾値逸脱区間を作り、有効な回復点で区間を閉じます。増加・減少傾向の発報条件は既存資料では未確定のため、推測した条件で行を生成しません。参照 API の検証は `npm run test:sensor-anomalies:local` で行えます。
