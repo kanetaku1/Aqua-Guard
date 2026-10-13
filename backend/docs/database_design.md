@@ -105,26 +105,32 @@ ThresholdのFarm別取得では、現在のFarm版にあるParameterはその値
 
 `production_cycles.started_on = stocking_records.stocked_on`とする。給餌・死亡・Sampling・KPIは対象サイクルに結び、再放養後に旧サイクルの累積値を混ぜない。放養記録の登録・更新APIは**現行OpenAPIにない**ため、既存のPond取得・KPI APIの入力源としてデータを持ちつつ、外部からの編集経路はAPI追加合意後に確定する。既存データ移行時は出典と登録者を保持する。初期Biomassが不明ならFCRを架空の0や数値で返さない。
 
+現行実装では `stocking_records` と日別の `feeding_plan_rounds` をMigration `0016_pond_planning.sql` で作成した。放養記録は複合FKでサイクルのPond・開始日との一致を保証する。給餌計画はPond・日付・回の組を一意にし、回の時刻・飼料・予定量・注記を保持する。計画が未登録の日は `PondDetail.feeding` を空配列で返す。登録・訂正の公開APIは未合意のままなので追加していない。
+
+Farm運用状態用にMigration `0017_farm_operations.sql` で `farm_generator_states`（Farmごとの最新の構造化状態・観測時刻・任意の試験時刻）と `farm_sampling_schedule`（Farmごとの予定日）を追加した。`OperationalStatus.nextSampling` は現地日付以降の最も早い予定日を使い、予定がなければ `null` を返す。どちらも現行OpenAPIに更新APIがないため、登録方法はバックエンド運用手順で定める。
+
 ### 6.2 現場記録
 
 | テーブル | 主な列 | 制約・対応API |
 | --- | --- | --- |
-| `feeding_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `record_date date`, `amount_kg numeric`, `rounds integer`, `feed_type text`, `appetite text NULL`, `tray text NULL`, `note text NULL`, `recorded_by uuid FK`, `created_at`, `updated_at` | `FeedingInput`。`amount_kg >= 0`、`rounds >= 0`。同日複数記録可 |
-| `mortality_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `record_date date`, `count integer`, `weight_kg numeric NULL`, `abnormal boolean NULL`, `note text NULL`, `recorded_by uuid FK`, `created_at`, `updated_at` | `MortalityInput`。`count >= 0`、`weight_kg >= 0` |
-| `sampling_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `sample_date date`, `sample_count integer NULL`, `sample_weight_g numeric NULL`, `tan numeric NULL`, `no2 numeric NULL`, `vibrio numeric NULL`, `alkalinity numeric NULL`, `recorded_by uuid FK`, `created_at`, `updated_at` | `SamplingInput`。`UNIQUE (pond_id, sample_date)`、`sample_count > 0`（非NULL時）、測定値は非負 |
+| `feeding_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `record_date date`, `round_no integer`, `feed_type text`, `amount_kg numeric`, `tray_check text NULL`, `note text NULL`, `recorded_by uuid FK`, `created_at`, `updated_at`, `row_version bigint` | フロントエンドの`FeedingInput`を正とする。`round_no >= 1`、`amount_kg > 0`。同日複数回を許し、同じPond・日付・回は一意 |
+| `mortality_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NULL`, `record_date date`, `count integer`, `weight_kg numeric NOT NULL`, `observation text NULL`, `note text NULL`, `recorded_by uuid FK`, `created_at`, `updated_at`, `row_version bigint` | フロントエンドの`MortalityInput`を正とし、必須の`weightKg`と`observation` enumを保存する。`count >= 0`、`weight_kg >= 0` |
+| `sampling_records` | `id uuid PK`, `public_id text UNIQUE`, `pond_id uuid FK`, `cycle_id uuid FK NOT NULL`, `sample_date date`, `sample_count integer NULL`, `sample_weight_g numeric NULL`, `tan numeric NULL`, `no2 numeric NULL`, `vibrio numeric NULL`, `alkalinity numeric NULL`, `note text NULL`, `recorded_by uuid FK`, `created_at`, `updated_at`, `row_version bigint` | `SamplingInput`。`UNIQUE (pond_id, sample_date)`、`sample_count > 0`（非NULL時）、測定値は非負。記録日を含むサイクルがなければ422 |
 
-`feeding_records.appetite`は`good`／`reduced`／`poor`、`tray`は`clean`／`leftover`。`sampling_records`の4検査項目は後着を許す。`sample_count`と`sample_weight_g`は両方そろった場合にABWを計算し、片方のみの保存は422とする。OpenAPIでは両方とも任意／nullなので、検査値だけの記録は許す。Laboratoryの`labPending`は未着・未確認状態から導出する。必要なら`lab_confirmed_at`／`lab_confirmed_by`を内部列として持つ。VibrioはAPIの`×10³ CFU/mL`の数値をそのまま保存し、単位の異なる生値を混在させない。
+`feeding_records.tray_check`はフロントエンドの`TrayCheck` enumをそのまま保存する。`sampling_records`の4検査項目は後着を許す。`sample_count`と`sample_weight_g`は両方そろった場合にABWを計算し、片方のみの保存は422とする。OpenAPIでは両方とも任意／nullなので、検査値だけの記録は許す。Laboratoryの`labPending`は4項目のいずれかが未入力の場合にtrueとする。検査結果の確認作業を別途追跡する場合は`lab_confirmed_at`／`lab_confirmed_by`を内部列として追加する。VibrioはAPIの`×10³ CFU/mL`の数値をそのまま保存し、単位の異なる生値を混在させない。
 
 一括Samplingは`(pond_id, sample_date)`でUpsertし、指定された`entries`だけを1Transactionで処理する。権限外Pondや異なるFarmのPondが1件でもあれば全件拒否し、途中まで保存しない。通常のPOSTで同一Pond・日付が重複した場合の409と、訂正のPATCHは既存APIの状態に従う。`recorded_by`は初回登録者、`updated_at`と監査で訂正履歴を追う。記録日の未来日可否は既存APIに記載された個別規則を優先する。
+
+現行実装のSamplingは未来日を422とし、記録日を含む`production_cycles`がない場合も422とする。DOCはサイクルの`started_on`から計算する。目標曲線の定義点間は直線補間し、定義範囲外は外挿せず`targetAbwG`・`vsTargetPct`・`growth`をnullにする。一括入力は測定項目だけを置き換え、既存の`note`と初回の`recorded_by`を保つ。
 
 ### 6.3 KPI結果
 
 | テーブル | 主な列 | 用途 |
 | --- | --- | --- |
 | `pond_kpi_snapshots` | `id uuid PK`, `pond_id uuid FK`, `cycle_id uuid FK`, `as_of_date date`, `sampling_id uuid FK NULL`, `calculation_version text`, `doc integer NULL`, `abw_g numeric NULL`, `adg_g_per_day numeric NULL`, `target_abw_g numeric NULL`, `vs_target_pct numeric NULL`, `estimated_survivors numeric NULL`, `survival_rate_pct numeric NULL`, `biomass_kg numeric NULL`, `fcr numeric NULL`, `size_uniformity_pct numeric NULL`, `basis jsonb`, `calculated_at timestamptz` | `UNIQUE (cycle_id, as_of_date, calculation_version)`。元記録ID・設定版・欠損理由を`basis`に保持 |
-| `farm_status_daily` | `farm_id uuid FK`, `status_date date`, `status text`, `water_quality text`, `growth text`, `operations text`, `main_reason text`, `rule_version_id uuid FK`, `computed_at timestamptz` | PK `(farm_id, status_date)`。`/status-trend?days=`の過去日別状態を固定 |
+| `farm_status_daily` | `farm_id uuid FK`, `status_date date`, `status text`, `water_quality text`, `growth text`, `operations text`, `computed_at timestamptz` | PK `(farm_id, status_date)`。観測した日の最悪状態を保存。観測していない日は補完しない |
 
-KPIはPond・サイクル単位で算出する。DOC=`基準日 - stocked_on`、ABW=`sample_weight_g / sample_count`、ADGは同じサイクル内の前回Samplingとの差、目標比は`(ABW / targetABW - 1) × 100`。Survival RateとBiomassはEstimated。`biomass_kg = estimated_survivors × abw_g / 1000`。Farm／CompanyのBiomassは合計、SRは`Σ推定生存尾数 / Σ放養尾数 × 100`、FCRは`Σ累積給餌量 / Σ増重量`で再計算し、Pond比率やABW・ADGを単純平均しない。0除算・未入力・古いデータはNULLと欠損理由にする。現行Sampling入力に個体別重量はないため、Size Uniformityは算出できずNULL。不明減耗の推定方法とFCRの正式な分母はKPI資料でも未確定であり、式Version確定まで推定値を創作しない。
+KPIはPond・サイクル単位で算出する。DOC=`基準日 - stocked_on`、ABW=`sample_weight_g / sample_count`、ADGは同じサイクル内の前回Samplingとの差、目標比は`(ABW / targetABW - 1) × 100`。Survival RateとBiomassはEstimated。`biomass_kg = estimated_survivors × abw_g / 1000`。Farm／CompanyのBiomassは合計、SRは`Σ推定生存尾数 / Σ放養尾数 × 100`、FCRは`Σ累積給餌量 / Σ増重量`で再計算し、Pond比率やABW・ADGを単純平均しない。0除算・未入力・古いデータは欠損として扱う。現行Sampling入力に個体別重量はないため、Size Uniformityは算出できずNULL。不明減耗の正式式が決まるまでは0と置く暫定推定を採用し、SR・Biomassを暫定値として扱う。
 
 現在のFarm状態は有効なAlert、Pond成長、設備・センサー接続、Report提出状況から導出する。`farm_status_daily`はWIBの日ごとの判定結果を保存し、後日の設定変更で過去の表示を変えない。`/production/summary`等は必要なPondスナップショットから集計し、FMには生センサー値を渡さない。
 
@@ -186,18 +192,22 @@ DailyとWeeklyは共通の`reports`でID・Farm・状態を管理する。これ
 | テーブル | 主な列 | 制約・用途 |
 | --- | --- | --- |
 | `reports` | `id uuid PK`, `public_id text UNIQUE`, `farm_id uuid FK`, `type text`, `status text`, `report_date date NULL`, `week_start date NULL`, `week_end date NULL`, `technical_manager_id uuid FK`, `due_at timestamptz`, `saved_at timestamptz NULL`, `submitted_at timestamptz NULL`, `submitted_by uuid FK NULL`, `created_at`, `updated_at`, `row_version bigint` | `type IN ('daily','weekly')`、`status IN ('draft','submitted')`。Dailyは`report_date`のみ、Weeklyは月曜`week_start`と`week_end`を持つ |
-| `daily_report_inputs` | `report_id uuid PK/FK`, `weather text NULL`, `rainfall_mm numeric NULL`, `events text NULL`, `generator text NULL`, `summary text NULL` | `DailyReportInput.environment`と`summary`。提出時はWeather・Summary必須 |
-| `daily_report_pond_inputs` | `report_id uuid FK`, `pond_id uuid FK`, `appetite text NULL`, `tray text NULL`, `health text NULL`, `observations text[]`, `health_note text NULL` | PK `(report_id, pond_id)`。DailyのPond別観察。給餌量・死亡数をここへ複製しない |
+| `daily_report_inputs` | `report_id uuid PK/FK`, `weather text NULL`, `rainfall_mm numeric NULL`, `events text NULL`, `summary text NULL` | `DailyReportInput.environment`と`summary`。提出時はWeather・Summary必須 |
+| `daily_report_pond_inputs` | `report_id uuid FK`, `pond_id uuid FK`, `appetite text NULL`, `tray text NULL`, `mortality_note text NULL`, `health text NULL`, `observations text[]`, `health_note text NULL` | PK `(report_id, pond_id)`。DailyのPond別観察。給餌量・死亡数をここへ複製しない |
 | `report_excluded_alerts` | `report_id uuid FK`, `alert_id uuid FK` | PK `(report_id, alert_id)`。Dailyの`excludedAlertIds` |
 | `report_manual_actions` | `id uuid PK`, `public_id text UNIQUE`, `report_id uuid FK`, `pond_id uuid FK NULL`, `at timestamptz`, `action text`, `outcome text NULL`, `sort_order integer` | Dailyの`manualActions`。PATCHで送った全件で置換し、既存IDを持つ行は同じReport内に限定 |
-| `weekly_report_inputs` | `report_id uuid PK/FK`, `water_quality_comment text NULL`, `laboratory_confirmed boolean`, `technical_summary text NULL` | `WeeklyReportInput`。提出時はTechnical Summary必須 |
+| `report_manual_equipment_events` | `id uuid PK`, `public_id text UNIQUE`, `report_id uuid FK`, `pond_id uuid FK NULL`, `equipment text`, `failure text`, `occurred_at timestamptz`, `action text NULL`, `status text` | Dailyの`manualEquipmentEvents`。PATCHで送った全件で置換 |
+| `weekly_report_inputs` | `report_id uuid PK/FK`, `farm_condition text NULL`, `water_quality_comment text NULL`, `technical_summary text NULL` | `WeeklyReportInput`。提出時はTechnical Summary必須 |
 | `weekly_report_alert_notes` | `report_id uuid FK`, `alert_id uuid FK`, `cause text NULL`, `action text NULL`, `outcome text NULL` | PK `(report_id, alert_id)`。Weeklyの`alertNotes` |
+| `weekly_report_major_actions` | `id uuid PK`, `public_id text UNIQUE`, `report_id uuid FK`, `action_date date`, `pond_id uuid FK NULL`, `action text`, `sort_order integer` | Weeklyの`majorActions`。PATCHで送った全件で置換 |
 | `report_snapshots` | `report_id uuid PK/FK`, `schema_version text`, `payload jsonb`, `source_cutoff_at timestamptz`, `influx_queried_at timestamptz NULL`, `created_at timestamptz` | Submitted時の`DailyReport`／`WeeklyReport`応答を固定。生センサー時系列は入れない |
 | `report_source_refs` | `report_id uuid FK`, `source_type text`, `source_id uuid`, `source_updated_at timestamptz NULL` | 元の給餌・死亡・Sampling・Alert・Action・Actuator Logを追跡。PKは3列の組合せ |
 
-`reports`にはDailyの`UNIQUE (farm_id, report_date) WHERE type='daily'`とWeeklyの`UNIQUE (farm_id, week_start) WHERE type='weekly'`を置く。`week_start`はWIBの月曜、`week_end`は同週の日曜。Reportの`overdue`は`/farms/{farmId}/report-status`用の導出状態で、`reports.status`へは保存しない。`due_at`は設定版とWIB境界から作成時に計算し、期日変更をどのDraftへ適用するかは運用ルール確定時に決める。
+Migration `0018_reports_foundation.sql` では共通の `reports` テーブルを作成した。Dailyの`UNIQUE (farm_id, report_date) WHERE type='daily'`とWeeklyの`UNIQUE (farm_id, week_start) WHERE type='weekly'`を置く。`week_start`はFarm現地時間の月曜、`week_end`は同週の日曜。Reportの`overdue`は`/farms/{farmId}/report-status`用の導出状態で、`reports.status`へは保存しない。未作成Reportの締切は現行RulesとFarmタイムゾーンから計算し、作成済みReportは保存済み`due_at`を使う。期日変更をどのDraftへ適用するかは運用ルール確定時に決める。
 
-Daily DraftのGETでは、給餌・死亡・設備・Alert・対応を元データから再構成し、TMの入力は上記入力テーブルから重ねる。給餌の`amountKg`、死亡の`count`等をDaily入力テーブルで編集しない。Pond別の`appetite`／`tray`はDailyのTM入力があればそれを表示し、なければFeeding記録を参照する。`manualActions`置換、`excludedAlertIds`、Pond観察は1Transactionで保存する。Weekly Draftの再構成タイミングはOpenAPI未定義なので、提出時には少なくとも現在の元データとInfluxDB集計を確定させる。
+Daily DraftのGETでは、給餌・死亡・設備・Alert・対応を元データから再構成し、TMの入力は上記入力テーブルから重ねる。給餌の`amountKg`、死亡の`count`等をDaily入力テーブルで編集しない。Pond別の`appetite`／`tray`はDailyのTM入力を表示する。Feeding記録の`trayCheck`からDailyの`tray`への変換規則は未確定であり、自動変換しない。`manualActions`置換、`excludedAlertIds`、Pond観察は1Transactionで保存する。Weekly Draftの再構成タイミングはOpenAPI未定義なので、提出時には少なくとも現在の元データとInfluxDB集計を確定させる。
+
+Migration `0019_daily_report_inputs.sql` はDaily手入力値の保存先を追加する。`DailyReport` の `appetite`・`tray`・`health` は各Pond行でnull不可である。フロントエンドMockのフォーム初期値と合わせ、未入力のDraftでは `good`・`clean`・`normal` を編集可能な初期値として返し、保存済みTM入力があれば優先する。これはIoTから判定するPond／Farmの状態には使用しない。
 
 Submittedへの遷移時はReport行をロックし、必須入力・担当権限・状態を確認してスナップショットと`submitted_at`を同一PostgreSQL Transactionで保存する。PostgreSQLの元記録は同一Transaction内の一貫した読取スナップショットで集める。週次の水質はInfluxDBからPondごとのDO最小、pH最小・最大、水温最大、範囲外日数、Alert件数等を集計してからSnapshotへ入れ、集計完了時刻を残す。両DB間に単一Transactionはないため、提出Snapshotは「保存した集計結果とその取得時点」を正本とする。これは週次**派生結果**であり、測定点の複製ではない。提出後のGETはSnapshotを返し、元記録の訂正・閾値変更・遅延IoTデータで提出内容を暗黙に変えない。提出後RevisionのAPIは未定義なので、新たな訂正操作を勝手に設けない。`ReportAction.source`は`alert_handling`／`actuator_log`／`manual`、`Source` enum全体はAPI側の定義に従う。
 
@@ -205,8 +215,9 @@ Submittedへの遷移時はReport行をロックし、必須入力・担当権�
 
 | テーブル | 主な列 | 用途 |
 | --- | --- | --- |
-| `actuator_commands` | `id uuid PK`, `public_id text UNIQUE`, `device_id uuid FK`, `pond_id uuid FK`, `requested_by uuid FK NULL`, `source text`, `command text`, `status text`, `safety_result text NULL`, `safety_reason text NULL`, `requested_at timestamptz`, `sent_at timestamptz NULL`, `acknowledged_at timestamptz NULL`, `completed_at timestamptz NULL`, `failure_reason text NULL`, `idempotency_key text NULL` | `turn_on`／`turn_off`／`set_auto`を受付から実機結果まで追跡。202受付と完了を区別 |
-| `actuator_logs` | `id uuid PK`, `public_id text UNIQUE`, `command_id uuid FK NULL`, `device_id uuid FK`, `pond_id uuid FK`, `at timestamptz`, `command text`, `actor_id uuid FK NULL`, `result text`, `reason text NULL` | APIの`ActuatorLog`へ対応。自動制御時は`actor_id NULL`、`command`は`auto_on`／`auto_off`も可 |
+| `actuator_control_configs` | `device_id uuid PK/FK`, `desired_mode text`, `auto_rule_label text NULL`, `emergency_latched boolean`, `command_enabled boolean`, `safety_description text NULL`, `updated_at timestamptz` | 制御意図と安全設定。現行の実機送信機能は無効 |
+| `actuator_commands` | `id uuid PK`, `public_id text UNIQUE`, `device_id uuid FK`, `pond_id uuid FK`, `requested_by uuid FK NULL`, `source text`, `command text`, `status text`, `safety_result text NULL`, `safety_reason text NULL`, `requested_at timestamptz`, `sent_at timestamptz NULL`, `acknowledged_at timestamptz NULL`, `completed_at timestamptz NULL`, `failure_reason text NULL` | OpenAPIの`turn_on`／`turn_off`／`set_manual`／`set_auto`と内部の`auto_on`／`auto_off`を追跡。現行は拒否を監査保存 |
+| `actuator_logs` | `id uuid PK`, `public_id text UNIQUE`, `command_id uuid FK NULL`, `device_id uuid FK`, `pond_id uuid FK`, `at timestamptz`, `command text`, `actor_id uuid FK NULL`, `mode text`, `result text`, `reason text NULL` | APIの`ActuatorLog`へ対応。自動制御時は`actor_id NULL`、`command`は`auto_on`／`auto_off`も可 |
 | `pid_setting_versions` | `id uuid PK`, `device_id uuid FK`, `controlled_parameter text`, `setpoint numeric`, `kp numeric`, `ki numeric`, `kd numeric`, `sample_period_ms integer`, `output_min numeric`, `output_max numeric`, `effective_from timestamptz`, `effective_to timestamptz NULL`, `approved_by uuid FK NULL` | 自動制御の内部設定履歴。画面からの変更APIは未定義 |
 | `safety_rule_versions` | `id uuid PK`, `device_id uuid FK`, `input_min numeric NULL`, `input_max numeric NULL`, `runtime_limit_seconds integer NULL`, `freshness_limit_seconds integer NULL`, `fail_safe_action text`, `effective_from timestamptz`, `effective_to timestamptz NULL` | 操作拒否・Fail-safeの判断版 |
 | `audit_logs` | `id uuid PK`, `actor_id uuid FK NULL`, `action text`, `target_type text`, `target_id uuid NULL`, `farm_id uuid FK NULL`, `pond_id uuid FK NULL`, `occurred_at timestamptz`, `result text`, `details jsonb NULL` | 設定変更、Alert対応、Report提出、Actuator操作と拒否の監査 |
@@ -265,7 +276,7 @@ Raw Dataと集計Dataの保持期間は必要なSensor History検索期間とBac
 | User | `UNIQUE (lower(email))`、Role／StatusのCHECK、`user_farm_assignments(user_id) WHERE unassigned_at IS NULL`の一意索引 |
 | Master | `farms(company_id)`、`ponds(farm_id)`、`devices(device_id)`一意、Device割当・設定版の有効期間非重複 |
 | Setting | Scopeごとの現行`threshold_sets`一意、`threshold_values(set_id, parameter)`一意、Growth点のDOC一意 |
-| Records | `feeding_records(pond_id, record_date)`、`mortality_records(pond_id, record_date)`、`sampling_records(pond_id, sample_date)`一意 |
+| Records | `feeding_records(pond_id, record_date, round_no)`は一意。`mortality_records(pond_id, record_date)`は検索用索引、`sampling_records(pond_id, sample_date)`は一意 |
 | Alert／Issue | `alerts(pond_id, state, occurred_at DESC)`、`alerts(detection_state_id, episode_no)`部分一意、`alert_detection_states(pond_id, device_id, parameter, direction)`一意、`issues(farm_id, state, severity, since)`、`issues(source_type, source_id)`一意 |
 | 通知 | Outbox `(alert_id, event_kind)`一意、`(status, next_attempt_at)`検索。利用者通知 `(outbox_id, user_id)`・`(user_id, stream_sequence)`一意、未読 `(user_id, created_at DESC) WHERE read_at IS NULL`。SSE配送 `(notification_id, channel, delivery_key)`一意・`(status, next_attempt_at)`検索 |
 | Report | Daily `(farm_id, report_date)`、Weekly `(farm_id, week_start)`の部分一意索引、`reports(farm_id, type, status, submitted_at DESC)` |
@@ -299,9 +310,9 @@ InfluxDB書込とPostgreSQLのReceipt／Checkpoint更新は原子的にCommitで
 | --- | --- |
 | InfluxDB | Version、Bucket／Table表現、Retention、Backup、同時刻点の重複挙動、容量見積もり |
 | Device通知 | センサー以外のHeartbeat・Actuator実状態・ACKのPayload。なければ`connection`や実状態の信頼性が下がる |
-| Generator | `OperationalStatus.generator`の構造化された状態・試験時刻の入力源が現行OpenAPIにない。Reportの自由文`environment.generator`から正確に導出できない |
+| Generator | `OperationalStatus.generator`用に`farm_generator_states`へ構造化状態・観測時刻・任意の試験時刻を保存する。現行OpenAPIに更新APIがないためバックエンド運用側で登録が必要。Reportの自由文`environment.generator`からは導出しない |
 | 初回Actuator状態 | フィードバック未着時の`Actuator.state`はOpenAPIに未知値がない。誤って`off`／`fault`を返さない表現が必要 |
-| 初回Sensor・生産状態 | 未受信時も`SensorValue.severity`、放養・Samplingがない場合も`PondProduction.doc`・`CompanyProduction.latestSamplingDate`・`FarmProduction.samplingDate`はOpenAPI上必須。ダミーのNormal、DOC、日付を返さないため、未取得時の契約確認が必要 |
+| 初回Sensor・生産状態 | 運用開始前にIoT受信を確認し、再起動時はInfluxDBの保存済み有効データと未処理Receipt・Alertから状態を復元する。受信履歴があるだけでNormalとはせず、対象機器・必要項目・鮮度の受入条件を確定する。未放養・Sampling未実施でも`PondProduction.doc`・`CompanyProduction.latestSamplingDate`・`FarmProduction.samplingDate`が必須となる契約上の課題は残る |
 | Issueの傾向 | 初回発生で比較対象がない場合も`Issue.trend`は必須。`stable`を無根拠に返さないため、初回の表現を確認する |
 | 養殖サイクル | 再放養の終了・開始手順と放養記録APIの採用。現行OpenAPIには放養更新APIがない |
 | KPI | 不明減耗、初期Biomass、Size Uniformityの元データと正式式。未算出時はNULLにする |

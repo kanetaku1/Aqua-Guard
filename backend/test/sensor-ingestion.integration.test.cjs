@@ -1,0 +1,301 @@
+const assert = require('node:assert/strict');
+const { randomUUID } = require('node:crypto');
+const { test } = require('node:test');
+const { connectAsync } = require('mqtt');
+const { createPostgresPool } = require('../dist/infrastructure/postgres');
+const { InfluxService } = require('../dist/infrastructure/influx.service');
+const { SensorIngestionService } = require('../dist/infrastructure/sensor-ingestion.service');
+const { CriticalEvaluationService } = require('../dist/infrastructure/critical-evaluation.service');
+const { AdminThresholdsService } = require('../dist/admin/admin-thresholds.service');
+const { MqttTelemetrySubscriberService } = require('../dist/infrastructure/mqtt-telemetry-subscriber.service');
+const { DeviceTelemetryIngestionService } = require(
+  '../dist/infrastructure/device-telemetry-ingestion.service');
+
+async function until(check, timeoutMs = 10000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await check()) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  assert.fail('Timed out waiting for MQTT ingestion');
+}
+
+test('sensor storage validates assignment, deduplicates retries and quarantines collisions', async () => {
+  const pool = createPostgresPool();
+  const suffix = randomUUID().slice(0, 8);
+  const influxUrl = process.env.INFLUXDB_URL
+    ?? `http://127.0.0.1:${process.env.INFLUXDB_PORT ?? '8086'}`;
+  const headers = { Authorization: `Token ${process.env.INFLUXDB_ADMIN_TOKEN}` };
+  const priorBucket = process.env.INFLUXDB_BUCKET;
+  const priorClientId = process.env.MQTT_CLIENT_ID;
+  const broker = process.env.MQTT_URL ?? `mqtt://127.0.0.1:${process.env.MQTT_PORT ?? '1883'}`;
+  const subscriberClientId = `aquaguard-test-${suffix}`;
+  let subscriber;
+  let publisher;
+  let bucketId;
+  let companyId;
+  let farmId;
+  let pondId;
+  let deviceId;
+  let actuatorDeviceId;
+  try {
+    const org = process.env.INFLUXDB_ORG ?? 'aquaguard';
+    const orgResponse = await fetch(`${influxUrl}/api/v2/orgs?org=${encodeURIComponent(org)}`,
+      { headers });
+    assert.equal(orgResponse.status, 200);
+    const orgId = (await orgResponse.json()).orgs[0].id;
+    const bucketName = `aquaguard_ingestion_${randomUUID().replaceAll('-', '')}`;
+    const created = await fetch(`${influxUrl}/api/v2/buckets`, {
+      method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: bucketName, orgID: orgId }),
+    });
+    assert.equal(created.status, 201);
+    bucketId = (await created.json()).id;
+    process.env.INFLUXDB_BUCKET = bucketName;
+    const influx = new InfluxService();
+    const critical = new CriticalEvaluationService({ pool }, influx,
+      new AdminThresholdsService({ pool }));
+    const ingestion = new SensorIngestionService({ pool }, influx, critical);
+
+    companyId = (await pool.query(
+      `INSERT INTO companies (public_id, name, status)
+       VALUES ($1, 'Ingestion Test', 'active') RETURNING id`, [`company-${suffix}`],
+    )).rows[0].id;
+    farmId = (await pool.query(
+      `INSERT INTO farms (public_id, company_id, name, location, status)
+       VALUES ($1, $2, 'Farm', 'East Java', 'active') RETURNING id`,
+      [`farm-${suffix}`, companyId],
+    )).rows[0].id;
+    pondId = (await pool.query(
+      `INSERT INTO ponds (public_id, farm_id, name, area_ha)
+       VALUES ($1, $2, 'Pond', 0.8) RETURNING id`, [`pond-${suffix}`, farmId],
+    )).rows[0].id;
+    deviceId = (await pool.query(
+      `INSERT INTO devices (device_id, type, parameter)
+       VALUES ($1, 'sensor', 'do') RETURNING id`, [`device-${suffix}`],
+    )).rows[0].id;
+    await pool.query(
+      `INSERT INTO device_assignments (device_id, pond_id, assigned_at)
+       VALUES ($1, $2, now() - interval '1 day')`, [deviceId, pondId],
+    );
+    actuatorDeviceId = (await pool.query(
+      `INSERT INTO devices (device_id, type)
+       VALUES ($1, 'aerator') RETURNING id`, [`aerator-${suffix}`],
+    )).rows[0].id;
+    await pool.query(
+      `INSERT INTO device_assignments (device_id, pond_id, assigned_at)
+       VALUES ($1, $2, now() - interval '1 day')`, [actuatorDeviceId, pondId],
+    );
+    const event = { eventId: `event-${suffix}`, deviceId: `device-${suffix}`,
+      parameter: 'do', value: 4.25, measuredAt: new Date(Date.now() - 60000).toISOString() };
+    await assert.rejects(ingestion.ingest({ ...event, parameter: 'ph' }),
+      (error) => error.getStatus() === 422);
+    await assert.rejects(ingestion.ingest({ ...event, deviceId: 'unknown-device' }),
+      (error) => error.getStatus() === 422);
+
+    const first = await ingestion.ingest(event);
+    assert.equal(first.stored, true);
+    assert.equal(first.duplicate, false);
+    const receipt = await pool.query(
+      `SELECT status, critical_evaluation_status, observation_refs
+       FROM ingestion_receipts WHERE id = $1`, [first.receiptId],
+    );
+    assert.equal(receipt.rows[0].status, 'completed');
+    assert.equal(receipt.rows[0].critical_evaluation_status, 'evaluated');
+    assert.equal(receipt.rows[0].observation_refs[0].pondId, `pond-${suffix}`);
+    const again = await ingestion.ingest(event);
+    assert.equal(again.receiptId, first.receiptId);
+    assert.equal(again.duplicate, true);
+    await assert.rejects(ingestion.ingest({ ...event, value: 4.5 }),
+      (error) => error.getStatus() === 409 && error.getResponse().code === 'event_id_conflict');
+    await assert.rejects(ingestion.ingest({ ...event, eventId: `collision-${suffix}`, value: 4.5 }),
+      (error) => error.getStatus() === 409 && error.getResponse().code === 'observation_conflict');
+    const collision = await pool.query(
+      'SELECT status FROM ingestion_receipts WHERE device_id = $1 AND event_id = $2',
+      [deviceId, `collision-${suffix}`],
+    );
+    assert.equal(collision.rows[0].status, 'quarantined');
+
+    await pool.query(`UPDATE ingestion_receipts SET status = 'pending', stored_at = NULL
+      WHERE id = $1`, [first.receiptId]);
+    await pool.query(
+      `INSERT INTO ingestion_receipts
+         (device_id, event_id, payload_hash, observation_refs, received_at)
+       VALUES ($1, $2, $3, $4, now())`,
+      [deviceId, `missing-${suffix}`, 'missing-point', JSON.stringify([{
+        farmId: `farm-${suffix}`, pondId: `pond-${suffix}`,
+        deviceId: `device-${suffix}`, parameter: 'do',
+        measuredAt: new Date(Date.now() - 15000).toISOString(),
+      }])],
+    );
+    const recovery = await ingestion.recoverPendingFromStorage();
+    assert.equal(recovery.recovered, 1);
+    assert.equal(recovery.missing, 1);
+    assert.equal(recovery.quarantined, 0);
+    const recovered = await ingestion.ingest(event);
+    assert.equal(recovered.duplicate, true);
+    const points = await influx.client.getQueryApi(influx.org).collectRows(
+      `from(bucket: ${JSON.stringify(bucketName)}) |> range(start: -1h)
+       |> filter(fn: (r) => r._measurement == "sensor_readings" and r._field == "value")`,
+    );
+    assert.equal(points.length, 1);
+    assert.equal(points[0]._value, 4.25);
+    const concurrentEvent = { ...event, eventId: `concurrent-${suffix}`,
+      measuredAt: new Date(Date.now() - 30000).toISOString(), value: 4.75 };
+    const concurrent = await Promise.all([
+      ingestion.ingest(concurrentEvent), ingestion.ingest(concurrentEvent),
+    ]);
+    assert.equal(concurrent[0].receiptId, concurrent[1].receiptId);
+    assert.deepEqual(concurrent.map((result) => result.duplicate).sort(), [false, true]);
+
+    process.env.MQTT_CLIENT_ID = subscriberClientId;
+    const priorSession = await connectAsync(broker,
+      { clientId: subscriberClientId, clean: false });
+    await priorSession.subscribeAsync('aquaguard/sensors/+/readings', { qos: 1 });
+    await priorSession.endAsync();
+    const deviceIngestion = new DeviceTelemetryIngestionService({ pool }, influx);
+    subscriber = new MqttTelemetrySubscriberService({ pool }, ingestion, deviceIngestion);
+    let readyTimer;
+    try {
+      await Promise.race([subscriber.start(), new Promise((_, reject) => {
+        readyTimer = setTimeout(() => reject(new Error('MQTT subscription timeout')), 10000);
+      })]);
+    } finally { clearTimeout(readyTimer); }
+    publisher = await connectAsync(broker, { clientId: `publisher-${suffix}`, clean: true });
+    const topic = `aquaguard/sensors/device-${suffix}/readings`;
+    const mqttEvent = { ...event, eventId: `mqtt-${suffix}`,
+      measuredAt: new Date(Date.now() - 10000).toISOString(), value: 5.1 };
+    await publisher.publishAsync(topic, JSON.stringify(mqttEvent), { qos: 1 });
+    await until(async () => (await pool.query(`SELECT status FROM ingestion_receipts
+      WHERE device_id=$1 AND event_id=$2`, [deviceId, mqttEvent.eventId])).rows[0]?.status
+      === 'completed');
+    await publisher.publishAsync(topic, JSON.stringify(mqttEvent), { qos: 1 });
+    assert.equal((await pool.query(`SELECT count(*)::integer AS n FROM ingestion_receipts
+      WHERE device_id=$1 AND event_id=$2`, [deviceId, mqttEvent.eventId])).rows[0].n, 1);
+
+    await publisher.publishAsync(topic, '{bad-json', { qos: 1 });
+    await publisher.publishAsync(topic, '{bad-json', { qos: 1 });
+    await until(async () => (await pool.query(`SELECT rejected_count
+      FROM mqtt_rejected_messages WHERE topic=$1 AND reason_code='invalid_json'`,
+    [topic])).rows[0]?.rejected_count === 2);
+    await publisher.publishAsync(topic, JSON.stringify({ ...mqttEvent,
+      eventId: `wrong-topic-${suffix}`, deviceId: 'another-device' }), { qos: 1 });
+    await until(async () => (await pool.query(`SELECT count(*)::integer AS n
+      FROM mqtt_rejected_messages WHERE topic=$1 AND reason_code='topic_device_mismatch'`,
+    [topic])).rows[0].n === 1);
+
+    const heartbeatTopic = `aquaguard/devices/aerator-${suffix}/heartbeats`;
+    const heartbeat = { eventId: `heartbeat-${suffix}`, deviceId: `aerator-${suffix}`,
+      sentAt: new Date(Date.now() - 4000).toISOString(), onlineHint: true };
+    await publisher.publishAsync(heartbeatTopic, JSON.stringify(heartbeat), { qos: 1 });
+    const feedbackTopic = `aquaguard/actuators/aerator-${suffix}/feedback`;
+    const feedback = { eventId: `feedback-${suffix}`, deviceId: `aerator-${suffix}`,
+      occurredAt: new Date(Date.now() - 3000).toISOString(), state: 'on', mode: 'manual' };
+    await assert.rejects(deviceIngestion.ingest('feedback', { ...feedback,
+      deviceId: `device-${suffix}` }), (error) => error.getStatus() === 422
+        && error.getResponse().code === 'device_assignment_invalid');
+    await publisher.publishAsync(feedbackTopic, JSON.stringify(feedback), { qos: 1 });
+    async function telemetryRows(measurement, field) {
+      return influx.client.getQueryApi(influx.org).collectRows(
+        `from(bucket: ${JSON.stringify(bucketName)}) |> range(start: -1h)
+         |> filter(fn: (r) => r._measurement == ${JSON.stringify(measurement)}
+           and r._field == ${JSON.stringify(field)})`,
+      );
+    }
+    await until(async () => (await telemetryRows('actuator_feedback', 'state')).length === 1);
+    assert.equal((await telemetryRows('actuator_feedback', 'state'))[0]._value, 'on');
+    assert.equal((await telemetryRows('device_heartbeats', 'online_hint'))[0]._value, true);
+    await publisher.publishAsync(feedbackTopic, JSON.stringify(feedback), { qos: 1 });
+    await until(async () => (await telemetryRows('actuator_feedback', 'state')).length === 1);
+    await publisher.publishAsync(feedbackTopic, JSON.stringify({ ...feedback,
+      eventId: `conflict-${suffix}`, state: 'off' }),
+      { qos: 1 });
+    await until(async () => (await pool.query(`SELECT count(*)::integer AS n
+      FROM mqtt_rejected_messages WHERE topic=$1 AND reason_code='telemetry_point_conflict'`,
+    [feedbackTopic])).rows[0].n === 1);
+    await publisher.publishAsync(feedbackTopic, JSON.stringify({ ...feedback,
+      occurredAt: new Date(Date.now() - 2000).toISOString() }), { qos: 1 });
+    await until(async () => (await pool.query(`SELECT count(*)::integer AS n
+      FROM mqtt_rejected_messages WHERE topic=$1 AND reason_code='event_id_conflict'`,
+    [feedbackTopic])).rows[0].n === 1);
+    await pool.query(`UPDATE device_telemetry_receipts SET status='pending',stored_at=NULL
+      WHERE device_id=$1 AND kind='heartbeat' AND event_id=$2`,
+    [actuatorDeviceId, heartbeat.eventId]);
+    assert.equal((await deviceIngestion.recoverPendingFromStorage()).recovered, 1);
+    assert.equal((await pool.query(`SELECT status FROM device_telemetry_receipts
+      WHERE device_id=$1 AND kind='heartbeat' AND event_id=$2`,
+    [actuatorDeviceId, heartbeat.eventId])).rows[0].status, 'stored');
+    const retryFeedback = { ...feedback, eventId: `storage-retry-${suffix}`,
+      occurredAt: new Date(Date.now() - 1000).toISOString() };
+    const writeFeedback = influx.writeActuatorFeedback.bind(influx);
+    influx.writeActuatorFeedback = async () => { throw new Error('simulated Influx outage'); };
+    await assert.rejects(deviceIngestion.ingest('feedback', retryFeedback),
+      (error) => error.getStatus() === 503);
+    assert.equal((await pool.query(`SELECT status FROM device_telemetry_receipts
+      WHERE device_id=$1 AND kind='feedback' AND event_id=$2`,
+    [actuatorDeviceId, retryFeedback.eventId])).rows[0].status, 'pending');
+    influx.writeActuatorFeedback = writeFeedback;
+    await deviceIngestion.ingest('feedback', retryFeedback);
+    assert.equal((await pool.query(`SELECT status FROM device_telemetry_receipts
+      WHERE device_id=$1 AND kind='feedback' AND event_id=$2`,
+    [actuatorDeviceId, retryFeedback.eventId])).rows[0].status, 'stored');
+    await publisher.publishAsync(feedbackTopic, JSON.stringify({ ...feedback,
+      eventId: `bad-feedback-${suffix}`, state: 'invalid' }), { qos: 1 });
+    await until(async () => (await pool.query(`SELECT count(*)::integer AS n
+      FROM mqtt_rejected_messages WHERE topic=$1 AND reason_code='invalid_device_telemetry'`,
+    [feedbackTopic])).rows[0].n === 1);
+
+    const retryEvent = { ...mqttEvent, eventId: `retry-${suffix}`,
+      measuredAt: new Date(Date.now() - 5000).toISOString() };
+    const originalIngest = ingestion.ingest.bind(ingestion);
+    let attempts = 0;
+    ingestion.ingest = async (raw) => {
+      if (raw.eventId === retryEvent.eventId && attempts++ === 0) {
+        throw new Error('simulated database outage');
+      }
+      return originalIngest(raw);
+    };
+    await publisher.publishAsync(topic, JSON.stringify(retryEvent), { qos: 1 });
+    await until(async () => (await pool.query(`SELECT status FROM ingestion_receipts
+      WHERE device_id=$1 AND event_id=$2`, [deviceId, retryEvent.eventId])).rows[0]?.status
+      === 'completed');
+    assert.ok(attempts >= 2);
+  } finally {
+    if (publisher) await publisher.endAsync(true);
+    if (subscriber) await subscriber.onModuleDestroy();
+    if (subscriber) {
+      const cleanupClient = await connectAsync(broker, { clientId: subscriberClientId, clean: true });
+      await cleanupClient.endAsync();
+    }
+    await pool.query(`DELETE FROM mqtt_rejected_messages WHERE topic=$1`,
+      [`aquaguard/sensors/device-${suffix}/readings`]);
+    await pool.query(`DELETE FROM mqtt_rejected_messages WHERE topic=$1`,
+      [`aquaguard/actuators/aerator-${suffix}/feedback`]);
+    if (priorClientId === undefined) delete process.env.MQTT_CLIENT_ID;
+    else process.env.MQTT_CLIENT_ID = priorClientId;
+    if (deviceId) {
+      await pool.query('DELETE FROM alert_detection_states WHERE device_id = $1', [deviceId]);
+      await pool.query('DELETE FROM ingestion_receipts WHERE device_id = $1', [deviceId]);
+      await pool.query('DELETE FROM device_assignments WHERE device_id = $1', [deviceId]);
+      await pool.query('DELETE FROM devices WHERE id = $1', [deviceId]);
+    }
+    if (actuatorDeviceId) {
+      await pool.query('DELETE FROM device_telemetry_receipts WHERE device_id = $1',
+        [actuatorDeviceId]);
+      await pool.query('DELETE FROM device_assignments WHERE device_id = $1', [actuatorDeviceId]);
+      await pool.query('DELETE FROM devices WHERE id = $1', [actuatorDeviceId]);
+    }
+    if (pondId) await pool.query('DELETE FROM ponds WHERE id = $1', [pondId]);
+    if (farmId) await pool.query('DELETE FROM farms WHERE id = $1', [farmId]);
+    if (companyId) await pool.query('DELETE FROM companies WHERE id = $1', [companyId]);
+    await pool.end();
+    if (priorBucket === undefined) delete process.env.INFLUXDB_BUCKET;
+    else process.env.INFLUXDB_BUCKET = priorBucket;
+    if (bucketId) {
+      const removed = await fetch(`${influxUrl}/api/v2/buckets/${bucketId}`, {
+        method: 'DELETE', headers,
+      });
+      assert.equal(removed.status, 204);
+    }
+  }
+});

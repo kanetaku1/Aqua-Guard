@@ -171,9 +171,10 @@ AlertはReport提出とは独立して判定する。IoT Sensor 6項目のCritic
 | GET | `/ponds/{pondId}/samplings` | `items: SamplingRecord[]`, `growthCurve` | 200 |
 | POST | `/ponds/{pondId}/samplings` | `SamplingInput` → `SamplingRecord` | 201 |
 | PATCH | `/samplings/{recordId}` | `SamplingInput` → `SamplingRecord` | 200 |
+| GET | `/farms/{farmId}/samplings` | `date` → `items: SamplingRecord[]`, `growthCurve`, `onTrackBandPct` | 200 |
 | POST | `/farms/{farmId}/samplings/batch` | `date`, `entries[]` → `items: SamplingRecord[]` | 200 |
 
-`FeedingInput`の必須項目は`date`、`amountKg`、`rounds`、`feedType`。`MortalityInput`は`date`、`count`が必須で、`weightKg`、`abnormal`、`note`は任意。`SamplingInput`は`date`が必須で、`sampleCount`、`sampleWeightG`、`tan`、`no2`、`vibrio`、`alkalinity`は任意またはnullを許す。検査値は後着のためPATCHで追記でき、未着中は`labPending`を返す。ABW、ADG、DOC、目標比はバックエンドが計算して`SamplingRecord`に付ける。未来日の給餌は422。入力の負値は各schemaの`minimum`に従って拒否する。
+`FeedingInput`の必須項目は`date`、`round`、`feedType`、`amountKg`で、`trayCheck`と`note`は任意。`MortalityInput`は`date`、`count`、`weightKg`が必須で、`observation`と`note`は任意。これらの項目名と必須条件はフロントエンドOpenAPIを正とする。`SamplingInput`は`date`が必須で、`sampleCount`、`sampleWeightG`、`tan`、`no2`、`vibrio`、`alkalinity`は任意またはnullを許す。検査値は後着のためPATCHで追記でき、未着中は`labPending`を返す。ABW、ADG、DOC、目標比はバックエンドが計算して`SamplingRecord`に付ける。未来日の給餌は422。入力の負値は各schemaの`minimum`に従って拒否する。
 
 PATCHの名前であっても、`/feedings/{recordId}`と`/mortalities/{recordId}`のリクエストschemaは各Inputを参照し、**作成時と同じ必須項目を要求する**。`/samplings/{recordId}`も`date`が必須。部分更新の一般的な解釈で必須項目を省略可能にしない。一括Samplingでは測定しないPondを`entries`に含めず、同じPond・同じ日付の記録は更新する。記録の所有Pondが担当Farmに属することをIDから再検証する。
 
@@ -185,7 +186,7 @@ PATCHの名前であっても、`/feedings/{recordId}`と`/mortalities/{recordId
 | POST | `/actuators/{actuatorId}/commands` | `command` → `Actuator` | 202 |
 | GET | `/ponds/{pondId}/actuator-logs` | `page`, `pageSize` → `ActuatorLog[]` | 200 |
 
-`command`は`turn_on`、`turn_off`、`set_auto`のみ。Actuatorの`state`は`on`／`off`／`fault`、`mode`は`auto`／`manual`、`connection`は`online`／`offline`。`blockedCommands[]`はSafety Layerで禁止された操作と理由を返す。Auto中に手動操作するとManual（override）になるため、画面は確認ダイアログを示す。サーバー側でもSafety Layerを再評価し、禁止時は`409`・`code: safety_blocked`と理由を返して設備へ送信しない。
+`command`はフロントエンドOpenAPIの`turn_on`、`turn_off`、`set_manual`、`set_auto`。Actuatorの`state`は`on`／`off`／`fault`、`mode`は`auto`／`manual`、`connection`は`online`／`offline`。`blockedCommands[]`はSafety Layerで禁止された操作と理由を返す。Auto中に手動操作するとManual（override）になるため、画面は確認ダイアログを示す。サーバー側でもSafety Layerを再評価し、禁止時は`409`・`code: safety_blocked`と理由を返して設備へ送信しない。実機プロトコルとSafetyルールの確定までは全Commandを拒否し、202を返さない。
 
 **202は受付であり、実機実行完了を意味しない。** 現行OpenAPIの202本文は`Actuator`であり、Command IDや詳細な配送状態は返さない。既存画面は状態を再取得し、操作履歴の`result`（`succeeded`／`failed`／`blocked`）を参照する。バックエンド内部では要求者、対象、要求、Safety判定、送信、ACK、結果、時刻を追跡し、再送による二重操作を防ぐ。追跡用の公開APIは第11章の追加提案とする。PID設定値、Emergency Stopの操作APIはOpenAPIに定義されていないため、現行Commandのenumへ暗黙に追加しない。
 
