@@ -8,6 +8,7 @@
     "db:migrate": "node dist/tools/migrate.js",
     "admin:bootstrap": "node --env-file=.env.example --env-file-if-exists=.env dist/tools/bootstrap-admin.js",
     "test:unit": "node --test test/telemetry.test.cjs test/periodic-severity.test.cjs test/farm-growth.test.cjs",
+    "test:contract:routes": "node --test test/openapi-routes.test.cjs",
     "test:db:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/migrations.test.cjs",
     "test:auth:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/auth.integration.test.cjs",
     "test:admin:local": "node --env-file=.env.example --env-file-if-exists=.env --test test/admin.integration.test.cjs",
