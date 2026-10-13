@@ -70,7 +70,7 @@ Docker ComposeでPostgreSQL、InfluxDB、Mosquitto、Mailpitを起動し、Migra
 
 - センサー値、Heartbeat、設備Feedbackの受信・保存・参照は実装済み
 - IoT実機のTokenや本番Brokerを使う確認は、接続情報をリポジトリへ保存せず、配置環境の環境変数で行う
-- ポンプやエアレーターへの遠隔命令は現運用の対象外。操作APIは監査履歴を保存し、`409 safety_blocked` を返して実機へ送信しない
+- ポンプやエアレーターは、Technical Managerによる手動遠隔操作を行う。AIやルールによる自動制御は行わず、実機の通信仕様が設定されていない環境では操作APIが監査履歴を保存して`409 safety_blocked`を返す
 - 画面で扱うAPI契約はフロントエンドOpenAPIを最優先とする
 
 ## 再確認の基準
