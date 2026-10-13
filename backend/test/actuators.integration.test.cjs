@@ -98,8 +98,9 @@ test('Actuator view uses observed state and commands remain safety blocked', asy
     await assert.rejects(() => service.command(tm, deviceId,
       { command: 'invalid' }), (error) => error.getStatus() === 422);
     await client.query(`INSERT INTO actuator_logs
-      (public_id,device_id,pond_id,command,actor_id,mode,result)
-      VALUES ($1,$2,$3,'turn_off',$4,'manual','succeeded')`,
+      (public_id,device_id,pond_id,at,command,actor_id,mode,result)
+      VALUES ($1,$2,$3,current_timestamp + interval '1 second',
+        'turn_off',$4,'manual','succeeded')`,
     [`log-${suffix}`, device, pond, user]);
     const logs = await service.logs(tm, pondId, { page: '1', pageSize: '10' });
     assert.equal(logs.total, 2);
