@@ -153,7 +153,7 @@ Daily Reportは当日の給餌・死亡・Alert対応・Actuator操作等を参�
 
 ### 6.4 ActuatorとPID
 
-TMの`POST /actuators/{actuatorId}/commands`はOpenAPI定義の`turn_on`／`turn_off`／`set_manual`／`set_auto`を受け、Safety Layerが権限・Sensor鮮度・設備状態・制限を検証する。拒否時は409、受付時は202と`Actuator`を返す。**202は実機での完了ではない。** Commandとその結果はPostgreSQL、設備からの生ACK・実状態はInfluxDBに置く。画面はActuator状態と操作履歴を再取得して結果を確認する。Auto中の手動操作はManual Overrideとなる。PIDの目標値・実行場所・周期、Emergency Stopの解除条件は実機仕様に基づき決める。実機プロトコルとSafetyルールが未確定の現行実装は全Commandを409で拒否する。
+現段階では設備操作を現場で手動実施するため、バックエンドから実機へのCommand送信とAuto制御は対象外とする。`POST /actuators/{actuatorId}/commands`はOpenAPI互換の入力検証と権限確認を行うが、全Commandを`409 safety_blocked`で拒否して監査記録を残す。Actuatorの実状態・接続状態は設備から受信したFeedbackとHeartbeatから表示する。将来遠隔操作を追加する場合は、OpenAPI定義の`turn_on`／`turn_off`／`set_manual`／`set_auto`に対してSafety Layer、Command配送、ACK、Timeout、再送を実装する。**202は実機での完了を意味しない。**
 
 旧システム設計書は実機制御の前にSimulationとSafety Reviewを要求する一方、業務要件書にはActuator操作が含まれる。本書は操作と安全制御の論理構成を設計対象とする。Emergency Stop、PID設定・承認、Command状態参照の公開APIと実機投入条件は未確定とする。
 
