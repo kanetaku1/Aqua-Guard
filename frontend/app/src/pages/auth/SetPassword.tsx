@@ -71,7 +71,14 @@ function SetPasswordForm({ token, info }: { token: string; info: NonNullable<Ret
 
       <form className="stack" onSubmit={onSubmit}>
         {invite && (
-          <dl className="dl dl-2" style={{ background: 'var(--color-mist)', padding: 16, borderRadius: 8 }}>
+          <dl
+            className="dl set-password-meta"
+            style={{
+              background: 'var(--color-mist)',
+              padding: 16,
+              borderRadius: 8,
+            }}
+          >
             <div>
               <dt>{t('auth.email')}</dt>
               <dd>{info.email}</dd>
