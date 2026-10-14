@@ -85,6 +85,7 @@ import { CriticalEvaluationService } from './infrastructure/critical-evaluation.
 import { PeriodicAlertService } from './infrastructure/periodic-alert.service';
 import { AlertNotificationMaterializerService } from './infrastructure/alert-notification-materializer.service';
 import { PostgresService } from './infrastructure/postgres.service';
+import { SourceInfluxSyncService } from './infrastructure/source-influx-sync.service';
 
 @Module({
   controllers: [HealthController, AuthController, AdminController, AdminUsersController,
@@ -106,6 +107,7 @@ import { PostgresService } from './infrastructure/postgres.service';
     CriticalEvaluationService,
     PeriodicAlertService,
     AlertNotificationMaterializerService,
+    SourceInfluxSyncService,
     AuthService, MailService, PasswordLinksService,
     AdminService, AdminUsersService, AdminDevicesService, AdminSettingsService,
     AdminThresholdsService, BusinessScopeService, SyncStatusService, SensorSeriesService,

@@ -10,6 +10,7 @@ import { PeriodicAlertService } from './infrastructure/periodic-alert.service';
 import { AlertNotificationMaterializerService } from './infrastructure/alert-notification-materializer.service';
 import { DeviceTelemetryIngestionService } from './infrastructure/device-telemetry-ingestion.service';
 import { FarmStatusService } from './business/farm-status.service';
+import { SourceInfluxSyncService } from './infrastructure/source-influx-sync.service';
 
 async function bootstrap(): Promise<void> {
   const port = Number(process.env.PORT ?? '8000');
@@ -54,6 +55,24 @@ async function bootstrap(): Promise<void> {
   await app.listen(port, '0.0.0.0');
   if (process.env.MQTT_ENABLED === 'true') {
     void app.get(MqttTelemetrySubscriberService).start();
+  }
+  if (SourceInfluxSyncService.enabled()) {
+    let sourceSyncRunning = false;
+    const runSourceSync = async () => {
+      if (sourceSyncRunning) return;
+      sourceSyncRunning = true;
+      try {
+        const result = await app.get(SourceInfluxSyncService).runOnce();
+        if (result.rows) new Logger('SourceInfluxSync').log(JSON.stringify(result));
+      } catch (error) {
+        new Logger('SourceInfluxSync').error('Source InfluxDB sync failed', error);
+      } finally { sourceSyncRunning = false; }
+    };
+    void runSourceSync();
+    const intervalSeconds = Number(process.env.SOURCE_INFLUX_POLL_SECONDS ?? '60');
+    const sourceSyncTimer = setInterval(runSourceSync,
+      (Number.isFinite(intervalSeconds) && intervalSeconds > 0 ? intervalSeconds : 60) * 1000);
+    sourceSyncTimer.unref();
   }
   try {
     const result = await app.get(PeriodicAlertService).runOnce();
