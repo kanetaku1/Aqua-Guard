@@ -92,7 +92,7 @@ TM 向け `GET /farms/{farmId}/ponds/water-quality` は担当 Farm の Pond ご�
 
 TM向け `GET /ponds/{pondId}` は、担当Pondの面積、現在の放養サイクルの記録、DOC、最新SamplingのABW、当日の給餌計画、未解決Alert数を返します。状態はSensor現在値と未解決Alertの最も重い重大度で算出します。欠けたSensor値（`no_data`）は状態を上げず、Offlineの項目は Attention として数えます。放養記録がない場合は `stockedOn`・`stockedPl`・`doc`、Samplingがない場合は `abwG` を `null` にします。給餌計画がない場合は `feeding` の配列を空で返します。`stocking_records` と `feeding_plan_rounds` は既存のPond取得契約の入力源ですが、登録・編集の公開APIは現行フロントエンド契約にないため追加していません。保存構造はMigration `0016_pond_planning.sql`、確認コマンドは `npm run test:pond-planning:local` と `npm run test:sync-status:local` です。
 
-TM向け `GET /farms/{farmId}/ponds` は担当FarmのPond一覧を返し、`status`・`alertState` で絞り込めます。状態とAlertは水質一覧、ABW・目標比は現行サイクルの最新Sampling、当日の給餌・死亡は現場記録、予定回数は給餌計画、エアレーター稼働数はInfluxDBのFeedbackから取得します。欠測値は契約上nullableな項目では `null` にし、Sensorまたは登録済みエアレーターの状態が確定できないPondでは `503 telemetry_not_ready` を返します。`latestSamplingDate` は絞り込み後のPondの最新日です。実DB・InfluxDBの確認は `npm run test:sync-status:local` です。
+TM向け `GET /farms/{farmId}/ponds` は担当FarmのPond一覧を返し、`status`・`alertState` で絞り込めます。状態とAlertは水質一覧、ABW・目標比は現行サイクルの最新Sampling、当日の給餌・死亡は現場記録、予定回数は給餌計画、エアレーター稼働数はInfluxDBのFeedbackから取得します。欠測値は契約上nullableな項目では `null` にします。Sensorの欠測は水質一覧と同じく状態に反映し、一覧全体を失敗させません。登録済みエアレーターのFeedbackがない・古い・Heartbeatで切断と判定された場合は、`aerators.total` に含め `on` には数えません（原因調査のため一覧は表示します）。`latestSamplingDate` は絞り込み後のPondの最新日です。実DB・InfluxDBの確認は `npm run test:sync-status:local` です。
 
 Farm Summary の成長観点に向けて、稼働中の生産サイクルと最新サンプリングから、成長目標との比率および Behind のPond割合を計算します。割合の Attention／Warning 境界は Rules、Pond単位の Behind 判定幅は Growth Targets に従います。サンプルまたは目標値が欠けるPondがあれば `sampleBasedStatus: null` とし、Farm Summaryはデータ不足として返します。Survival Rate急低下による重大度の昇格条件は未確定で、現在の成長観点には含めていません。`npm run test:sampling:local` と `npm run test:unit` で検証します。
 

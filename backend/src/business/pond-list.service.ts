@@ -108,11 +108,9 @@ export class PondListService {
         && (alertFilter === null || quality.worstAlertState === alertFilter);
     });
     const all = await Promise.all(selectedPonds.map(async (pond) => {
-      const quality = waterByPond.get(pond.public_id);
-      if (!quality || Object.values(quality.values).some((value) =>
-        value.quality !== 'live' && value.quality !== 'delayed')) {
-        throw new ApiProblem(503, 'telemetry_not_ready', 'Pond sensor data is incomplete or stale');
-      }
+      // Missing sensor values (no_data / offline) are already reflected in the water-quality
+      // status, so they no longer fail the whole list, as for the Pond detail.
+      const quality = waterByPond.get(pond.public_id)!;
       const plan = await this.planning.snapshot(pond.id, today);
       const sampleDate = pond.sample_date;
       const abwG = pond.sample_count && pond.sample_weight_g !== null
@@ -136,11 +134,10 @@ export class PondListService {
           && stateAt <= now && now - stateAt <= offlineMs;
         const validBeat = Number.isFinite(beatAt) && beatAt >= device.assigned_at.getTime()
           && beatAt <= now && now - beatAt <= offlineMs;
-        if (!validState || (validBeat && beatAt > stateAt && beat?._value === false)
-          || !['on', 'off', 'fault'].includes(String(state?._value))) {
-          throw new ApiProblem(503, 'telemetry_not_ready', 'Aerator state is incomplete or stale');
-        }
-        if (state?._value === 'on') on++;
+        // Unconfirmed aerators (no or stale feedback, disconnected) stay in the total but are
+        // not counted as running, so the list still opens while the device is investigated.
+        const disconnected = validBeat && beatAt > stateAt && beat?._value === false;
+        if (validState && !disconnected && state?._value === 'on') on++;
       }
       return { pond: { id: pond.public_id, name: pond.name },
         areaHa: Number(pond.area_ha), stockedOn: plan.stockedOn, doc: plan.doc,
