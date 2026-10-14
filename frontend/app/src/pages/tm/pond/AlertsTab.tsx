@@ -44,7 +44,7 @@ export function AlertsTab({ pond }: { pond: components['schemas']['PondDetail'] 
             .filter((a) => !state || a.state === state)
             .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
           return (
-            <>
+            <div className="table-wrap">
               <table className="table">
                 <thead>
                   <tr>
@@ -60,8 +60,9 @@ export function AlertsTab({ pond }: { pond: components['schemas']['PondDetail'] 
                 <tbody>
                   {rows.map((a) => (
                     <tr key={a.id}>
-                      <td className="text-muted">{a.id}</td>
-                      <td className="cell-main">{a.title}</td>
+                      {/* Live IDs are ALT-<uuid> and titles carry values, so both may wrap */}
+                      <td className="text-muted wrap">{a.id}</td>
+                      <td className="cell-main wrap">{a.title}</td>
                       <td>
                         <StatusMark severity={a.severity} />
                       </td>
@@ -89,7 +90,7 @@ export function AlertsTab({ pond }: { pond: components['schemas']['PondDetail'] 
                   <span className="empty-title">{t('pondAlerts.none')}</span>
                 </div>
               )}
-            </>
+            </div>
           )
         }}
       </QueryState>

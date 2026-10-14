@@ -182,9 +182,18 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.equal(seriesWithOverride.status, 200);
     assert.equal((await seriesWithOverride.json()).threshold.warningLow, 4);
     const currentUrl = `${base}/ponds/pond-a-${suffix}/sensors/current`;
-    assert.equal((await fetch(currentUrl, { headers: { Cookie: tmCookie } })).status, 503);
+    const unconfigured = await fetch(currentUrl, { headers: { Cookie: tmCookie } });
+    assert.equal(unconfigured.status, 200);
+    const unconfiguredItems = (await unconfigured.json()).items;
+    assert.equal(unconfiguredItems.length, 6);
+    assert.ok(unconfiguredItems.every((item) => item.value === null
+      && item.quality === 'no_data' && item.severity === 'normal' && item.measuredAt === null));
     const detailUrl = `${base}/ponds/pond-a-${suffix}`;
-    assert.equal((await fetch(detailUrl, { headers: { Cookie: tmCookie } })).status, 503);
+    assert.equal((await fetch(detailUrl, { headers: { Cookie: tmCookie } })).status, 200);
+    const unconfiguredList = await fetch(`${base}/farms/farm-a-${suffix}/ponds`,
+      { headers: { Cookie: tmCookie } });
+    assert.equal(unconfiguredList.status, 200);
+    assert.equal((await unconfiguredList.json()).items.length, 1);
     assert.equal((await fetch(detailUrl, { headers: { Cookie: fmCookie } })).status, 403);
     assert.equal((await fetch(`${base}/ponds/pond-b-${suffix}`,
       { headers: { Cookie: tmCookie } })).status, 404);
@@ -330,7 +339,9 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
     assert.equal(missingFeedback.sensors.offline[0].deviceId, `old-ph-${suffix}`);
     assert.equal(missingFeedback.aerators.unknown, 1);
     assert.equal(missingFeedback.aerators.on, 0);
-    assert.equal((await fetch(pondListUrl, { headers: { Cookie: tmCookie } })).status, 503);
+    const unknownAerator = await fetch(pondListUrl, { headers: { Cookie: tmCookie } });
+    assert.equal(unknownAerator.status, 200);
+    assert.deepEqual((await unknownAerator.json()).items[0].aerators, { on: 0, total: 1 });
     await influxCurrent.writeActuatorFeedback(['aerator', 'pump'].map((name) => ({
       farmId: `farm-a-${suffix}`, pondId: `pond-a-${suffix}`,
       deviceId: `${name}-${suffix}`, state: name === 'aerator' ? 'on' : 'fault',
@@ -363,7 +374,9 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
       `farm-a-${suffix}`);
     assert.deepEqual(disconnected.equipmentOffline, [`aerator-${suffix}`]);
     assert.equal(disconnected.aerators.on, 0);
-    assert.equal((await fetch(pondListUrl, { headers: { Cookie: tmCookie } })).status, 503);
+    const disconnectedList = await fetch(pondListUrl, { headers: { Cookie: tmCookie } });
+    assert.equal(disconnectedList.status, 200);
+    assert.deepEqual((await disconnectedList.json()).items[0].aerators, { on: 0, total: 1 });
     assert.equal((await fetch(currentUrl, { headers: { Cookie: saCookie } })).status, 403);
     assert.equal((await fetch(`${base}/ponds/pond-b-${suffix}/sensors/current`,
       { headers: { Cookie: tmCookie } })).status, 404);
@@ -413,8 +426,11 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
       `${restartedBase}/ponds/pond-a-${suffix}/sensors/current`,
       { headers: { Cookie: tmCookie } },
     );
-    assert.equal(invalidCurrent.status, 503);
-    assert.equal((await invalidCurrent.json()).code, 'telemetry_not_ready');
+    assert.equal(invalidCurrent.status, 200);
+    const invalidDo = (await invalidCurrent.json()).items.find((item) => item.parameter === 'do');
+    assert.equal(invalidDo.value, null);
+    assert.equal(invalidDo.quality, 'no_data');
+    assert.equal(invalidDo.severity, 'normal');
     const unavailableWater = await fetch(
       `${restartedBase}/farms/farm-a-${suffix}/ponds/water-quality`,
       { headers: { Cookie: tmCookie } },
