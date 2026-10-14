@@ -9,7 +9,7 @@ import { BusinessScopeService } from './business-scope.service';
 
 const PARAMETERS: SensorParameter[] = ['do', 'ph', 'temperature', 'tds', 'turbidity', 'water_level'];
 type Severity = 'normal' | 'attention' | 'warning' | 'critical';
-type Quality = 'live' | 'delayed';
+type Quality = 'live' | 'delayed' | 'offline' | 'no_data';
 interface LatestRow {
   _time?: string; value?: number; validity?: string;
   device_id?: string; parameter?: string;
@@ -55,10 +55,6 @@ export class SensorCurrentService {
         [principal.companyId],
       ),
     ]);
-    const expected = new Set(devices.rows.map((row) => row.parameter));
-    if (PARAMETERS.some((parameter) => !expected.has(parameter))) {
-      throw new ApiProblem(503, 'telemetry_not_ready', 'Required sensors are not configured');
-    }
     const allowed = new Map(devices.rows.map((row) => [row.device_id, row.parameter]));
     const delayedMs = (rules.rows[0]?.sensor_delayed_after_minutes ?? 15) * 60000;
     const offlineMs = (rules.rows[0]?.sensor_offline_after_minutes ?? 60) * 60000;
@@ -67,8 +63,7 @@ export class SensorCurrentService {
     try {
       rows = await this.influx.client.getQueryApi(this.influx.org).collectRows<LatestRow>(
         `from(bucket: ${JSON.stringify(this.influx.bucket)})
-         |> range(start: time(v: ${JSON.stringify(new Date(now - offlineMs).toISOString())}),
-           stop: time(v: ${JSON.stringify(new Date(now + 1).toISOString())}))
+         |> range(start: 0, stop: time(v: ${JSON.stringify(new Date(now + 1).toISOString())}))
          |> filter(fn: (r) => r._measurement == "sensor_readings"
            and r.farm_id == ${JSON.stringify(pond.farmId)}
            and r.pond_id == ${JSON.stringify(pond.pondId)}
@@ -90,21 +85,33 @@ export class SensorCurrentService {
         latest.set(parameter, row);
       }
     }
+    const registered = new Map(devices.rows.map((row) => [row.parameter, row.device_id]));
     const items = [];
     for (const parameter of PARAMETERS) {
-      const row = latest.get(parameter);
-      const measuredAt = Date.parse(row?._time ?? '');
-      const age = now - measuredAt;
-      if (!row || row.validity !== 'valid' || typeof row.value !== 'number'
-        || !Number.isFinite(row.value) || !Number.isFinite(measuredAt)
-        || age < 0 || age > offlineMs) {
-        throw new ApiProblem(503, 'telemetry_not_ready', 'Current sensor data is incomplete or stale');
-      }
       const threshold = await this.thresholds.effectiveThreshold(
         principal.companyId, pond.farmUuid, parameter,
       );
+      const row = latest.get(parameter);
+      const measuredAt = Date.parse(row?._time ?? '');
+      const age = now - measuredAt;
+      const deviceId = row?.device_id ?? registered.get(parameter);
+      // No sensor, no reading or an invalid latest reading: report no_data instead of failing
+      // the whole response, so the Pond views stay usable while some sensors are missing.
+      if (!row || row.validity !== 'valid' || typeof row.value !== 'number'
+        || !Number.isFinite(row.value) || !Number.isFinite(measuredAt) || age < 0) {
+        items.push({ parameter, unit: threshold.unit, deviceId, value: null,
+          severity: 'normal' as Severity, quality: 'no_data' as Quality,
+          measuredAt: null, threshold });
+        continue;
+      }
+      if (age > offlineMs) {
+        items.push({ parameter, unit: threshold.unit, deviceId, value: null,
+          severity: 'attention' as Severity, quality: 'offline' as Quality,
+          measuredAt: new Date(measuredAt).toISOString(), threshold });
+        continue;
+      }
       const quality: Quality = age <= delayedMs ? 'live' : 'delayed';
-      items.push({ parameter, unit: threshold.unit, deviceId: row.device_id,
+      items.push({ parameter, unit: threshold.unit, deviceId,
         value: row.value, severity: severityFor(row.value, threshold), quality,
         measuredAt: new Date(measuredAt).toISOString(), threshold });
     }
