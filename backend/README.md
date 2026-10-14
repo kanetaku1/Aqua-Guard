@@ -126,6 +126,12 @@ Sensor Current／Series／History／Anomalies は TM と担当 Farm の Pond に
 
 `GET /farms` と `GET /farms/{farmId}` は、担当範囲内の水質・成長・運用の3観点を組み合わせた状態を返します。`counts` は絞り込み前のFarm数です。未受信のセンサー、未測定の成長、未確認の設備・発電機を正常と扱わず、必要な根拠が欠ければ `503 farm_status_not_ready` を返します。Daily／Weeklyの未作成とDraftの期限切れはFarm現地時間とRulesで判定します。`GET /farms/{farmId}/status-trend` は、観測済みの日について日ごとの最も重い状態を返します。現在のFarm状態を計算するたびに当日の最悪値を `farm_status_daily` へ保存し、起動時と5分処理後にも対象Farmを計算します。観測を開始する前や計算されなかった日は履歴を捏造せず、配列に含めません。運用開始前に対象IoT機器からの受信を確認し、再起動時は保存済みの有効な計測値と未処理判定から状態を復元します。最初の5分を無条件に `normal` としません。未放養・Sampling未実施時に [フロントエンドOpenAPI](../frontend/app/api/openapi.frontend.yaml) の必須日付をどう扱うかは引き続き確定が必要です。バックエンド側で契約を独自変更せず、[DB設計の未決事項](./docs/database_design.md)に記録しています。
 
+現行 OpenAPI に放養登録 API がない間、開発環境では次のコマンドで Pond の養殖サイクルと放養記録を作成できます（`npm run build` 後）。稼働中サイクルがある Pond、Fallow の Pond、未来日は拒否します。`--recorded-by` を省略すると、Farm 担当の有効な TM（いなければ SA）を記録者にします。
+
+```powershell
+npm run stocking:register:local -- --farm test --pond Pond01 --stocked-on 2026-09-15 --pl 100000 [--biomass-kg 50] [--recorded-by tm@example.com]
+```
+
 Sampling API は Pond の一覧・登録・修正と Farm の日付別一覧・一括保存に対応します。DOC、ABW、ADG、目標比、成長判定、Laboratory の閾値判定は保存済み記録と現行の管理設定から計算します。一括保存は同一 Farm 内の指定 Pond だけを同一トランザクションで更新し、途中で失敗した場合は全件を戻します。記録日を含む `production_cycles` が必要で、未登録の場合は 422 を返します。現行 OpenAPI に放養登録 API がないため、運用開始時のサイクル登録経路は今後の設計課題です。ローカル検証は `npm run test:sampling:local` で行えます。
 
 ## API の基準
