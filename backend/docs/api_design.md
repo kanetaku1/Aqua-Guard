@@ -119,7 +119,7 @@ Farmの`status`は`waterQuality`、`growth`、`operations`のうち最も重い`
 
 | Method | Path | 主な入力・応答 |
 | --- | --- | --- |
-| GET | `/farms/{farmId}/ponds/water-quality` | `items: PondWaterQualityRow[]`, `counts`, `normalRanges` |
+| GET | `/farms/{farmId}/ponds/water-quality` | `items: PondWaterQualityRow[]`（地図用の`location`を含む）, `counts`, `normalRanges` |
 | GET | `/farms/{farmId}/ponds` | `status`, `alertState` → `items: PondListRow[]` |
 | GET | `/ponds/{pondId}` | `PondDetail`（Farm、面積、放養日、DOC、放養尾数、ABW等） |
 | GET | `/ponds/{pondId}/sensors/current` | `items: SensorReading[]`。6項目の値、品質、時刻、閾値 |
@@ -259,7 +259,7 @@ Dailyの給餌・死亡・設備・Alert・対応・KPI等は元記録から自�
 | POST | `/admin/farms/{farmId}/devices` | `AdminDeviceInput` → `AdminDevice` | 201 |
 | PATCH | `/admin/devices/{deviceId}` | `AdminDeviceInput` → `AdminDevice` | 200 |
 
-`AdminFarmInput`は`name`、`location`が必須、`timeZone`既定は`Asia/Jakarta`。`AdminPondInput`は`name`、`areaHa`が必須で、`status`は`in_operation`／`fallow`。`AdminDeviceInput`は`deviceId`、`type`、`pondId`が必須、`type`は`sensor`／`aerator`／`pump`、`parameter`はセンサーのみ。Adminに返すDeviceの状態は`connection`、`lastSeenAt`までとし、業務の測定値は返さない。同じDevice IDでの登録は409・`device_id_taken`。これらのPATCHも参照するInput schema上の必須項目を満たす。
+`AdminFarmInput`は`name`、`location`が必須、`timeZone`既定は`Asia/Jakarta`。`AdminPondInput`は`name`、`areaHa`が必須で、`status`は`in_operation`／`fallow`。`location`（`GeoPoint`：`lat`、`lng`）は任意で、作成時の省略は未設定、PATCHでの省略は現在の値を保持、`null`で消す。範囲外は422（`location.lat`／`location.lng`）。`AdminDeviceInput`は`deviceId`、`type`、`pondId`が必須、`type`は`sensor`／`aerator`／`pump`、`parameter`はセンサーのみ。Adminに返すDeviceの状態は`connection`、`lastSeenAt`までとし、業務の測定値は返さない。同じDevice IDでの登録は409・`device_id_taken`。これらのPATCHも参照するInput schema上の必須項目を満たす。
 
 ### 10.3 Settings
 

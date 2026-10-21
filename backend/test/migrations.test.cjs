@@ -43,6 +43,17 @@ test('initial schema enforces frontend enums, ownership keys and non-overlapping
       [`pond-duplicate-${suffix}`, farm.rows[0].id],
       '23505',
     );
+    await expectConstraint(
+      client, 'UPDATE ponds SET latitude = -6.259871 WHERE id = $1', [pond.rows[0].id], '23514',
+    );
+    await expectConstraint(
+      client, 'UPDATE ponds SET latitude = 91, longitude = 106.644181 WHERE id = $1',
+      [pond.rows[0].id], '23514',
+    );
+    await client.query(
+      'UPDATE ponds SET latitude = -6.259871, longitude = 106.644181 WHERE id = $1',
+      [pond.rows[0].id],
+    );
 
     await expectConstraint(
       client,

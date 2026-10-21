@@ -109,7 +109,7 @@ test('SA manages company farms and ponds with frontend response fields', async (
     const pond = await createdPond.json();
     assert.deepEqual(pond, {
       id: pond.id, name: 'Pond 01', areaHa: 0.8,
-      status: 'in_operation', sensorCount: 0, actuatorCount: 0,
+      status: 'in_operation', location: null, sensorCount: 0, actuatorCount: 0,
     });
     pondUuid = (await pool.query('SELECT id FROM ponds WHERE public_id = $1', [pond.id])).rows[0].id;
     const deviceId = `sensor-${suffix}`;
@@ -238,11 +238,34 @@ test('SA manages company farms and ponds with frontend response fields', async (
     assert.equal(configs.rows[1].type, 'sensor');
     assert.equal(configs.rows[1].parameter, 'temperature');
     assert.equal(configs.rows[1].effective_to, null);
+    const located = await fetch(`${base}/admin/ponds/${pond.id}`, {
+      method: 'PATCH', headers,
+      body: JSON.stringify({ name: 'Pond 01', areaHa: 0.8,
+        location: { lat: -6.259871300848581, lng: 106.64418059601238 } }),
+    });
+    assert.equal(located.status, 200);
+    assert.deepEqual((await located.json()).location, { lat: -6.259871, lng: 106.644181 });
+    const kept = await fetch(`${base}/admin/ponds/${pond.id}`, {
+      method: 'PATCH', headers, body: JSON.stringify({ name: 'Pond 01', areaHa: 0.8 }),
+    });
+    assert.deepEqual((await kept.json()).location, { lat: -6.259871, lng: 106.644181 });
+    const outOfRange = await fetch(`${base}/admin/ponds/${pond.id}`, {
+      method: 'PATCH', headers,
+      body: JSON.stringify({ name: 'Pond 01', areaHa: 0.8, location: { lat: -6.2, lng: 181 } }),
+    });
+    assert.equal(outOfRange.status, 422);
+    assert.equal((await outOfRange.json()).fieldErrors[0].field, 'location.lng');
+    const cleared = await fetch(`${base}/admin/ponds/${pond.id}`, {
+      method: 'PATCH', headers, body: JSON.stringify({ name: 'Pond 01', areaHa: 0.8, location: null }),
+    });
+    assert.equal((await cleared.json()).location, null);
     const secondPondCreated = await fetch(`${base}/admin/farms/${farm.id}/ponds`, {
-      method: 'POST', headers, body: JSON.stringify({ name: 'Pond 02', areaHa: 1.2 }),
+      method: 'POST', headers,
+      body: JSON.stringify({ name: 'Pond 02', areaHa: 1.2, location: { lat: -6.26, lng: 106.645 } }),
     });
     assert.equal(secondPondCreated.status, 201);
     const secondPond = await secondPondCreated.json();
+    assert.deepEqual(secondPond.location, { lat: -6.26, lng: 106.645 });
     secondPondUuid = (await pool.query('SELECT id FROM ponds WHERE public_id = $1',
       [secondPond.id])).rows[0].id;
     const reassigned = await fetch(`${base}/admin/devices/${newDeviceId}`, {
