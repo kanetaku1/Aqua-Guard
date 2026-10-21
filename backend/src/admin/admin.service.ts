@@ -205,7 +205,7 @@ export class AdminService {
     try {
       const updated = await this.postgres.pool.query(
         `UPDATE ponds p SET name = $3, area_ha = $4, status = $5,
-          updated_at = now(), row_version = row_version + 1
+          updated_at = now(), row_version = p.row_version + 1
          FROM farms f WHERE p.farm_id = f.id AND f.company_id = $1 AND p.public_id = $2`,
         [companyId, pondId, name, area, status],
       );
