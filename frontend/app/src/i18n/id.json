@@ -127,7 +127,7 @@
     "title": "Dasbor",
     "meta": "{{farm}} · {{count}} Kolam · DOC {{min}}–{{max}}",
     "pondStatus": "Status Kolam",
-    "pondStatusSub": "Kualitas air terkini per Kolam · data sensor tiap 5 menit · nilai di luar batas ditandai",
+    "pondStatusSub": "Kualitas air terkini per Kolam · data sensor tiap 5 menit · arahkan atau fokuskan ke Kolam untuk melihat nilainya",
     "allPonds": "Semua Kolam",
     "pond": "Kolam",
     "status": "Status",
@@ -159,7 +159,11 @@
     "create": "Buat",
     "continue": "Lanjutkan",
     "lastSubmitted": "Terakhir dikirim",
-    "none": "—"
+    "none": "—",
+    "mapLabel": "Peta status Kolam",
+    "locationNotSet": "Lokasi belum diatur:",
+    "noLocations": "Belum ada lokasi Kolam",
+    "noLocationsHelp": "System Administrator mengaturnya di Tambak & Kolam › Kolam."
   },
   "placeholder": {
     "notBuilt": "Layar ini belum dibuat.",
@@ -1194,7 +1198,8 @@
         "area": "Luas",
         "status": "Status",
         "sensors": "Sensor",
-        "actuators": "Aktuator"
+        "actuators": "Aktuator",
+        "location": "Lokasi"
       },
       "editPond": "Ubah {{name}}",
       "editTitle": "Ubah {{name}}",
@@ -1209,8 +1214,19 @@
         "namePlaceholder": "mis. Kolam 10",
         "nameRequired": "Masukkan nama Kolam.",
         "area": "Luas",
-        "areaRequired": "Masukkan luas di atas 0 ha."
-      }
+        "areaRequired": "Masukkan luas di atas 0 ha.",
+        "location": "Lokasi",
+        "locationHelp": "Klik peta untuk menempatkan Kolam, geser pin untuk menyesuaikan, atau masukkan koordinatnya.",
+        "lat": "Lintang",
+        "lng": "Bujur",
+        "latRange": "Masukkan lintang antara -90 dan 90.",
+        "lngRange": "Masukkan bujur antara -180 dan 180.",
+        "bothRequired": "Masukkan lintang dan bujur, atau kosongkan keduanya."
+      },
+      "located": "Diatur",
+      "notLocated": "Belum diatur",
+      "clearLocation": "Hapus lokasi",
+      "mapLabel": "Peta untuk memilih lokasi Kolam"
     },
     "devices": {
       "offlineTitle_one": "{{count}} perangkat offline:",

@@ -5,6 +5,7 @@ import type {
   OperationalStatus,
   ParameterRange,
   PondWaterQualityRow,
+  GeoPoint,
   ReportStatusSummary,
   SensorValue,
   Severity,
@@ -114,16 +115,22 @@ const v = (value: number, severity: Severity = 'normal'): SensorValue => ({ valu
 const offline: SensorValue = { value: null, severity: 'normal', quality: 'offline', measuredAt: '2026-09-28T15:10:00Z' }
 const pond = (n: number) => ({ id: `farm-a-pond-0${n}`, name: `Pond 0${n}` })
 
+/** Farm A Pond positions (TM-01 map): Pond 01 at the site's first surveyed point, the others in two rows of four beside it. */
+export const farmAPondLocation = (n: number): GeoPoint => ({
+  lat: Math.round((-6.259871 - Math.floor((n - 1) / 4) * 0.0007) * 1e6) / 1e6,
+  lng: Math.round((106.644181 + ((n - 1) % 4) * 0.0008) * 1e6) / 1e6,
+})
+
 // Pond | Status | DO | pH | Temp | TDS | Turbidity | Level — mock_data.md "Farm A Ponds"
 export const farmAWaterQuality: PondWaterQualityRow[] = [
-  { pond: pond(1), status: 'normal', values: { do: v(5.9), ph: v(7.9), temperature: v(29.4), tds: v(18200), turbidity: v(38), water_level: v(135) }, openAlerts: 0, worstAlertState: null },
-  { pond: pond(2), status: 'warning', values: { do: v(4.1, 'warning'), ph: v(7.8), temperature: v(29.8), tds: v(18900), turbidity: v(45), water_level: v(132) }, openAlerts: 1, worstAlertState: 'unacknowledged' },
-  { pond: pond(3), status: 'normal', values: { do: v(6.1), ph: v(8.0), temperature: v(29.2), tds: v(17800), turbidity: v(35), water_level: v(138) }, openAlerts: 0, worstAlertState: null },
-  { pond: pond(4), status: 'attention', values: { do: v(5.4), ph: v(7.4, 'attention'), temperature: v(29.5), tds: v(18400), turbidity: v(40), water_level: v(136) }, openAlerts: 1, worstAlertState: 'in_progress' },
-  { pond: pond(5), status: 'warning', values: { do: v(5.0), ph: v(7.9), temperature: v(31.6, 'warning'), tds: v(18600), turbidity: v(42), water_level: v(130) }, openAlerts: 1, worstAlertState: 'acknowledged' },
-  { pond: pond(6), status: 'normal', values: { do: v(6.0), ph: v(8.1), temperature: v(29.1), tds: v(17900), turbidity: v(33), water_level: v(137) }, openAlerts: 0, worstAlertState: null },
-  { pond: pond(7), status: 'normal', values: { do: v(5.8), ph: v(8.0), temperature: v(29.3), tds: v(18100), turbidity: v(36), water_level: v(134) }, openAlerts: 0, worstAlertState: null },
-  { pond: pond(8), status: 'normal', values: { do: v(5.7), ph: v(7.9), temperature: v(29.4), tds: v(18000), turbidity: offline, water_level: v(135) }, openAlerts: 1, worstAlertState: 'acknowledged' },
+  { pond: pond(1), location: farmAPondLocation(1), status: 'normal', values: { do: v(5.9), ph: v(7.9), temperature: v(29.4), tds: v(18200), turbidity: v(38), water_level: v(135) }, openAlerts: 0, worstAlertState: null },
+  { pond: pond(2), location: farmAPondLocation(2), status: 'warning', values: { do: v(4.1, 'warning'), ph: v(7.8), temperature: v(29.8), tds: v(18900), turbidity: v(45), water_level: v(132) }, openAlerts: 1, worstAlertState: 'unacknowledged' },
+  { pond: pond(3), location: farmAPondLocation(3), status: 'normal', values: { do: v(6.1), ph: v(8.0), temperature: v(29.2), tds: v(17800), turbidity: v(35), water_level: v(138) }, openAlerts: 0, worstAlertState: null },
+  { pond: pond(4), location: farmAPondLocation(4), status: 'attention', values: { do: v(5.4), ph: v(7.4, 'attention'), temperature: v(29.5), tds: v(18400), turbidity: v(40), water_level: v(136) }, openAlerts: 1, worstAlertState: 'in_progress' },
+  { pond: pond(5), location: farmAPondLocation(5), status: 'warning', values: { do: v(5.0), ph: v(7.9), temperature: v(31.6, 'warning'), tds: v(18600), turbidity: v(42), water_level: v(130) }, openAlerts: 1, worstAlertState: 'acknowledged' },
+  { pond: pond(6), location: farmAPondLocation(6), status: 'normal', values: { do: v(6.0), ph: v(8.1), temperature: v(29.1), tds: v(17900), turbidity: v(33), water_level: v(137) }, openAlerts: 0, worstAlertState: null },
+  { pond: pond(7), location: farmAPondLocation(7), status: 'normal', values: { do: v(5.8), ph: v(8.0), temperature: v(29.3), tds: v(18100), turbidity: v(36), water_level: v(134) }, openAlerts: 0, worstAlertState: null },
+  { pond: pond(8), location: farmAPondLocation(8), status: 'normal', values: { do: v(5.7), ph: v(7.9), temperature: v(29.4), tds: v(18000), turbidity: offline, water_level: v(135) }, openAlerts: 1, worstAlertState: 'acknowledged' },
 ]
 
 // Normal ranges — 04 §6.2 (sample thresholds)

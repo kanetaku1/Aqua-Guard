@@ -1,5 +1,8 @@
+import type { Marker as LeafletMarker } from 'leaflet'
 import { ArrowRight, Clock, Droplets, Fan, Radio, Scale, Utensils, Warehouse, Waves, Zap, type LucideIcon } from 'lucide-react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Marker, Tooltip } from 'react-leaflet'
 import { Link, useNavigate } from 'react-router'
 import { useOpenAlerts } from '@/api/queries/alerts'
 import { useCurrentUser } from '@/api/queries/auth'
@@ -17,12 +20,14 @@ import type {
 } from '@/api/types'
 import { Icon } from '@/components/Icon'
 import { Card, PageHeader } from '@/components/Page'
+import { PondMap } from '@/components/PondMap'
 import { useDocumentTitle } from '@/components/useDocumentTitle'
 import { QueryState } from '@/components/QueryState'
 import { AlertStateText, ReportStateText, StatusMark } from '@/components/StatusMark'
 import { cx } from '@/lib/cx'
 import { formatCalendarDate, formatDue, formatNumber, formatRecentTime, formatWeek } from '@/lib/format'
 import { DIGITS, SENSOR_PARAMS, UNIT } from '@/lib/params'
+import { pondIcon } from '@/lib/pondMap'
 
 /**
  * TM-01 Dashboard (05 §5 / 06 TM-01 / prototype screens/tm-dashboard.html):
@@ -96,28 +101,7 @@ function PondStatusCard({ farmId }: { farmId: string }) {
         {(data) => (
           <>
             <StatusSummary counts={data.counts} />
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>{t('tmDashboard.pond')}</th>
-                    <th>{t('tmDashboard.status')}</th>
-                    {PARAMS.map((p) => (
-                      <th key={p} className="num">
-                        {[t(`param.${p}`), UNIT[p]].filter(Boolean).join(' ')}
-                      </th>
-                    ))}
-                    <th>{t('tmDashboard.alerts')}</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortPonds(data.items).map((row) => (
-                    <PondRow key={row.pond.id} row={row} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <PondStatusMap rows={data.items} />
             <div className="card-footer" style={{ justifyContent: 'flex-start' }}>
               <span className="caption">{t('tmDashboard.normalRange', { ranges: formatRanges(data.normalRanges, t) })}</span>
             </div>
@@ -145,32 +129,105 @@ function StatusSummary({ counts }: { counts: SeverityCounts }) {
   )
 }
 
-function PondRow({ row }: { row: PondWaterQualityRow }) {
+/** Each Pond at its position in its status color, values on hover / focus (07 §7 Pond Map). Ponds without a position are listed below. */
+function PondStatusMap({ rows }: { rows: PondWaterQualityRow[] }) {
+  const { t } = useTranslation()
+  const sorted = sortPonds(rows)
+  const located = sorted.filter((r) => r.location)
+  const unset = sorted.filter((r) => !r.location)
+  return (
+    <>
+      <div className="card-body">
+        {located.length === 0 ? (
+          <div className="empty">
+            <span className="empty-title">{t('tmDashboard.noLocations')}</span>
+            <span>{t('tmDashboard.noLocationsHelp')}</span>
+          </div>
+        ) : (
+          <PondMap points={located.map((r) => r.location!)} label={t('tmDashboard.mapLabel')}>
+            {located.map((row) => (
+              <PondMarker key={row.pond.id} row={row} />
+            ))}
+          </PondMap>
+        )}
+      </div>
+      {unset.length > 0 && (
+        <div className="pond-map-unset">
+          <span className="pond-map-unset-title">{t('tmDashboard.locationNotSet')}</span>
+          {unset.map((row) => (
+            <Link key={row.pond.id} to={`/tm/ponds/${row.pond.id}`}>
+              {row.pond.name}
+              <StatusMark severity={row.status} size="xs" />
+            </Link>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
+function PondMarker({ row }: { row: PondWaterQualityRow }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const to = `/tm/ponds/${row.pond.id}`
+  const icon = useMemo(() => pondIcon(row.status, row.pond.name), [row.status, row.pond.name])
+  const label = `${row.pond.name}, ${t(`severity.${row.status}`)}`
   return (
-    <tr className="is-link" onClick={() => navigate(to)}>
-      <td className="cell-main">{row.pond.name}</td>
-      <td>
-        <StatusMark severity={row.status} />
-      </td>
-      {PARAMS.map((p) => (
-        <SensorCell key={p} value={row.values[p]} digits={DIGITS[p]} />
-      ))}
-      <td>
-        {row.openAlerts > 0 && row.worstAlertState ? (
-          <AlertStateText state={row.worstAlertState} count={row.openAlerts} />
-        ) : (
-          <span className="text-muted">—</span>
-        )}
-      </td>
-      <td className="actions">
-        <Link className="btn btn--link" to={to} onClick={(e) => e.stopPropagation()}>
-          {t('common.view')}
-        </Link>
-      </td>
-    </tr>
+    <Marker
+      position={[row.location!.lat, row.location!.lng]}
+      icon={icon}
+      title={label}
+      // The most severe stays on top where markers overlap
+      zIndexOffset={(SEVERITY_ORDER.length - rank(row.status)) * 100}
+      eventHandlers={{
+        click: () => navigate(to),
+        // Not hover only: keyboard focus opens the same tooltip, and Enter opens the Pond (Leaflet fires click)
+        add: (e) => {
+          const marker = e.target as LeafletMarker
+          const el = marker.getElement()
+          el?.setAttribute('aria-label', label)
+          el?.addEventListener('focus', () => marker.openTooltip())
+          el?.addEventListener('blur', () => marker.closeTooltip())
+        },
+      }}
+    >
+      <Tooltip className="pond-tip" direction="top" offset={[0, -16]}>
+        <PondTip row={row} />
+      </Tooltip>
+    </Marker>
+  )
+}
+
+/** The same values as the former Pond Status table row. */
+function PondTip({ row }: { row: PondWaterQualityRow }) {
+  const { t } = useTranslation()
+  return (
+    <>
+      <div className="pond-tip-head">
+        <span className="pond-tip-name">{row.pond.name}</span>
+        <StatusMark severity={row.status} size="xs" />
+      </div>
+      <table className="pond-tip-table">
+        <tbody>
+          {PARAMS.map((p) => (
+            <tr key={p}>
+              <th scope="row">{[t(`param.${p}`), UNIT[p]].filter(Boolean).join(' ')}</th>
+              <SensorCell value={row.values[p]} digits={DIGITS[p]} />
+            </tr>
+          ))}
+          <tr className="pond-tip-alerts">
+            <th scope="row">{t('tmDashboard.alerts')}</th>
+            <td>
+              {row.openAlerts > 0 && row.worstAlertState ? (
+                <AlertStateText state={row.worstAlertState} count={row.openAlerts} />
+              ) : (
+                <span className="text-muted">—</span>
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </>
   )
 }
 

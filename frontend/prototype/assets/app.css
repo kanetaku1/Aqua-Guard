@@ -532,3 +532,33 @@ details.card-details[open] > summary .btn svg { transform: rotate(180deg); }
 .steps li::before { content: counter(step) ". "; font-weight: var(--fw-bold); }
 .steps li.is-done { border-top-color: var(--status-normal-marker); color: var(--color-ink); }
 .steps li.is-current { border-top-color: var(--color-water-blue); color: var(--color-ink); font-weight: var(--fw-bold); }
+/* ---------- Pond Map (08 §10 Pond Map) — TM Dashboard Pond Status, AD Pond drawer ---------- */
+.pond-map { position: relative; z-index: 0; isolation: isolate; height: 420px; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; background: var(--color-mist); font: inherit; }
+.pond-map--sm { height: 280px; }
+.pond-map .leaflet-container { height: 100%; width: 100%; font: inherit; background: var(--color-mist); }
+.pond-marker { display: flex; flex-direction: column; align-items: center; gap: 2px; width: max-content; transform: translate(-50%, -12px); cursor: pointer; }
+.pond-marker-dot { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--color-white); box-shadow: 0 1px 4px rgba(24, 50, 59, 0.4); background: var(--status-normal-marker); }
+.pond-marker-dot::before { content: ""; width: 14px; height: 14px; background: var(--color-white); -webkit-mask: var(--icon-alert) center / contain no-repeat; mask: var(--icon-alert) center / contain no-repeat; }
+.pond-marker--normal .pond-marker-dot::before { content: none; }
+.pond-marker--attention .pond-marker-dot { background: var(--status-attention-marker); }
+.pond-marker--attention .pond-marker-dot::before { background: var(--color-ink); -webkit-mask-image: var(--icon-attention); mask-image: var(--icon-attention); }
+.pond-marker--warning .pond-marker-dot { background: var(--status-warning-marker); }
+.pond-marker--critical .pond-marker-dot { background: var(--status-critical-marker); }
+.pond-marker--critical .pond-marker-dot::before { -webkit-mask-image: var(--icon-critical); mask-image: var(--icon-critical); }
+.pond-marker--pick .pond-marker-dot { background: var(--color-water-blue); }
+.pond-marker--pick .pond-marker-dot::before { content: none; }
+.pond-marker--other { cursor: default; opacity: 0.7; }
+.pond-marker--other .pond-marker-dot { width: 16px; height: 16px; background: var(--color-slate); }
+.pond-marker--other .pond-marker-dot::before { content: none; }
+.pond-marker-label { font-size: var(--fs-helper); line-height: var(--lh-helper); font-weight: var(--fw-bold); color: var(--color-ink); white-space: nowrap; text-shadow: 0 0 2px var(--color-white), 0 0 2px var(--color-white), 0 0 3px var(--color-white); }
+.leaflet-marker-icon:focus-visible .pond-marker-dot { outline: 3px solid var(--color-primary-ring); outline-offset: 2px; }
+.pond-map .leaflet-tooltip.pond-tip { padding: var(--space-1) var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-overlay); color: var(--color-ink); font-size: var(--fs-small); white-space: normal; }
+.pond-tip-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-1); }
+.pond-tip-name { font-weight: var(--fw-bold); font-size: var(--fs-normal); }
+.pond-tip-table { border-collapse: collapse; min-width: 220px; }
+.pond-tip-table th { text-align: left; font-weight: var(--fw-regular); color: var(--color-slate); padding: 2px var(--space-2) 2px 0; white-space: nowrap; }
+.pond-tip-table td { text-align: right; padding: 2px 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pond-tip-table tr.pond-tip-alerts th, .pond-tip-table tr.pond-tip-alerts td { border-top: 1px solid var(--color-border); padding-top: var(--space-0); }
+.pond-map-unset { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); padding: var(--space-2) var(--space-3); border-top: 1px solid var(--color-border); font-size: var(--fs-small); }
+.pond-map-unset-title { color: var(--color-slate); }
+.pond-map-unset a { display: inline-flex; align-items: center; gap: var(--space-0); }

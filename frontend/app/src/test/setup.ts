@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, configure } from '@testing-library/react'
-import { afterAll, afterEach, beforeAll } from 'vitest'
+import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 import '@/i18n'
 import { resetAdmin } from '@/mocks/admin'
 import { resetSettings } from '@/mocks/settings'
@@ -20,6 +20,9 @@ globalThis.ResizeObserver ??= class {
   unobserve() {}
   disconnect() {}
 }
+
+// jsdom cannot lay out Leaflet maps
+vi.mock('react-leaflet', () => import('./reactLeafletMock'))
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {

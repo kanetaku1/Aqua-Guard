@@ -127,7 +127,7 @@
     "title": "Dashboard",
     "meta": "{{farm}} · {{count}} Ponds · DOC {{min}}–{{max}}",
     "pondStatus": "Pond Status",
-    "pondStatusSub": "Current water quality per Pond · sensor data every 5 min · out-of-range values highlighted",
+    "pondStatusSub": "Current water quality per Pond · sensor data every 5 min · hover or focus a Pond for its values",
     "allPonds": "All Ponds",
     "pond": "Pond",
     "status": "Status",
@@ -159,7 +159,11 @@
     "create": "Create",
     "continue": "Continue",
     "lastSubmitted": "Last submitted",
-    "none": "—"
+    "none": "—",
+    "mapLabel": "Map of Pond status",
+    "locationNotSet": "Location not set:",
+    "noLocations": "No Pond locations yet",
+    "noLocationsHelp": "The System Administrator sets them in Farms & Ponds › Ponds."
   },
   "placeholder": {
     "notBuilt": "This screen is not built yet.",
@@ -1194,7 +1198,8 @@
         "area": "Area",
         "status": "Status",
         "sensors": "Sensors",
-        "actuators": "Actuators"
+        "actuators": "Actuators",
+        "location": "Location"
       },
       "editPond": "Edit {{name}}",
       "editTitle": "Edit {{name}}",
@@ -1209,8 +1214,19 @@
         "namePlaceholder": "e.g. Pond 10",
         "nameRequired": "Enter a Pond name.",
         "area": "Area",
-        "areaRequired": "Enter an area above 0 ha."
-      }
+        "areaRequired": "Enter an area above 0 ha.",
+        "location": "Location",
+        "locationHelp": "Click the map to place the Pond, drag the pin to adjust, or enter the coordinates.",
+        "lat": "Latitude",
+        "lng": "Longitude",
+        "latRange": "Enter a latitude between -90 and 90.",
+        "lngRange": "Enter a longitude between -180 and 180.",
+        "bothRequired": "Enter both latitude and longitude, or leave both empty."
+      },
+      "located": "Set",
+      "notLocated": "Not set",
+      "clearLocation": "Clear location",
+      "mapLabel": "Map to choose the Pond location"
     },
     "devices": {
       "offlineTitle_one": "{{count}} device offline:",

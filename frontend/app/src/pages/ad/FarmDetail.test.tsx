@@ -1,6 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+import { clickMap, dragMarker } from '@/test/reactLeafletMock'
 import { renderApp } from '@/test/render'
 
 /** AD-03 must match the wireframe sa-farms-ponds-detail.png (Farm Info) and prototype/screens/ad-farm-detail.html. */
@@ -70,6 +71,43 @@ describe('AD-03 Farm Detail', () => {
     await userEvent.click(drawer.getByRole('button', { name: 'Save pond' }))
     expect(await screen.findByText('Pond 10 added')).toBeInTheDocument()
     expect(await ponds.findByText('10 Ponds · 4.3 ha · 9 in operation')).toBeInTheDocument()
+  })
+
+  it('sets a Pond location from the map or the coordinates, and clears it', async () => {
+    open('farm-a', '?tab=ponds')
+    const ponds = await card('Ponds')
+    expect(within((await ponds.findByText('Pond 01')).closest('tr')!).getByText('Set')).toBeInTheDocument()
+    expect(within(ponds.getByText('Pond 09').closest('tr')!).getByText('Not set')).toBeInTheDocument()
+
+    // Pond 01: its stored position, with the other located Ponds shown for reference
+    await userEvent.click(ponds.getByRole('button', { name: 'Edit Pond 01' }))
+    let drawer = within(await screen.findByRole('dialog', { name: 'Edit Pond 01' }))
+    expect(drawer.getByRole('textbox', { name: /Latitude/ })).toHaveValue('-6.259871')
+    expect(drawer.getByRole('textbox', { name: /Longitude/ })).toHaveValue('106.644181')
+    expect(drawer.getAllByTestId('leaflet-marker')).toHaveLength(8)
+    dragMarker({ lat: -6.2599, lng: 106.6443 })
+    expect(await drawer.findByDisplayValue('-6.259900')).toBeInTheDocument()
+    await userEvent.click(drawer.getByRole('button', { name: 'Clear location' }))
+    expect(drawer.getByRole('textbox', { name: /Latitude/ })).toHaveValue('')
+    expect(drawer.getAllByTestId('leaflet-marker')).toHaveLength(7)
+    await userEvent.click(drawer.getByRole('button', { name: 'Save pond' }))
+    expect(await screen.findByText('Pond 01 saved')).toBeInTheDocument()
+    expect(await within(ponds.getByText('Pond 01').closest('tr')!).findByText('Not set')).toBeInTheDocument()
+
+    // Pond 09: one coordinate only is rejected; a click on the map places it
+    await userEvent.click(ponds.getByRole('button', { name: 'Edit Pond 09' }))
+    drawer = within(await screen.findByRole('dialog', { name: 'Edit Pond 09' }))
+    await userEvent.type(drawer.getByRole('textbox', { name: /Latitude/ }), '-6.26')
+    await userEvent.click(drawer.getByRole('button', { name: 'Save pond' }))
+    expect(drawer.getByText('Enter both latitude and longitude, or leave both empty.')).toBeInTheDocument()
+    await userEvent.type(drawer.getByRole('textbox', { name: /Longitude/ }), '200')
+    expect(drawer.getByText('Enter a longitude between -180 and 180.')).toBeInTheDocument()
+    clickMap({ lat: -6.2612345678, lng: 106.6459 })
+    expect(await drawer.findByDisplayValue('-6.261235')).toBeInTheDocument()
+    expect(drawer.getByRole('textbox', { name: /Longitude/ })).toHaveValue('106.645900')
+    await userEvent.click(drawer.getByRole('button', { name: 'Save pond' }))
+    expect(await screen.findByText('Pond 09 saved')).toBeInTheDocument()
+    expect(await within(ponds.getByText('Pond 09').closest('tr')!).findByText('Set')).toBeInTheDocument()
   })
 
   it('lists devices without values and warns about the offline one', async () => {
