@@ -1955,6 +1955,14 @@ components:
         id: { type: string }
         name: { type: string, example: Pond 02 }
 
+    GeoPoint:
+      type: object
+      description: WGS84 の緯度経度（小数 6 桁で保存）
+      required: [lat, lng]
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90, example: -6.259871 }
+        lng: { type: number, minimum: -180, maximum: 180, example: 106.644181 }
+
     ReportRef:
       type: object
       required: [id, type, label]
@@ -2261,9 +2269,14 @@ components:
 
     PondWaterQualityRow:
       type: object
-      required: [pond, status, values, openAlerts]
+      required: [pond, location, status, values, openAlerts]
       properties:
         pond: { $ref: '#/components/schemas/PondRef' }
+        location:
+          description: TM-01 の地図上の Pond の位置。未設定なら null（地図の外に一覧で出す）
+          oneOf:
+            - $ref: '#/components/schemas/GeoPoint'
+            - type: 'null'
         status: { $ref: '#/components/schemas/Severity' }
         values:
           type: object
@@ -3165,12 +3178,17 @@ components:
         name: { type: string, description: Farm 内で重複不可 }
         areaHa: { type: number, exclusiveMinimum: 0 }
         status: { type: string, enum: [in_operation, fallow], default: in_operation, description: fallow は監視・生産の画面に出さない（休止・準備中） }
+        location:
+          description: 地図で選んだ Pond の位置。作成時に省略すると未設定、更新時に省略すると現在の値を保持し、null で消す
+          oneOf:
+            - $ref: '#/components/schemas/GeoPoint'
+            - type: 'null'
 
     AdminPond:
       allOf:
         - $ref: '#/components/schemas/AdminPondInput'
         - type: object
-          required: [id, status, sensorCount, actuatorCount]
+          required: [id, status, location, sensorCount, actuatorCount]
           properties:
             id: { type: string }
             sensorCount: { type: integer }

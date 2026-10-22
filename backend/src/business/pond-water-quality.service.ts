@@ -14,7 +14,10 @@ const RANK: Record<Severity, number> = { normal: 0, attention: 1, warning: 2, cr
 const STATE_RANK: Record<string, number> = {
   unacknowledged: 3, acknowledged: 2, in_progress: 1,
 };
-interface Pond { id: string; public_id: string; name: string }
+interface Pond {
+  id: string; public_id: string; name: string;
+  latitude: string | null; longitude: string | null;
+}
 interface Assignment {
   pond_id: string; pond_public_id: string; device_id: string;
   parameter: SensorParameter; assigned_at: Date;
@@ -58,7 +61,8 @@ export class PondWaterQualityService {
     const farmUuid = farm.rows[0].id;
     const [ponds, assignments, alerts, rules] = await Promise.all([
       this.postgres.pool.query<Pond>(
-        `SELECT id,public_id,name FROM ponds WHERE farm_id=$1 ORDER BY name,public_id`,
+        `SELECT id,public_id,name,latitude,longitude FROM ponds
+         WHERE farm_id=$1 ORDER BY name,public_id`,
         [farmUuid],
       ),
       this.postgres.pool.query<Assignment>(
@@ -156,7 +160,9 @@ export class PondWaterQualityService {
         || (STATE_RANK[b.state] ?? 0) - (STATE_RANK[a.state] ?? 0))[0];
       if (leading) status = worst(status, leading.severity);
       counts[status] += 1;
-      return { pond: { id: pond.public_id, name: pond.name }, status, values,
+      const location = pond.latitude === null || pond.longitude === null ? null
+        : { lat: Number(pond.latitude), lng: Number(pond.longitude) };
+      return { pond: { id: pond.public_id, name: pond.name }, location, status, values,
         openAlerts: open.length, worstAlertState: leading?.state ?? null };
     });
     return { items, counts, normalRanges };

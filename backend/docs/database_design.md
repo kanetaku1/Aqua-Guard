@@ -54,7 +54,7 @@ InfluxDBとPostgreSQLの間にFKや分散Transactionはない。APIはRole・Com
 | --- | --- | --- |
 | `companies` | `id uuid PK`, `public_id text UNIQUE`, `name text`, `status text` | Farmの親。FMのCompany境界 |
 | `farms` | `id uuid PK`, `public_id text UNIQUE`, `company_id uuid FK`, `name text`, `location text`, `time_zone text DEFAULT 'Asia/Jakarta'`, `status text` | `AdminFarmInput`。`status IN ('active','inactive')` |
-| `ponds` | `id uuid PK`, `public_id text UNIQUE`, `farm_id uuid FK`, `name text`, `area_ha numeric`, `status text` | `AdminPondInput`。`area_ha > 0`、`status IN ('in_operation','fallow')` |
+| `ponds` | `id uuid PK`, `public_id text UNIQUE`, `farm_id uuid FK`, `name text`, `area_ha numeric`, `status text`, `latitude numeric(9,6)`, `longitude numeric(9,6)` | `AdminPondInput`。`area_ha > 0`、`status IN ('in_operation','fallow')`。位置（TM-01 の地図）は緯度経度の点で、両方 NULL（未設定）か両方あり。池の輪郭（GeoJSON）は将来の拡張 |
 | `users` | `id uuid PK`, `public_id text UNIQUE`, `company_id uuid FK`, `name text`, `email text`, `password_hash text`, `role text`, `status text`, `language text`, `failed_login_count integer`, `locked_until timestamptz`, `last_sign_in_at timestamptz` | `Me`／`AdminUser`。`role IN ('farms_manager','technical_manager','system_administrator')`、`language IN ('en','id')`、`status IN ('invited','active','deactivated')` |
 | `user_farm_assignments` | `id uuid PK`, `user_id uuid FK`, `farm_id uuid FK`, `assigned_at timestamptz`, `unassigned_at timestamptz` | TMの担当Farm履歴。現行`Me.farm`とAdminの単数`farmId`に合わせ、有効な割当はユーザーあたり最大1件 |
 

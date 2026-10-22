@@ -218,7 +218,7 @@ export const adminHandlers = [
     if (denied) return denied
     const farmId = params.farmId as string
     if (!findFarm(farmId)) return problem(404, 'not_found', 'Farm not found')
-    const body = (await request.json()) as { name?: string; areaHa?: number; status?: S['AdminPond']['status'] }
+    const body = (await request.json()) as { name?: string; areaHa?: number; status?: S['AdminPond']['status']; location?: S['GeoPoint'] | null }
     const errors = pondErrors(body)
     if (errors.length) return invalid(errors)
     if (pondNameTaken(farmId, body.name!)) return pondNameConflict()
@@ -230,7 +230,7 @@ export const adminHandlers = [
     if (denied) return denied
     const pond = findPond(params.pondId as string)
     if (!pond) return problem(404, 'not_found', 'Pond not found')
-    const body = (await request.json()) as { name?: string; areaHa?: number; status?: S['AdminPond']['status'] }
+    const body = (await request.json()) as { name?: string; areaHa?: number; status?: S['AdminPond']['status']; location?: S['GeoPoint'] | null }
     const errors = pondErrors(body)
     if (errors.length) return invalid(errors)
     if (pondNameTaken(pond.farmId, body.name!, pond.id)) return pondNameConflict()
@@ -360,8 +360,11 @@ export const adminHandlers = [
   }),
 ]
 
-function pondErrors(body: { name?: string; areaHa?: number }) {
+function pondErrors(body: { name?: string; areaHa?: number; location?: S['GeoPoint'] | null }) {
+  const within = (n: unknown, limit: number) => typeof n === 'number' && Math.abs(n) <= limit
   return [
+    ...(body.location && !within(body.location.lat, 90) ? [{ field: 'location.lat', message: 'Must be between -90 and 90' }] : []),
+    ...(body.location && !within(body.location.lng, 180) ? [{ field: 'location.lng', message: 'Must be between -180 and 180' }] : []),
     ...(body.name?.trim() ? [] : [{ field: 'name', message: 'Enter a Pond name' }]),
     ...(typeof body.areaHa === 'number' && body.areaHa > 0 ? [] : [{ field: 'areaHa', message: 'Enter an area above 0 ha' }]),
   ]

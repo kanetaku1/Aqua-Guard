@@ -1,6 +1,6 @@
 import type { components } from '@/api/schema'
 import { farms } from './company'
-import { users as authUsers } from './data'
+import { users as authUsers, farmAPondLocation } from './data'
 
 type S = components['schemas']
 type Role = S['Role']
@@ -56,7 +56,8 @@ function seedMaster() {
       const n = String(i + 1).padStart(2, '0')
       const pondId = `${farmId}-pond-${n}`
       const resting = fallow.includes(i + 1)
-      pondList.push({ id: pondId, farmId, name: `Pond ${n}`, areaHa, status: resting ? 'fallow' : 'in_operation' })
+      const location = farmId === 'farm-a' && !resting ? farmAPondLocation(i + 1) : null
+      pondList.push({ id: pondId, farmId, name: `Pond ${n}`, areaHa, status: resting ? 'fallow' : 'in_operation', location })
       if (resting) return
       const code = `${letter}-P${n}`
       const add = (deviceId: string, type: S['DeviceType'], parameter: S['SensorParameter'] | null, spec: string | null) =>
@@ -279,15 +280,18 @@ export const pondsOf = (farmId: string) =>
 export const pondNameTaken = (farmId: string, name: string, exceptId?: string) =>
   master.pondList.some((p) => p.farmId === farmId && p.id !== exceptId && p.name.toLowerCase() === name.trim().toLowerCase())
 
-export function createPond(farmId: string, body: { name: string; areaHa: number; status?: S['AdminPond']['status'] }) {
-  const pond: StoredPond = { id: `${farmId}-pond-new-${nextId++}`, farmId, name: body.name.trim(), areaHa: body.areaHa, status: body.status ?? 'in_operation' }
+type PondBody = Pick<S['AdminPondInput'], 'name' | 'areaHa' | 'status' | 'location'>
+
+export function createPond(farmId: string, body: PondBody) {
+  const pond: StoredPond = { id: `${farmId}-pond-new-${nextId++}`, farmId, name: body.name.trim(), areaHa: body.areaHa, status: body.status ?? 'in_operation', location: body.location ?? null }
   master.pondList.push(pond)
   return toAdminPond(pond)
 }
 
-export function updatePond(id: string, body: { name: string; areaHa: number; status?: S['AdminPond']['status'] }) {
+/** An omitted `location` keeps the stored one; `null` clears it (same as the API). */
+export function updatePond(id: string, body: PondBody) {
   const p = findPond(id)!
-  Object.assign(p, { name: body.name.trim(), areaHa: body.areaHa, status: body.status ?? p.status })
+  Object.assign(p, { name: body.name.trim(), areaHa: body.areaHa, status: body.status ?? p.status, location: body.location === undefined ? p.location : body.location })
   return toAdminPond(p)
 }
 

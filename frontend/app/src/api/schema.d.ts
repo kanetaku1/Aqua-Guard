@@ -1355,6 +1355,13 @@ export interface components {
             /** @example Pond 02 */
             name: string;
         };
+        /** @description WGS84 の緯度経度（小数 6 桁で保存） */
+        GeoPoint: {
+            /** @example -6.259871 */
+            lat: number;
+            /** @example 106.644181 */
+            lng: number;
+        };
         ReportRef: {
             id: string;
             type: components["schemas"]["ReportType"];
@@ -1615,6 +1622,8 @@ export interface components {
         };
         PondWaterQualityRow: {
             pond: components["schemas"]["PondRef"];
+            /** @description TM-01 の地図上の Pond の位置。未設定なら null（地図の外に一覧で出す） */
+            location: components["schemas"]["GeoPoint"] | null;
             status: components["schemas"]["Severity"];
             /** @description キーは SensorParameter */
             values: {
@@ -2370,6 +2379,8 @@ export interface components {
              * @enum {string}
              */
             status: "in_operation" | "fallow";
+            /** @description 地図で選んだ Pond の位置。作成時に省略すると未設定、更新時に省略すると現在の値を保持し、null で消す */
+            location?: components["schemas"]["GeoPoint"] | null;
         };
         AdminPond: components["schemas"]["AdminPondInput"] & {
             id: string;

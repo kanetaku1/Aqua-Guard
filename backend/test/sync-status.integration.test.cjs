@@ -113,7 +113,17 @@ test('scoped telemetry survives API restart and reports no data, offline, delaye
       { headers: { Cookie: tmCookie } },
     );
     assert.equal(emptyWater.status, 200);
-    assert.equal((await emptyWater.json()).items[0].values.do.quality, 'no_data');
+    const emptyRows = (await emptyWater.json()).items;
+    assert.equal(emptyRows[0].values.do.quality, 'no_data');
+    assert.equal(emptyRows[0].location, null);
+    await pool.query('UPDATE ponds SET latitude = -6.259871, longitude = 106.644181 WHERE id = $1',
+      [pondUuids[0]]);
+    const locatedWater = await fetch(
+      `${base}/farms/farm-a-${suffix}/ponds/water-quality`,
+      { headers: { Cookie: tmCookie } },
+    );
+    assert.deepEqual((await locatedWater.json()).items[0].location,
+      { lat: -6.259871, lng: 106.644181 });
     waterAlertId = (await pool.query(`INSERT INTO alerts
       (public_id,pond_id,parameter,severity,occurred_at)
       VALUES ($1,$2,'ph','warning',now()) RETURNING id`,

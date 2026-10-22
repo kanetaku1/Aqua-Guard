@@ -2,7 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { PostgresService } from '../infrastructure/postgres.service';
 import { ApiProblem } from '../http/problem';
-import { inputObject, invalid, optionalEnum, positiveNumber, requiredText } from './admin-input';
+import {
+  GeoPoint, inputObject, invalid, optionalEnum, optionalLocation, positiveNumber, requiredText,
+} from './admin-input';
 import { AdminDevicesService } from './admin-devices.service';
 
 type FarmStatus = 'active' | 'inactive';
@@ -36,12 +38,15 @@ interface PondRow {
   name: string;
   area_ha: string;
   status: PondStatus;
+  latitude: string | null;
+  longitude: string | null;
   sensor_count: string;
   actuator_count: string;
 }
 
 export interface AdminPond {
   id: string; name: string; areaHa: number; status: PondStatus;
+  location: GeoPoint | null;
   sensorCount: number; actuatorCount: number;
 }
 
@@ -163,7 +168,7 @@ export class AdminService {
   async listPonds(companyId: string, farmId: string): Promise<{ items: AdminPond[] }> {
     const farm = await this.farmUuid(companyId, farmId);
     const result = await this.postgres.pool.query<PondRow>(
-      `SELECT p.public_id, p.name, p.area_ha, p.status,
+      `SELECT p.public_id, p.name, p.area_ha, p.status, p.latitude, p.longitude,
         (SELECT count(*) FROM device_assignments a JOIN devices d ON d.id = a.device_id
          WHERE a.pond_id = p.id AND a.unassigned_at IS NULL AND d.enabled
            AND d.type = 'sensor') AS sensor_count,
@@ -181,11 +186,13 @@ export class AdminService {
     const name = requiredText(data.name, 'name');
     const area = positiveNumber(data.areaHa, 'areaHa');
     const status = optionalEnum(data.status, 'status', ['in_operation', 'fallow'], 'in_operation');
+    const location = optionalLocation(data.location, 'location') ?? null;
     const publicId = `pond-${randomUUID()}`;
     try {
       await this.postgres.pool.query(
-        `INSERT INTO ponds (public_id, farm_id, name, area_ha, status)
-         VALUES ($1, $2, $3, $4, $5)`, [publicId, farm, name, area, status],
+        `INSERT INTO ponds (public_id, farm_id, name, area_ha, status, latitude, longitude)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [publicId, farm, name, area, status, location?.lat ?? null, location?.lng ?? null],
       );
     } catch (error) { duplicate(error, 'pond_name_taken'); }
     return this.getPond(companyId, publicId);
@@ -195,6 +202,7 @@ export class AdminService {
     const data = inputObject(body);
     const name = requiredText(data.name, 'name');
     const area = positiveNumber(data.areaHa, 'areaHa');
+    const location = optionalLocation(data.location, 'location');
     const previous = await this.postgres.pool.query<{ status: PondStatus }>(
       `SELECT p.status FROM ponds p JOIN farms f ON f.id = p.farm_id
        WHERE f.company_id = $1 AND p.public_id = $2`, [companyId, pondId],
@@ -205,9 +213,12 @@ export class AdminService {
     try {
       const updated = await this.postgres.pool.query(
         `UPDATE ponds p SET name = $3, area_ha = $4, status = $5,
-          updated_at = now(), row_version = row_version + 1
+          latitude = CASE WHEN $6::boolean THEN $7::numeric ELSE p.latitude END,
+          longitude = CASE WHEN $6::boolean THEN $8::numeric ELSE p.longitude END,
+          updated_at = now(), row_version = p.row_version + 1
          FROM farms f WHERE p.farm_id = f.id AND f.company_id = $1 AND p.public_id = $2`,
-        [companyId, pondId, name, area, status],
+        [companyId, pondId, name, area, status, location !== undefined,
+          location?.lat ?? null, location?.lng ?? null],
       );
       if (!updated.rowCount) throw new ApiProblem(404, 'not_found', 'Pond not found');
     } catch (error) { duplicate(error, 'pond_name_taken'); }
@@ -216,7 +227,7 @@ export class AdminService {
 
   private async getPond(companyId: string, pondId: string): Promise<AdminPond> {
     const result = await this.postgres.pool.query<PondRow>(
-      `SELECT p.public_id, p.name, p.area_ha, p.status,
+      `SELECT p.public_id, p.name, p.area_ha, p.status, p.latitude, p.longitude,
         (SELECT count(*) FROM device_assignments a JOIN devices d ON d.id = a.device_id
          WHERE a.pond_id = p.id AND a.unassigned_at IS NULL AND d.enabled
            AND d.type = 'sensor') AS sensor_count,
@@ -234,6 +245,8 @@ export class AdminService {
   private pondResponse(pond: PondRow): AdminPond {
     return {
       id: pond.public_id, name: pond.name, areaHa: Number(pond.area_ha), status: pond.status,
+      location: pond.latitude === null || pond.longitude === null
+        ? null : { lat: Number(pond.latitude), lng: Number(pond.longitude) },
       sensorCount: Number(pond.sensor_count), actuatorCount: Number(pond.actuator_count),
     };
   }

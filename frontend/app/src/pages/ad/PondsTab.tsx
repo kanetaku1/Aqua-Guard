@@ -10,7 +10,9 @@ import { Icon } from '@/components/Icon'
 import { QueryState } from '@/components/QueryState'
 import { cx } from '@/lib/cx'
 import { formatNumber } from '@/lib/format'
+import { locationText, parseLocation } from '@/lib/pondMap'
 import { fieldError } from './fieldError'
+import { PondLocationField } from './PondLocationField'
 
 type S = components['schemas']
 type PondStatus = S['AdminPond']['status']
@@ -66,6 +68,7 @@ export function PondsTab({ farm, onDone }: { farm: S['AdminFarm']; onDone: (mess
                       <th>{t('adFarm.ponds.col.status')}</th>
                       <th className="num">{t('adFarm.ponds.col.sensors')}</th>
                       <th className="num">{t('adFarm.ponds.col.actuators')}</th>
+                      <th>{t('adFarm.ponds.col.location')}</th>
                       <th />
                     </tr>
                   </thead>
@@ -79,6 +82,7 @@ export function PondsTab({ farm, onDone }: { farm: S['AdminFarm']; onDone: (mess
                         </td>
                         <td className="num">{p.sensorCount}</td>
                         <td className="num">{p.actuatorCount}</td>
+                        <td>{p.location ? t('adFarm.ponds.located') : <span className="text-muted">{t('adFarm.ponds.notLocated')}</span>}</td>
                         <td className="actions">
                           <button type="button" className="btn btn--link" aria-label={t('adFarm.ponds.editPond', { name: p.name })} onClick={() => setEditing(p.id)}>
                             {t('adFarm.edit')}
@@ -95,6 +99,7 @@ export function PondsTab({ farm, onDone }: { farm: S['AdminFarm']; onDone: (mess
                       <td className="num">{items.reduce((sum, p) => sum + p.sensorCount, 0)}</td>
                       <td className="num">{items.reduce((sum, p) => sum + p.actuatorCount, 0)}</td>
                       <td />
+                      <td />
                     </tr>
                   </tfoot>
                 </table>
@@ -103,7 +108,7 @@ export function PondsTab({ farm, onDone }: { farm: S['AdminFarm']; onDone: (mess
                 <span className="caption">{t('adFarm.ponds.note')}</span>
               </div>
               {(editing === 'new' || pond) && (
-                <PondDrawer key={editing} farmId={farm.id} pond={pond ?? null} onClose={() => setEditing(null)} onDone={(message) => (setEditing(null), onDone(message))} />
+                <PondDrawer key={editing} farmId={farm.id} pond={pond ?? null} ponds={items} onClose={() => setEditing(null)} onDone={(message) => (setEditing(null), onDone(message))} />
               )}
             </>
           )
@@ -113,12 +118,25 @@ export function PondsTab({ farm, onDone }: { farm: S['AdminFarm']; onDone: (mess
   )
 }
 
-function PondDrawer({ farmId, pond, onClose, onDone }: { farmId: string; pond: S['AdminPond'] | null; onClose: () => void; onDone: (message: string) => void }) {
+function PondDrawer({
+  farmId,
+  pond,
+  ponds,
+  onClose,
+  onDone,
+}: {
+  farmId: string
+  pond: S['AdminPond'] | null
+  ponds: S['AdminPond'][]
+  onClose: () => void
+  onDone: (message: string) => void
+}) {
   const { t } = useTranslation()
   const save = useSavePond(farmId)
   const [name, setName] = useState(pond?.name ?? '')
   const [area, setArea] = useState(pond ? String(pond.areaHa) : '')
   const [status, setStatus] = useState<NonNullable<PondStatus>>(pond?.status ?? 'in_operation')
+  const [location, setLocation] = useState(() => locationText(pond?.location ?? null))
   const [tried, setTried] = useState(false)
 
   const areaHa = Number(area)
@@ -127,15 +145,21 @@ function PondDrawer({ farmId, pond, onClose, onDone }: { farmId: string; pond: S
     areaHa: !(area.trim() && areaHa > 0) ? t('adFarm.ponds.field.areaRequired') : undefined,
   }
   const shown = (field: keyof typeof errors) => (tried ? errors[field] : undefined) ?? fieldError(save.error, field)
+  const parsed = parseLocation(location)
+  const locationError = (axis: 'lat' | 'lng') => {
+    const key = tried ? parsed.errors[axis] : undefined
+    return (key && t(key)) || fieldError(save.error, `location.${axis}`)
+  }
+  const others = ponds.flatMap((p) => (p.id !== pond?.id && p.location ? [{ id: p.id, name: p.name, location: p.location }] : []))
   const submit = () => {
     setTried(true)
-    if (errors.name || errors.areaHa) return
+    if (errors.name || errors.areaHa || parsed.errors.lat || parsed.errors.lng) return
     save.mutate(
-      { pondId: pond?.id ?? null, body: { name: name.trim(), areaHa, status } },
+      { pondId: pond?.id ?? null, body: { name: name.trim(), areaHa, status, location: parsed.location } },
       { onSuccess: (p) => onDone(t(pond ? 'adFarm.ponds.saved' : 'adFarm.ponds.added', { name: p.name })) },
     )
   }
-  const otherError = save.isError && !fieldError(save.error, 'name') && !fieldError(save.error, 'areaHa')
+  const otherError = save.isError && !['name', 'areaHa', 'location.lat', 'location.lng'].some((f) => fieldError(save.error, f))
   // Setting a Pond with devices to Fallow hides it from monitoring while the devices stay assigned
   const resting = pond && pond.status === 'in_operation' && status === 'fallow' && pond.sensorCount + pond.actuatorCount > 0
 
@@ -200,6 +224,7 @@ function PondDrawer({ farmId, pond, onClose, onDone }: { farmId: string; pond: S
           ))}
         </div>
       </div>
+      <PondLocationField value={location} onChange={setLocation} others={others} errors={{ lat: locationError('lat'), lng: locationError('lng') }} />
       {resting && (
         <div className="notice">
           <Icon icon={Info} />
